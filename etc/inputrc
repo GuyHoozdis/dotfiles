@@ -31,7 +31,7 @@
     set page-completions off
 
 # If there are more than 200 possible ocmpletions for a word, ask to show them all
-    set completions-query-items 200
+    set completion-query-items 100
 
 # Show extra file information when completing, like `ls -F` does
     set visible-stats on
