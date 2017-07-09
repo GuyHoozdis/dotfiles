@@ -1,0 +1,46 @@
+
+# Use vi keybindings
+    set editing-mode vi
+    set keymap vi-command
+
+# ... uhh...
+    tab: complete
+
+# When the cursor moves over an opening or closing paren, highlight it's pair
+    set blink-matching-paren on
+
+# Don't blink or ding when hitting ESC
+    set bell-style none
+
+# Case insensitive file completion
+    set completion-ignore-case on
+
+# Treat hyphens and underscores as equivalent
+    set completion-map-case on
+
+# Display matches for ambiguous patterns at first tab press
+    set show-all-if-ambiguous on
+
+# Immediately add a trailing slash when autocompleting symlinks to directories
+    set mark-symlinked-directories on
+
+# Do not autocomplete hidden files unless the pattern explicitly starts with a dot
+    set match-hidden-files off
+
+# Show all autocomplete results at once
+    set page-completions off
+
+# If there are more than 200 possible ocmpletions for a word, ask to show them all
+    set completions-query-items 200
+
+# Show extra file information when completing, like `ls -F` does
+    set visible-stats on
+
+# Be more intelligent when autocompleting (e.g. when the cursor is not at
+# the end of the word to be completed, do the right thing).
+    set skip-completed-text on
+
+# Allow UTF-8 input and output, instead of showing $'\0123\0456'
+set input-meta on
+set output-meta on
+set convert-meta off
