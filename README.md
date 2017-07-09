@@ -56,5 +56,17 @@ On a brand new system:
 TODO ...
 
 
+
+# Things that are missing
+
+... a lot, but this is a start.
+
+Check out these references for further brew inspiration
+- https://gist.github.com/kevinelliott/3135044
+- https://github.com/paulirish/dotfiles
+- https://github.com/mathiasbynens/dotfiles
+
+
 [homebrew]: https://brew.sh/
 [dotbot]: https://github.com/anishathalye/dotbot
+[fhs]: http://www.pathname.com/fhs/pub/fhs-2.3.html
