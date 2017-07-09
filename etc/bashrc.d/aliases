@@ -51,13 +51,12 @@
 
 # Homebrew
 #
-# !!!: I was doing this to prevent my key from getting acidentally captured in a crash 
-# log / error report if I am ever debugging server code using dev/qa envioronment variables.
-#
-# Now that this is going into a public repo I can't put my key there anymore.  I need to rework
-# the command - perhaps a function that reads the token from a file that doesn't get checked in.
+# This is implemented in aliases.local, a file that does not get committed to the repo.  The
+# reason for this alias is to prevent the token from being captured in a crash report, during
+# local development, and exposed in said report.  This technique prevents the token from being
+# present in the environment variables.  It will not show up in the bash history either.
 
-    alias brew='HOMEBREW_GITHUB_API_TOKEN=foo brew'
+    #alias brew='HOMEBREW_GITHUB_API_TOKEN=foo brew'
 
 
 # Networking helpers
