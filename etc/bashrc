@@ -1,0 +1,28 @@
+
+# If the shell is non-interactive, then abort
+#
+# Another way to determine if this is a non-interactive shell is to
+# test if $PS1 is set.  It is only set in interactive shells.
+#
+#    https://www.gnu.org/software/bash/manual/html_node/Is-this-Shell-Interactive_003f.html#Is-this-Shell-Interactive_003f
+
+    [[ $- != *i* ]] && return
+
+
+# Load all files from the bashrc.d directory
+#
+# !!!: The following logic assumes that the repo is located at
+# `~/.local`.  I'm not sure where a good place to define vars,
+# as fundemental as that one, should go.  If I end up using
+# Ansible to deploy and link these files, then it shouldn't be
+# an issue.
+
+    if [ -d $HOME/.local/bashrc.d ]; then
+        for file in $HOME/.local/bashrc.d/*.bash; do
+            source $file
+        done
+    fi
+
+# NOTE: If you want to share configuration across various shells,
+# then you can create a common `rc.d` directory and source its
+# contents in the same way that was done above.
