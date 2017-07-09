@@ -1,7 +1,7 @@
 
 # Source the bashrc file if it exists
 
-    [ -f $HOME/.local/etc/bashrc ] && source $HOME/.local/bashrc
+    [ -f $HOME/.local/etc/bashrc ] && source $HOME/.local/etc/bashrc
 
 
 # Load all of the files from the login.d directory

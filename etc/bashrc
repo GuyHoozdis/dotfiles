@@ -17,8 +17,8 @@
 # Ansible to deploy and link these files, then it shouldn't be
 # an issue.
 
-    if [ -d $HOME/.local/bashrc.d ]; then
-        for file in $HOME/.local/bashrc.d/*.bash; do
+    if [ -d $HOME/.local/etc/bashrc.d ]; then
+        for file in $HOME/.local/etc/bashrc.d/*.bash; do
             source $file
         done
     fi
