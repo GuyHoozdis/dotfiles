@@ -1,3 +1,10 @@
+# Enable debugging by placing a file, with the .debug extension, next to the
+# file to be examined
+
+    DEBUG_FLAG=$HOME/.local/etc/bash_login.debug
+    if [[ -f $DEBUG_FLAG ]]; then
+        set -x
+    fi
 
 # Load all files from the bashrc.d directory
 #
@@ -9,7 +16,7 @@
     [[ ! -d $BASH_CONFIG_DIR ]] && return
 
     for file in {environment,prompt,exports,aliases,functions}; do
-        BASH_CONFIG_FILE=${BASH_CONF_DIR}/${file}
+        BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${file}
 
         [[ -r ${BASH_CONFIG_FILE}.local ]] && source ${BASH_CONFIG_FILE}.local
         [[ -r ${BASH_CONFIG_FILE} ]] && source ${BASH_CONFIG_FILE}
