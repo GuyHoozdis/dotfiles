@@ -1,0 +1,18 @@
+# OS Generated Files #
+######################
+.DS_Store
+.DS_Store?
+.Trashes
+Thumbs.db
+
+
+# Python Projects #
+###################
+.python-version
+ipython_log.py
+ipynb_checkpoints/
+
+
+# VIM #
+#######
+*.swp
