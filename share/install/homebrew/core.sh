@@ -60,6 +60,27 @@
     brew install n
     #brew install rbenv
 
+# !!!: It appears that when _n_ is installed via brew there is an issue that
+# doesn't exist, I don't recall it anyway, when installing via npm.  The problem
+# is that _n_ does not create the directory, where it keeps downloaded versions of
+# node, during installation.  It tries to create the directory, at /usr/local/n by
+# default, the first time it runs.
+#
+# I believe, when brew is doing the install that it has elevated privileges and it
+# could have created the directory `/usr/local/n`.  The owner of `/usr/local` is
+# `root:wheel`; hence, when the utility runs for the first time, my user, it doesn't
+# have the permissions to create `/usr/local/n/{node,ios}`.
+#
+# Setting N_PREFIX might be analternative, but it seems that it will expect a
+# bin directory to be at `$N_PREFIX/bin`.  That doesn't follow any the FHS :/.
+#
+# I think this will pre-create the directories for _n_, so that it by the time it
+# runs fo the first time it is happy.
+
+    sudo mkdir -p /usr/local/n/{node,ios}
+    eval $(stat $HOME)
+    sudo chown -R $st_uid:$st_gid /usr/local/n
+
 
 # Databases
 #
