@@ -13,7 +13,7 @@
 
     BASH_CONFIG_DIR=~/.local/etc/bashrc.d
     [[ ! -d $BASH_CONFIG_DIR ]] && return
-    for filename in {exports,aliases,functions,completion,prompt}; do
+    for filename in {exports,aliases,functions,app-config,prompt}; do
         BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${filename}
         [[ -r ${BASH_CONFIG_FILE}.local.bash ]] && source ${BASH_CONFIG_FILE}.local.bash
         [[ -r ${BASH_CONFIG_FILE}.bash ]] && source ${BASH_CONFIG_FILE}.bash
