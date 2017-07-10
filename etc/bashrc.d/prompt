@@ -6,7 +6,7 @@
 # than I preferred.
 
 
-default_username='ssullivan''
+default_username='ssullivan'
 
 
 if which thefuck > /dev/null; then
