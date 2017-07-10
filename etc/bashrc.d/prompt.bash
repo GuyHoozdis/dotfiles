@@ -22,7 +22,7 @@
 # backslash the expression is only evaluated once.
 
     HOSTNAME="${WHITE}[${GREEN}\w${WHITE}]${NIL}"
-    VIRTENV="${WHITE}(${CYAN}PyEnv: ${RED}$(pyenv version-name)${WHITE})"
+    VIRTENV="${WHITE}(${CYAN}PyEnv: ${RED}\$(pyenv version-name)${WHITE})"
     BRANCH="\$(git symbolic-ref --quiet --short HEAD 2>/dev/null)"
     GIT="${WHITE}(${CYAN}Branch: ${RED}${BRANCH}${WHITE})${NIL}"
 
