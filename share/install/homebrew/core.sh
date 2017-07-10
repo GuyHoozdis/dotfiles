@@ -37,10 +37,40 @@
 #
 #  * https://git-scm.com/
 #  * https://github.com/ggreer/the_silver_searcher
+#  * https://hub.github.com/
+#  * ...
 
     brew install git
+    brew install git-flow
+    #brew install hub
     brew install the_silver_searcher
+    brew install jq
+    brew install httpie
+    #brew install z
+
+
+# Platform version managers
+#
+#  * https://github.com/pyenv/pyenv
+#  * https://github.com/tj/n
+#  * https://github.com/rbenv/rbenv
+
     brew install pyenv
+    brew install n
+    #brew install rbenv
+
+
+# Databases
+#
+#  * MySQL (I eff-ing hate you MySQL)
+#  * PostgreSQL
+#  * Redis
+#  * Mongo
+
+    brew install percona-server
+    brew install postgresql
+    brew install redis
+    brew install mongo
 
 
 # Look into these
@@ -49,6 +79,16 @@
 #  * https://github.com/rupa/z
 #  * https://www.ivarch.com/programs/pv.shtml
 
-    #brew install z
     #brew install fzf
     #brew install pv
+
+
+# These are all things that I want to look into too
+#
+# - imagemagick
+# - ffmpeg
+# - pidcat
+# - android-platform-tools
+# - ncdu
+# - terminal-notifier
+# - homebrew/completions/brew-cask-completion
