@@ -1,0 +1,105 @@
+" .vimrc created per Dein installer instructions
+"
+"   $ curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh > installer.sh
+"   $ sh ./installer.sh <INSTALL_DIR>
+"
+" I used ./vim/bundles for the INSTALL_DIR, because that is what I had been using with
+" NeoBundle.  It could have been any number of directories though.
+"
+
+
+" ----------------------------------------------------------------------
+"  Dein startup and VI/VIM plugin management
+" ----------------------------------------------------------------------
+if &compatible
+  set nocompatible	" Be iMproved
+endif
+
+
+" Required: Put Dein on the runtimepath
+set runtimepath+=~/.vim/bundles/repos/github.com/Shougo/dein.vim
+
+
+" Required: Dein startup and plugin activation logic
+if dein#load_state('~/.vim/bundles')
+  call dein#begin('~/.vim/bundles')
+
+  " Required: Let dein manage dein
+  call dein#add('~/.vim/bundles/repos/github.com/Shougo/dein.vim')
+
+  " Add/Remove your plugins here
+  " -------------------------------
+  " Some examples:
+  "  * call dein#add('Shougo/neosnippet.vim')
+  "  * call dein#add('Shougo/neosnippet-snippets')
+  "  * call dein#add('Shougo/vimshell', { 'rev': '3787e5' })
+  " ---------------------------------------------------------
+
+  call dein#add('scrooloose/nerdtree')          " NerdTree - filesystem explorer
+  call dein#add('tpope/vim-fugitive')           " Fugitive - git wrapper
+  call dein#add('stephpy/vim-yaml')             " YAML Syntax 
+  call dein#add('vim-airline/vim-airline')      " Status/tabline enhancement
+  call dein#add('ctrlpvim/ctrlp.vim')           " Ctrl-P - File/Directory search
+
+  " -------------------------------
+  " End "Add/Remove your plugins"
+  " -------------------------------
+
+  " Required: End Dein startup and plugin activation logic
+  call dein#end()
+  call dein#save_state()
+endif
+
+
+" Required
+filetype plugin indent on
+syntax enable
+
+
+" Automatically install plugins on startup
+if dein#check_install()
+  call dein#install()
+endif
+
+
+" ----------------------------------------------------------------------
+"
+" Global VI/VIM configuration
+"
+" ----------------------------------------------------------------------
+
+" Make VIM silent
+set noerrorbells visualbell t_vb=
+
+
+" Redefine the map leader
+let mapleader=','
+
+
+" Custom NERDTree Configuration
+nmap <Leader>nt :NERDTree<CR>
+let NERDTreeIgnore = ['\.pyc$']
+
+
+" Activate vim-airline to always be visible
+set laststatus=2
+
+
+" Format/Prettify JSON
+"
+" Each of these work... but
+"  * the first one is very common, but can only do 4 space indention.
+"  * the second requires 'brew install jq'
+"  * the third requires the custom script I wrote.
+"
+"nmap =j :%!python -m json.tool<CR>
+"nmap =j :%!jq '.'<CR>
+nmap =j :%!format-json.py<CR>
+
+
+" A few things that I
+set nowrap
+set number
+
+
+colorscheme torte
