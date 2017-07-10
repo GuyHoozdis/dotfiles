@@ -10,14 +10,14 @@
 #
 # Files with the extension .local are not committed to the repo and will be sourced
 # immediately before the file of the same name without the .local extention.
-#
 
     BASH_CONFIG_DIR=~/.local/etc/bashrc.d
     [[ ! -d $BASH_CONFIG_DIR ]] && return
 
-    for file in {environment,prompt,exports,aliases,functions}; do
-        BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${file}
+    for filename in {environment,prompt,exports,aliases,functions}; do
+        BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${filename}
 
         [[ -r ${BASH_CONFIG_FILE}.local ]] && source ${BASH_CONFIG_FILE}.local
         [[ -r ${BASH_CONFIG_FILE} ]] && source ${BASH_CONFIG_FILE}
     done
+    unset filename
