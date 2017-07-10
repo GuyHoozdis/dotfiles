@@ -13,10 +13,8 @@
 
     BASH_CONFIG_DIR=~/.local/etc/bashrc.d
     [[ ! -d $BASH_CONFIG_DIR ]] && return
-
-    for filename in {environment,prompt,exports,aliases,functions}; do
+    for filename in {environment,aliases,functions,prompt}; do
         BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${filename}
-
         [[ -r ${BASH_CONFIG_FILE}.local ]] && source ${BASH_CONFIG_FILE}.local
         [[ -r ${BASH_CONFIG_FILE} ]] && source ${BASH_CONFIG_FILE}
     done
