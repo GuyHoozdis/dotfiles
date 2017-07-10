@@ -56,6 +56,7 @@
 #  * https://github.com/rbenv/rbenv
 
     brew install pyenv
+    brew install pyenv-virtualenv
     brew install n
     #brew install rbenv
 
