@@ -1,1 +1,10 @@
+# Files with this extension contain information that is specific
+# to this system, sensitive, and should not be committed to the repo.
+#######################################################################
 *.local
+
+
+# File with this extension contain default setting that are specific
+# to this system.
+#######################################################################
+*.defaults
