@@ -1,8 +1,8 @@
 [core]
     autocrlf = false
-    excludesfile = $HOME/.gitignore
+    excludesfile = ~/.gitignore
     whitespace = trailing-space,space-before-tab
-    editor = ${EDITOR-/usr/bin/vim}
+    editor = /usr/bin/vim
 [color]
     ui = auto
     status = auto
