@@ -47,7 +47,12 @@
     brew install jq
     brew install httpie
     #brew install z
+
+    # !!!: I'll have to look closer at how these get applied in a virgin system.
+    #  * Will `docker-compose` install `docker-machine` since it is a dependancy?
+    #  * Do these need to occur after `VirtualBox` is installed?  (See cask.sh)
     brew install docker-machine
+    brew install docker-compose
 
 
 # Platform version managers
