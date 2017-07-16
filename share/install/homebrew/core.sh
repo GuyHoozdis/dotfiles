@@ -47,6 +47,7 @@
     brew install jq
     brew install httpie
     #brew install z
+    brew install docker-machine
 
 
 # Platform version managers
