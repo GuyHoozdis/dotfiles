@@ -3,15 +3,19 @@
     excludesfile = ~/.gitignore
     whitespace = trailing-space,space-before-tab
     editor = /usr/bin/vim
+
 [color]
     ui = auto
     status = auto
     commit = auto
     diff = auto
+
 [push]
     default = simple
+
 [tag]
     sort = version:refname
+
 [alias]
     co = checkout
     st = status
@@ -20,3 +24,6 @@
     lg1 = log --pretty=oneline --abbrev-commit --decorate --graph
     lgn = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -n 10
     supr = submodule update --recursive
+
+[include]
+    path = ~/.gitconfig.local
