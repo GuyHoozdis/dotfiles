@@ -65,6 +65,8 @@ Check out these references for further brew inspiration
 - https://gist.github.com/kevinelliott/3135044
 - https://github.com/paulirish/dotfiles
 - https://github.com/mathiasbynens/dotfiles
+- http://blog.apps.npr.org/2013/06/06/how-to-setup-a-developers-environment.html
+- https://github.com/donnemartin/dev-setup
 
 
 [homebrew]: https://brew.sh/
