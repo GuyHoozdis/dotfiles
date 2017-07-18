@@ -46,6 +46,7 @@
     brew install the_silver_searcher
     brew install jq
     brew install httpie
+    brew install mitmproxy
     #brew install z
 
     # !!!: I'll have to look closer at how these get applied in a virgin system.
