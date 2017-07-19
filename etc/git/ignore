@@ -16,3 +16,9 @@ ipynb_checkpoints/
 # VIM #
 #######
 *.swp
+
+
+# Directories I like to create #
+################################
+tmp/
+.env/
