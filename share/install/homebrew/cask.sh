@@ -22,5 +22,6 @@
 
 
     brew cask install iterm2
-    #brew install wireshark
+    brew install wireshark --with-gtk+
     brew cask install virtualbox
+    brew cask install skitch
