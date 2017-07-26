@@ -86,15 +86,7 @@ set laststatus=2
 
 
 " Format/Prettify JSON
-"
-" Each of these work... but
-"  * the first one is very common, but can only do 4 space indention.
-"  * the second requires 'brew install jq'
-"  * the third requires the custom script I wrote.
-"
-"nmap =j :%!python -m json.tool<CR>
-"nmap =j :%!jq '.'<CR>
-nmap =j :%!format-json.py<CR>
+nmap =j :%!python -m json.tool<CR>
 
 
 " A few things that I
