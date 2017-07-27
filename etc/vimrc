@@ -77,7 +77,7 @@ let mapleader=','
 
 
 " Custom NERDTree Configuration
-nmap <Leader>nt :NERDTree<CR>
+nmap <Leader>nt :NERDTreeToggle<CR>
 let NERDTreeIgnore = ['\.pyc$']
 
 
