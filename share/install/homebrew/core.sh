@@ -42,7 +42,7 @@
 
     brew install git
     brew install git-flow
-    #brew install hub
+    brew install hub
     brew install the_silver_searcher
     brew install jq
     brew install httpie
@@ -55,6 +55,9 @@
     #  * Do these need to occur after `VirtualBox` is installed?  (See cask.sh)
     brew install docker-machine
     brew install docker-compose
+
+    #
+    brew install nmap
 
 
 # Platform version managers
