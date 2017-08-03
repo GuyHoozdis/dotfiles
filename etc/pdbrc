@@ -31,3 +31,7 @@ alias uuuu u;;u;;u;;u
 alias dd d;;d
 alias ddd d;;d;;d
 alias dddd d;;d;;d;;d
+
+# Cast dict-like or list-like objects and then pretty print them
+alias ppd pp dict(%1)
+alias ppl pp list(%1)
