@@ -6,8 +6,14 @@
 " I used ./vim/bundles for the INSTALL_DIR, because that is what I had been using with
 " NeoBundle.  It could have been any number of directories though.
 "
-
-
+" ==== Inspiration =====
+"
+" I'm going to start taking idea from this configuration.  I like what I
+" see so far. I don't want all of it.  I just want to take the parts I like,
+" and try out things that look interesting.
+"
+"   https://github.com/spf13/spf13-vim#a-highly-optimized-vimrc-config-file
+"
 " ----------------------------------------------------------------------
 "  Dein startup and VI/VIM plugin management
 " ----------------------------------------------------------------------
@@ -79,6 +85,15 @@ let mapleader=','
 " Custom NERDTree Configuration
 nmap <Leader>nt :NERDTreeToggle<CR>
 let NERDTreeIgnore = ['\.pyc$']
+
+
+" Fugitive customization
+nmap <Leader>gs :Gstatus<CR>
+nmap <Leader>gd :Gdiff<CR>
+nmap <Leader>gb :Gblame<CR>
+nmap <Leader>gl :Glog<CR>
+"nmap <Leader>gc :Gcommit<CR>
+"nmap <Leader>gp :Gpush<CR>
 
 
 " Activate vim-airline to always be visible
