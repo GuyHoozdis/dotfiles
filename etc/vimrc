@@ -109,4 +109,12 @@ set nowrap
 set number
 
 
+" Sometimes, like when I use vimdiff, the words that have been
+" highlighted are difficult to read.  These are some colorschemes
+" that make it easier to see.
+"  * blue
+"  * murphy
+"  * pablo
+"  * peachpuff
+"  * slate
 colorscheme torte
