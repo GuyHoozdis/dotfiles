@@ -1,6 +1,9 @@
 # General System Configuration
 ##############################
 
+    export LANG=en_US.UTF-8
+    export LC_ALL=en_US.UTF-8
+
 # Improved `cd` command
 # - Case-insensitive globbing (used in pathname expansion)
 # - Correct spelling errors in arguments supplied to cd
