@@ -45,6 +45,7 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('tpope/vim-fugitive')           " Fugitive - git wrapper
   call dein#add('stephpy/vim-yaml')             " YAML Syntax 
   call dein#add('vim-airline/vim-airline')      " Status/tabline enhancement
+  call dein#add('vim-airline/vim-airline-themes')
   call dein#add('ctrlpvim/ctrlp.vim')           " Ctrl-P - File/Directory search
 
   " -------------------------------
@@ -96,8 +97,37 @@ nmap <Leader>gl :Glog<CR>
 "nmap <Leader>gp :Gpush<CR>
 
 
-" Activate vim-airline to always be visible
+" Airline customization
+"
+" Here are a few themes that look decent on my current setup
+"
+"     https://github.com/vim-airline/vim-airline/wiki/Screenshots#full-list-without-powerline-font-unfortunately
+"
+" I ended up installing the pre-patched fonts from powerline.  I had to go
+" into the iTerm preferences and select one of the _<blah> Powerline_ fonts.
+"
+" Per the article below I have been using "Inconsolata for Powerline" font, at
+" 14pt, and it has been working pretty well.  The article is a good reference
+" for the commands I ran to install the patched Powerline fonts (so  Airline
+" could use them), but I didn't actually do anything else described by that
+" article.
+"
+"     https://coderwall.com/p/yiot4q/setup-vim-powerline-and-iterm2-on-mac-os-x
+"
+" I'm still trying to find the theme that works best for me.  These are a few
+" of the ones that, at a glace, look decent.
+"
+"  * angr
+"  * lucius
+"  * molokai
+"  * murmur
+"  * papercolor
+"  X serene - (statusline is same color as document, no contrast)
+"  * understated
 set laststatus=2
+
+let g:airline_theme = 'murmur'
+let g:airline_powerline_fonts = 1
 
 
 " Format/Prettify JSON
