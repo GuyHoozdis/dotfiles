@@ -21,8 +21,8 @@
 
 # Arcanist Configuration
 #
-# Since there is only one system where I use Arcanist, perhaps this
-# should go into the .local version of this file.
+# This is actually done in the .local version of this file.  It is just left here
+# as an example.
 
-    ARCANIST_BASH_COMPLETIONS=$HOME/Development/arcanist/resources/shell/bash-completion
-    [ -f $ARCANIST_BASH_COMPLETIONS ] && . $ARCANIST_BASH_COMPLETIONS
+    #ARCANIST_BASH_COMPLETIONS=$HOME/Development/arcanist/resources/shell/bash-completion
+    #[ -f $ARCANIST_BASH_COMPLETIONS ] && . $ARCANIST_BASH_COMPLETIONS
