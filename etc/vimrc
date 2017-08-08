@@ -148,3 +148,7 @@ set number
 "  * peachpuff
 "  * slate
 colorscheme torte
+
+if &diff
+  colorscheme blue
+endif
