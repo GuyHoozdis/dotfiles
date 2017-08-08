@@ -25,6 +25,9 @@
     VIRTENV="${WHITE}(${CYAN}PyEnv: ${RED}\$(pyenv version-name)${WHITE})"
     BRANCH="\$(git symbolic-ref --quiet --short HEAD 2>/dev/null)"
     GIT="${WHITE}(${CYAN}Branch: ${RED}${BRANCH}${WHITE})${NIL}"
+    # XXX: If you want to add this to the prompt, you need to evaluate the variable
+    # everytime (like $BRANCH) not just when this file is sourced.
+    #APP_ENV="${WHITE}(${CYAN}AppEnv: ${RED} ${APP_ENVIRONMENT-System}${WHITE})${NIL}"
 
 
 # Put it together and what have you gut!?!  Something that is not
