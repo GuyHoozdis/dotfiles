@@ -3,6 +3,7 @@
     excludesfile = ~/.gitignore
     whitespace = trailing-space,space-before-tab
     editor = /usr/bin/vim
+    attributesFile = ~/.gitattributes
 
 [color]
     ui = auto
