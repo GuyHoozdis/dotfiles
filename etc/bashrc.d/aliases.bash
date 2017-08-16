@@ -49,6 +49,13 @@
     alias cdsitepackages='pushd ~/.pyenv/versions/$(pyenv version-name)/lib/python2.7/site-packages/'
 
 
+# Dotfiles helpers
+#
+# Quickly jump to the ~/.local directory
+
+    alias cdlocal='pushd ~/.local'
+
+
 # Homebrew
 #
 # This is implemented in aliases.local, a file that does not get committed to the repo.  The
