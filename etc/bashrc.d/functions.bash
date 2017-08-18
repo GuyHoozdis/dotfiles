@@ -33,3 +33,11 @@
     function dig-it() {
         dig +nocmd "$1" any +multiline +noall +answer
     }
+
+
+# Set the title, displayed on the tab, of the current terminal session.  I have to
+# experiment with this to see if it gets overwritten when I run processes.
+
+    function set-terminal-title {
+        echo -ne "\033]0;"$*"\007"
+    }
