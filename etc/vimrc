@@ -47,6 +47,7 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('vim-airline/vim-airline')      " Status/tabline enhancement
   call dein#add('vim-airline/vim-airline-themes')
   call dein#add('ctrlpvim/ctrlp.vim')           " Ctrl-P - File/Directory search
+  call dein#add('editorconfig/editorconfig-vim')
 
   " -------------------------------
   " End "Add/Remove your plugins"
@@ -97,6 +98,12 @@ nmap <Leader>gl :Glog<CR>
 "nmap <Leader>gp :Gpush<CR>
 
 
+" EditorConfig Customization
+"
+" Per the project's README, these changes are recommended.
+let g:EditorConfig_exclude_patterns = ['fugitive://.*', 'scp://.*']
+
+
 " Airline customization
 "
 " Here are a few themes that look decent on my current setup
@@ -134,7 +141,7 @@ let g:airline_powerline_fonts = 1
 nmap =j :%!python -m json.tool<CR>
 
 
-" A few things that I
+" A few things that I like
 set nowrap
 set number
 
