@@ -56,8 +56,8 @@
     brew install docker-machine
     brew install docker-compose
 
-    #
-    brew install nmap
+    # Install nmap with the GUI commponent
+    brew install nmap --with-pygtk
 
 
 # Platform version managers
