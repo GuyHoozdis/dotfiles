@@ -44,14 +44,14 @@
 #  * Right now I have the elements stacked, which is fine when I'm on big screens, but
 #    I'd like to be able to collapse or toggle the elements easily and as needed.
 
-    HOST_INFO="TODO"
-    HOST_INFO_PROMPT="${WHITE}[${GREEN}\w${WHITE}]${NIL}"
+    HOST_INFO="\w"
+    HOST_INFO_PROMPT="${WHITE}[${GREEN}${HOST_INFO}${WHITE}]${NIL}"
 
-    VIRTENV_NAME="TODO"
-    VIRTENV_PROMPT="${WHITE}(${CYAN}PyEnv: ${RED}\$(pyenv version-name)${WHITE})"
+    VIRTENV_NAME="\$(pyenv version-name)"
+    VIRTENV_PROMPT="${WHITE}(${CYAN}PyEnv: ${RED}${VIRTENV_NAME}${WHITE})"
 
     BRANCH_NAME="\$(_get_current_branch_name_for_prompt)"
-    BRANCH_NAME_PROMPT="${WHITE}(${CYAN}Branch: ${RED}${BRANCH}${WHITE})${NIL}"
+    BRANCH_NAME_PROMPT="${WHITE}(${CYAN}Branch: ${RED}${BRANCH_NAME}${WHITE})${NIL}"
 
     APP_ENV_NAME="\$(_get_sourced_environment_name_for_prompt)"
     APP_ENV_PROMPT="${WHITE}(${CYAN}AppEnv: ${RED}${APP_ENV_NAME}${WHITE})${NIL}"
