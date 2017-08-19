@@ -15,6 +15,18 @@
     PROMPT_DIRTRIM=3
 
 
+# Git Prompt Helper
+
+    _git_current_branch_for_prompt() {
+      local ACTIVE_BRANCH=$(git branch --no-color 2>/dev/null | grep '^\* ' | sed 's/^* //g')
+      if [ -z ${ACTIVE_BRANCH} ]; then
+        echo "Not a git repository"
+      else
+        echo -n ${ACTIVE_BRANCH}
+      fi
+    }
+
+
 # Manage the components independently to be more readable.
 #
 # Notice the leading backslash on the command substitution below,
@@ -23,7 +35,7 @@
 
     HOSTNAME="${WHITE}[${GREEN}\w${WHITE}]${NIL}"
     VIRTENV="${WHITE}(${CYAN}PyEnv: ${RED}\$(pyenv version-name)${WHITE})"
-    BRANCH="\$(git symbolic-ref --quiet --short HEAD 2>/dev/null)"
+    BRANCH="\$(_git_current_branch_for_prompt)"
     GIT="${WHITE}(${CYAN}Branch: ${RED}${BRANCH}${WHITE})${NIL}"
     # XXX: If you want to add this to the prompt, you need to evaluate the variable
     # everytime (like $BRANCH) not just when this file is sourced.
