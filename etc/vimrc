@@ -141,7 +141,12 @@ let g:airline_powerline_fonts = 1
 nmap =j :%!python -m json.tool<CR>
 
 
-" A few things that I like
+" Assume these values for filetypes not explicitly defined in 
+" the ~/.vim/after/ftplugin directory
+set tabstop=2
+set softtabstop=2
+set shiftwidth=2
+set expandtab
 set nowrap
 set number
 
