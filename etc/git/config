@@ -22,9 +22,22 @@
     st = status
     fap = fetch --all --prune
     lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-    lg1 = log --pretty=oneline --abbrev-commit --decorate --graph
+    lg1 = log --graph --pretty=oneline --abbrev-commit --decorate
     lgn = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -n 10
+    lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --branches --remotes
     supr = submodule update --recursive
+
+    # Prune all tracking local branches that have been removed from remote
+    prune-all = !git remote | xargs -n 1 git remote prune
+
+    # Given a string for an author, try to figure out full name and email:
+    whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
+    # Given any git object, try to show it briefly
+    whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
+
+    # Show list of contributors
+    rank = shortlog -sn --no-merges
+    count = shortlog -sn
 
 [include]
     path = ~/.gitconfig.local
