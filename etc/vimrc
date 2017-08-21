@@ -3,8 +3,8 @@
 "   $ curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh > installer.sh
 "   $ sh ./installer.sh <INSTALL_DIR>
 "
-" I used ./vim/bundles for the INSTALL_DIR, because that is what I had been using with
-" NeoBundle.  It could have been any number of directories though.
+" I used ./vim/bundles for the INSTALL_DIR, because that is what I had been
+" using with NeoBundle.  It could have been any number of directories though.
 "
 " ==== Inspiration =====
 "
@@ -13,6 +13,12 @@
 " and try out things that look interesting.
 "
 "   https://github.com/spf13/spf13-vim#a-highly-optimized-vimrc-config-file
+"
+" I've tried these plugins in the past, but didn't feel like it was worth
+" it.  It's been a few years since I've reviewed them, so I'm going to give
+" them another review.
+"
+"   http://200ok.ch/posts/vim-as-python-ide.html
 "
 " ----------------------------------------------------------------------
 "  Dein startup and VI/VIM plugin management
@@ -41,13 +47,19 @@ if dein#load_state('~/.vim/bundles')
   "  * call dein#add('Shougo/vimshell', { 'rev': '3787e5' })
   " ---------------------------------------------------------
 
-  call dein#add('scrooloose/nerdtree')          " NerdTree - filesystem explorer
-  call dein#add('tpope/vim-fugitive')           " Fugitive - git wrapper
-  call dein#add('stephpy/vim-yaml')             " YAML Syntax 
-  call dein#add('vim-airline/vim-airline')      " Status/tabline enhancement
+  call dein#add('scrooloose/nerdtree')      " NerdTree - filesystem explorer
+  call dein#add('tpope/vim-fugitive')       " Fugitive - git wrapper
+  call dein#add('stephpy/vim-yaml')         " YAML Syntax
+  call dein#add('vim-airline/vim-airline')  " Status/tabline enhancement
   call dein#add('vim-airline/vim-airline-themes')
-  call dein#add('ctrlpvim/ctrlp.vim')           " Ctrl-P - File/Directory search
+  call dein#add('ctrlpvim/ctrlp.vim')       " Ctrl-P - File/Directory search
   call dein#add('editorconfig/editorconfig-vim')
+
+  " Experimental - Things I am giving a chance, but might not keep
+  call dein#add('fholgado/minibufexpl.vim')   " Mini Buffer Explorer
+  call dein#add('vim-scripts/taglist.vim')    " TagList - Source code browser
+  " XXX: See comments in the plugin configuration section (end of file)
+  "call dein#add('davidhalter/jedi-vim')       " Jedi - autocompletion
 
   " -------------------------------
   " End "Add/Remove your plugins"
@@ -76,34 +88,40 @@ endif
 "
 " ----------------------------------------------------------------------
 
+"
 " Make VIM silent
-set noerrorbells visualbell t_vb=
+"
+    set noerrorbells visualbell t_vb=
 
-
+"
 " Redefine the map leader
-let mapleader=','
+"
+    let mapleader=','
 
-
+"
 " Custom NERDTree Configuration
-nmap <Leader>nt :NERDTreeToggle<CR>
-let NERDTreeIgnore = ['\.pyc$']
+"
+    nmap <Leader>nt :NERDTreeToggle<CR>
+    let NERDTreeIgnore = ['\.pyc$']
 
-
+"
 " Fugitive customization
-nmap <Leader>gs :Gstatus<CR>
-nmap <Leader>gd :Gdiff<CR>
-nmap <Leader>gb :Gblame<CR>
-nmap <Leader>gl :Glog<CR>
-"nmap <Leader>gc :Gcommit<CR>
-"nmap <Leader>gp :Gpush<CR>
+"
+    nmap <Leader>gs :Gstatus<CR>
+    nmap <Leader>gd :Gdiff<CR>
+    nmap <Leader>gb :Gblame<CR>
+    nmap <Leader>gl :Glog<CR>
+    "nmap <Leader>gc :Gcommit<CR>
+    "nmap <Leader>gp :Gpush<CR>
 
-
+"
 " EditorConfig Customization
 "
 " Per the project's README, these changes are recommended.
-let g:EditorConfig_exclude_patterns = ['fugitive://.*', 'scp://.*']
+"
+    let g:EditorConfig_exclude_patterns = ['fugitive://.*', 'scp://.*']
 
-
+"
 " Airline customization
 "
 " Here are a few themes that look decent on my current setup
@@ -131,26 +149,28 @@ let g:EditorConfig_exclude_patterns = ['fugitive://.*', 'scp://.*']
 "  * papercolor
 "  X serene - (statusline is same color as document, no contrast)
 "  * understated
-set laststatus=2
+"
+    set laststatus=2
+    let g:airline_theme = 'murmur'
+    let g:airline_powerline_fonts = 1
 
-let g:airline_theme = 'murmur'
-let g:airline_powerline_fonts = 1
-
-
+"
 " Format/Prettify JSON
-nmap =j :%!python -m json.tool<CR>
+"
+    nmap =j :%!python -m json.tool<CR>
 
-
+"
 " Assume these values for filetypes not explicitly defined in 
 " the ~/.vim/after/ftplugin directory
-set tabstop=2
-set softtabstop=2
-set shiftwidth=2
-set expandtab
-set nowrap
-set number
+"
+    set tabstop=2
+    set softtabstop=2
+    set shiftwidth=2
+    set expandtab
+    set nowrap
+    set number
 
-
+"
 " Sometimes, like when I use vimdiff, the words that have been
 " highlighted are difficult to read.  These are some colorschemes
 " that make it easier to see.
@@ -159,8 +179,68 @@ set number
 "  * pablo
 "  * peachpuff
 "  * slate
-colorscheme torte
+"
+    colorscheme torte
+    if &diff
+      colorscheme blue
+    endif
 
-if &diff
-  colorscheme blue
-endif
+
+" ----------------------------------------------------------------------
+"
+" VIM IDE Configuration
+"
+"   http://200ok.ch/posts/vim-as-python-ide.html
+"
+" Notes:
+" - The global configuration flags, form MiniBufExpl, cited by the article are
+"   all obsolete.  The only thing that needs to be added is a key mapping.
+" - If you like the TagList + CTags functionality, then you should add the
+"   installation command `brew install ctags-exuberant` to the proper script.
+" - To prevent rendering corruption, in the tag list window, after a tag is
+"   selected the `TList_Inc_Winwidth` option is set to zero.
+" - TagList is taking a lot of configuration to start working like I expect. I
+"   think it is in a basic usable state right now, but you probably still need
+"   to go over the "Commands" section of the documentation and possibly tweak
+"   a few more of the plugin settings.
+" - The article describes using VIM's `omnifunc` to gain code completion. That
+"   has never worked very well for me.  I'm going to give `jedi-vim` a try
+"   again.
+"
+" ----------------------------------------------------------------------
+
+"
+" Mini Buff Explorer
+"
+    map <Leader>mb :MBEToggle<CR>
+
+"
+" TagList
+"
+    map <Leader>tl :TlistToggle<CR>
+    let Tlist_Exit_OnlyWindow = 1
+    let Tlist_Close_On_Select = 1
+    let Tlist_Inc_Winwidth = 0
+    let Tlist_GainFocus_On_ToggleOpen = 1
+    let Tlist_Sort_Type = "order"
+    "let Tlist_Max_Submenu_Items = 5
+    "let Tlist_Highlight_Tag_On_BufEnter = 0
+    "let Tlist_Auto_Highlight_Tag = 0
+
+"
+" Code completion (Python)
+"
+    " XXX: I gave this a try again, but I still can't get it to work.  Maybe I
+    " am not invoking it correctly.  Anyway, the documentation for jedi-vim is
+    " much better, so I'm going to give it a try again.
+    "autocmd FileType python set omnifunc=pythoncomplete#Complete
+    "
+    " I'm going to have to come back to this.  I'm skeptical that it will work
+    " with my typcial environment.  Jedi wants to be installed via `pip` and I
+    " think that a virtualenv would not see a globally installed package
+    " (unless I change how I typically do things).  There are ways around
+    " this, but I don't want to deal with this now.
+    "
+    "   https://jedi.readthedocs.io/en/latest/
+    "   https://github.com/davidhalter/jedi
+    "   https://github.com/davidhalter/jedi-vim
