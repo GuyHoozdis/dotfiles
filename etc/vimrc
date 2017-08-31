@@ -61,6 +61,14 @@ if dein#load_state('~/.vim/bundles')
   " XXX: See comments in the plugin configuration section (end of file)
   "call dein#add('davidhalter/jedi-vim')       " Jedi - autocompletion
 
+  " Experimental - iOS related
+  " XXX: Almost immediately, disabled these and removed the repo. Every time
+  " I write a python file it is getting linted... it makes the editor feel
+  " unresponsive.
+  "
+  "call dein#add('keith/swift.vim')          " Swift syntax (?and more stuff?)
+  "call dein#add('vim-syntastic/syntastic.git') " I've been avoiding this, but maybe...
+
   " -------------------------------
   " End "Add/Remove your plugins"
   " -------------------------------
