@@ -16,7 +16,8 @@
     set completion-ignore-case on
 
 # Treat hyphens and underscores as equivalent
-    set completion-map-case on
+# XXX: Turns out, I don't think I really like this.  Leaving it for reference.
+    #set completion-map-case on
 
 # Display matches for ambiguous patterns at first tab press
     set show-all-if-ambiguous on
@@ -41,6 +42,6 @@
     set skip-completed-text on
 
 # Allow UTF-8 input and output, instead of showing $'\0123\0456'
-set input-meta on
-set output-meta on
-set convert-meta off
+    set input-meta on
+    set output-meta on
+    set convert-meta off
