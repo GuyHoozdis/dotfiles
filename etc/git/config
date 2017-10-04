@@ -17,6 +17,9 @@
 [tag]
     sort = version:refname
 
+[merge]
+    tool = vimdiff
+
 [alias]
     co = checkout
     st = status
@@ -44,3 +47,5 @@
 
 [mailmap]
   file = ~/.mailmap.local
+[mergetool]
+	prompt = true

@@ -190,7 +190,16 @@ endif
 "
     colorscheme torte
     if &diff
-      colorscheme blue
+      " http://blog.binchen.org/posts/use-vimdiff-to-resolve-git-merge-conflicts-effectively.html
+      " https://gist.github.com/mattratleph/4026987
+      "  - See the comment that discusses setting cursorline and some of the
+      "  highlight colors
+      colorscheme pablo
+      set laststatus=2
+      set statusline+=%-10.3n
+      map <silent> <leader>1 :diffget 1<CR> :diffupdate<CR>
+      map <silent> <leader>2 :diffget 2<CR> :diffupdate<CR>
+      map <silent> <leader>3 :diffget 3<CR> :diffupdate<CR>
     endif
 
 
