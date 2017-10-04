@@ -19,10 +19,10 @@
 
     _get_current_branch_name_for_prompt() {
       local ACTIVE_BRANCH=$(git branch --no-color 2>/dev/null | grep '^\* ' | sed 's/^* //g')
-      if [ -z ${ACTIVE_BRANCH} ]; then
+      if [ -z "${ACTIVE_BRANCH}" ]; then
         echo "Not a git repository"
       else
-        echo -n ${ACTIVE_BRANCH}
+        echo -n "${ACTIVE_BRANCH}"
       fi
     }
 
