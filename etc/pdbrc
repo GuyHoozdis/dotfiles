@@ -38,3 +38,18 @@ alias ppl pp list(%1)
 # Deserialize a JSON string and then pretty-print it
 from json import loads
 alias ppj pp loads(%1)
+
+
+# IDK about this... it's something I do frequently, but I"m not sure this is the best way.
+# Maybe I should re-consider: https://wiki.python.org/moin/PdbRcIdea
+#
+# I frequently set a breakpoint and then run some subset of the test suite to enumerate
+# the tests that will hit the break point (i.e. exercise the code path) that I am examining.
+import os, traceback
+alias trace locals()['frame']=[frame for frame in traceback.extract_stack() if os.path.basename(frame[0]).startswith("test_")][0]
+alias print_trace print traceback.format_list([locals()["frame"]])[0]
+
+
+# !!!: This does work, but I need to make this deployable.  This file is
+# checked in to my dotfiles, where the file it references is not (yet).
+execfile('/Users/sully/.ipython/profile_default/startup/10-utils.py')
