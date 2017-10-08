@@ -18,16 +18,18 @@
 # Prompt Helpers
 
     _get_current_branch_name_for_prompt() {
-      local ACTIVE_BRANCH=$(git branch --no-color 2>/dev/null | grep '^\* ' | sed 's/^* //g')
-      if [ -z "${ACTIVE_BRANCH}" ]; then
-        echo "Not a git repository"
-      else
-        echo -n "${ACTIVE_BRANCH}"
-      fi
+      local branch=$(git branch --no-color 2> /dev/null | grep '^\* ')
+      [[ -z "${branch}" ]] && branch="Not a git repository"
+      echo -n "${branch#* }"
     }
 
     _get_sourced_environment_name_for_prompt() {
       echo -n "${APP_ENVIRONMENT-System}"
+    }
+
+    _get_current_venv_name_for_prompt() {
+      local venv=$(pyenv version-name)
+      echo -n "${venv//:/|}"
     }
 
 
@@ -47,7 +49,7 @@
     HOST_INFO="\w"
     HOST_INFO_PROMPT="${WHITE}[${GREEN}${HOST_INFO}${WHITE}]${NIL}"
 
-    VIRTENV_NAME="\$(pyenv version-name)"
+    VIRTENV_NAME="\$(_get_current_venv_name_for_prompt)"
     VIRTENV_PROMPT="${WHITE}(${CYAN}PyEnv  : ${RED}${VIRTENV_NAME}${WHITE})"
 
     BRANCH_NAME="\$(_get_current_branch_name_for_prompt)"
@@ -68,3 +70,4 @@
     }
 
     export PROMPT_COMMAND=set_prompt
+
