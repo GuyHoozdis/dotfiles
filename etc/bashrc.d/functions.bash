@@ -41,3 +41,33 @@
     function set-terminal-title {
         echo -ne "\033]0;"$*"\007"
     }
+
+
+# Run iPython as a shell
+#
+# TODO: The shell profile, or perhaps its automated creation, should be checked
+# in too.  I tend to base (i.e. load_subconfig()) off of develop, but there is
+# more in that config than in my typical configurations... the things that make
+# it an awesome shell... that stuff should definately be checked-in.
+
+    function ipysh() {
+      [[ ! -z ${IPYSH_DEBUG} ]] && set -x
+
+      # Prefer the ipython from the current venv
+      ipython=$(pyenv which ipython 2> /dev/null)
+      if [[ $? -ne 0 ]]; then
+
+        # If nothing is found, we'll still let the system try
+        # to resolve the command.  If we find an explicit installation,
+        # then we can overwrite the assumption.
+        ipython=ipython
+        pyenv_root=$(pyenv root)
+        for venv in $(pyenv global); do
+          fullpath=$pyenv_root/versions/$venv/bin/ipython
+          [[ -f $fullpath ]] && ipython=$fullpath && break
+        done
+      fi
+
+      [[ ! -z ${IPYSH_DEBUG} ]] && set +x
+      ${ipython} --profile=shell $@
+    }

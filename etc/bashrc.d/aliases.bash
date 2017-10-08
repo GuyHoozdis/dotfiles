@@ -1,3 +1,12 @@
+# The exports are sourced before this, so those values are available
+# to be used in this module.  In pseudo code; the load order goes
+# like this:
+#
+#   for filename in {exports,aliases,functions,app-config,prompt};
+#     load filename.local.bash if filename.local.bash exists;
+#     load filename.bash if filename.bash exists;
+#
+# -----------------------------------------------------------------------------
 
 # Use the GNU utilities if they are installed.
 
@@ -36,8 +45,10 @@
 
 
 # Run iPython as a shell
+#
+# !!!: The ipysh alias is defined as a function now.
 
-    alias ipysh='ipython --profile=shell'
+    #alias ipysh='ipython --profile=shell'
 
 
 # PyEnv helper
@@ -116,6 +127,10 @@
 
 
 # Render the Zen
+#
+# I've run this command as executing a string for so many years... it only
+# recently occurred to me that it could be executed as a module.  Duh!
 
-    alias zen='python -c "import this"'
+    #alias zen='python -c "import this"'
+    alias zen='python -m this'
 
