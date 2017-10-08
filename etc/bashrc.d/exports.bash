@@ -18,7 +18,6 @@
 
 # Enhance application search path
 
-    PYENV_BIN=$HOME/.pyenv/bin
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
     [[ -d $PYENV_BIN ]] && PATH=$PYENV_BIN:$PATH
