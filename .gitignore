@@ -8,3 +8,17 @@
 # to this system.
 #######################################################################
 *.defaults
+
+
+# If you are supposed to be the future, why-come-u-so-dumb? Even after
+# uninstalling everyting (of pipenv) I went back through setting different
+# directories for the install.  They were used, but then moment later pew
+# and pipenv are dropped in my ./local/bin w/o any way, that I can see, to
+# control the install.
+#
+#   https://docs.pipenv.org/install.html#fancy-installation-of-pipenv
+##
+bin/pew
+bin/pipenv
+share/virtualenvs/
+venvs/
