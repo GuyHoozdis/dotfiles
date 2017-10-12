@@ -18,9 +18,10 @@
 
 # Enhance application search path
 
+    PIPENV_BIN=$HOME/.pipenv/bin
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
-    [[ -d $PYENV_BIN ]] && PATH=$PYENV_BIN:$PATH
+    [[ -d $PIPENV_BIN ]] && PATH=$PIPENV_BIN:$PATH
     [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
     export PATH
