@@ -134,3 +134,14 @@
     #alias zen='python -c "import this"'
     alias zen='python -m this'
 
+
+# Readline behavior for node repl!!!  Oh, happy day!
+#
+# Requires `rlwrap` - a readline wrapper.  See nodejs.org documentation for
+# more information.
+#
+#  https://nodejs.org/api/repl.html#repl_using_the_node_js_repl_with_advanced_line_editors
+
+    if which -s rlwrap; then
+      alias node="NODE_NO_READLINE=1 rlwrap node"
+    fi
