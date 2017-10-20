@@ -21,15 +21,16 @@
     brew install gawk
     brew install tree
     brew install readline
+    brew install rlwrap
 
 
-# Bash 4    
+# Bash 4
 # Note: Don't forget to add `/usr/local/bin/bash` to `/etc/shells` before running `chsh`.
 #
 #  * https://www.gnu.org/software/bash/
 #  * https://github.com/scop/bash-completion
 
-    brew install bash    
+    brew install bash
     brew install bash-completion
 
 
