@@ -54,25 +54,18 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('vim-airline/vim-airline-themes')
   call dein#add('ctrlpvim/ctrlp.vim')       " Ctrl-P - File/Directory search
   call dein#add('editorconfig/editorconfig-vim')
+  call dein#add('fholgado/minibufexpl.vim')   " Mini Buffer Explorer
+  call dein#add('python-mode/python-mode')    " Python Mode
+  call dein#add('~/Development/guyhoozdis/vim-n1ql')
 
   " Experimental - Things I am giving a chance, but might not keep
-  call dein#add('fholgado/minibufexpl.vim')   " Mini Buffer Explorer
-  call dein#add('vim-scripts/taglist.vim')    " TagList - Source code browser
-  " XXX: See comments in the plugin configuration section (end of file)
-  "call dein#add('davidhalter/jedi-vim')       " Jedi - autocompletion
-
-  " Experimental - iOS related
-  " XXX: Almost immediately, disabled these and removed the repo. Every time
-  " I write a python file it is getting linted... it makes the editor feel
-  " unresponsive.
-  "
-  "call dein#add('keith/swift.vim')          " Swift syntax (?and more stuff?)
-  "call dein#add('vim-syntastic/syntastic.git') " I've been avoiding this, but maybe...
+  " !!!: Looks There must be more for me to do here...
+  " https://github.com/JamshedVesuna/vim-markdown-preview
+  call dein#add('JamshedVesuna/vim-markdown-preview')
 
   " -------------------------------
   " End "Add/Remove your plugins"
   " -------------------------------
-
   " Required: End Dein startup and plugin activation logic
   call dein#end()
   call dein#save_state()
@@ -105,29 +98,6 @@ endif
 " Redefine the map leader
 "
     let mapleader=','
-
-"
-" Custom NERDTree Configuration
-"
-    nmap <Leader>nt :NERDTreeToggle<CR>
-    let NERDTreeIgnore = ['\.pyc$']
-
-"
-" Fugitive customization
-"
-    nmap <Leader>gs :Gstatus<CR>
-    nmap <Leader>gd :Gdiff<CR>
-    nmap <Leader>gb :Gblame<CR>
-    nmap <Leader>gl :Glog<CR>
-    "nmap <Leader>gc :Gcommit<CR>
-    "nmap <Leader>gp :Gpush<CR>
-
-"
-" EditorConfig Customization
-"
-" Per the project's README, these changes are recommended.
-"
-    let g:EditorConfig_exclude_patterns = ['fugitive://.*', 'scp://.*']
 
 "
 " Airline customization
@@ -163,12 +133,13 @@ endif
     let g:airline_powerline_fonts = 1
 
 "
-" Format/Prettify JSON
+" Format/Prettify
 "
     nmap =j :%!python -m json.tool<CR>
+    nmap =x :%!xmllint --format --recover --encode UTF-8 -<CR>
 
 "
-" Assume these values for filetypes not explicitly defined in 
+" Assume these values for filetypes not explicitly defined in
 " the ~/.vim/after/ftplugin directory
 "
     set tabstop=2
@@ -179,28 +150,46 @@ endif
     set number
 
 "
-" Sometimes, like when I use vimdiff, the words that have been
-" highlighted are difficult to read.  These are some colorschemes
-" that make it easier to see.
+" These are some colorschemes that make it easier to see.
+"
 "  * blue
 "  * murphy
 "  * pablo
 "  * peachpuff
 "  * slate
 "
-    colorscheme torte
+    colorscheme slate
     if &diff
       " http://blog.binchen.org/posts/use-vimdiff-to-resolve-git-merge-conflicts-effectively.html
       " https://gist.github.com/mattratleph/4026987
       "  - See the comment that discusses setting cursorline and some of the
       "  highlight colors
-      colorscheme pablo
+      colorscheme slate
       set laststatus=2
       set statusline+=%-10.3n
       map <silent> <leader>1 :diffget 1<CR> :diffupdate<CR>
       map <silent> <leader>2 :diffget 2<CR> :diffupdate<CR>
       map <silent> <leader>3 :diffget 3<CR> :diffupdate<CR>
     endif
+
+
+" ----------------------------------------------------------------------
+"
+" Markdown Preview
+"
+" Notes:
+" - Grip: Render local readme files before sending off to GitHub
+"   - https://github.com/joeyespo/grip
+"   - Readme Driven Development: http://tom.preston-werner.com/2010/08/23/readme-driven-development.html
+"   - This was installed via Homebrew.
+" - GitHub may rate limit or block if too much activity.  Configuring a token
+"   can increase the API daily quota.
+"   - https://github.com/joeyespo/grip#access
+"   - This has not been done yet.
+
+let vim_markdown_preview_browser='Google Chrome'
+let vim_markdown_preview_github=1
+let vim_markdown_preview_hotkey='<C-m>'
 
 
 " ----------------------------------------------------------------------
@@ -224,6 +213,12 @@ endif
 "   has never worked very well for me.  I'm going to give `jedi-vim` a try
 "   again.
 "
+" Update:
+" - I've come to enjoy Mini Buff Explorer.
+" - I don't use TagList.  I'm removing any related config for it.
+" - I discovered `pymode` recently and have been very happy with the
+"   functionality and features it offers, but it might be a dying
+"   project.
 " ----------------------------------------------------------------------
 
 "
@@ -232,32 +227,51 @@ endif
     map <Leader>mb :MBEToggle<CR>
 
 "
-" TagList
+" Custom NERDTree Configuration
 "
-    map <Leader>tl :TlistToggle<CR>
-    let Tlist_Exit_OnlyWindow = 1
-    let Tlist_Close_On_Select = 1
-    let Tlist_Inc_Winwidth = 0
-    let Tlist_GainFocus_On_ToggleOpen = 1
-    let Tlist_Sort_Type = "order"
-    "let Tlist_Max_Submenu_Items = 5
-    "let Tlist_Highlight_Tag_On_BufEnter = 0
-    "let Tlist_Auto_Highlight_Tag = 0
+    nmap <Leader>nt :NERDTreeToggle<CR>
+    let NERDTreeIgnore = ['\.pyc$']
 
 "
-" Code completion (Python)
+" Fugitive customization
 "
-    " XXX: I gave this a try again, but I still can't get it to work.  Maybe I
-    " am not invoking it correctly.  Anyway, the documentation for jedi-vim is
-    " much better, so I'm going to give it a try again.
-    "autocmd FileType python set omnifunc=pythoncomplete#Complete
-    "
-    " I'm going to have to come back to this.  I'm skeptical that it will work
-    " with my typcial environment.  Jedi wants to be installed via `pip` and I
-    " think that a virtualenv would not see a globally installed package
-    " (unless I change how I typically do things).  There are ways around
-    " this, but I don't want to deal with this now.
-    "
-    "   https://jedi.readthedocs.io/en/latest/
-    "   https://github.com/davidhalter/jedi
-    "   https://github.com/davidhalter/jedi-vim
+    nmap <Leader>gs :Gstatus<CR>
+    nmap <Leader>gd :Gdiff<CR>
+    nmap <Leader>gb :Gblame<CR>
+    nmap <Leader>gl :Glog<CR>
+    "nmap <Leader>gc :Gcommit<CR>
+    "nmap <Leader>gp :Gpush<CR>
+
+"
+" PyMode VIM
+"
+" Documentation:
+" - ":help pymode help"
+" - https://github.com/vim-scripts/Python-mode-klen/blob/master/doc/pymode.txt
+"
+" Troubleshooting:
+" - ":call pymode#troubleshooting#test()"
+"
+" RopeVIM
+" - https://github.com/python-rope/ropevim#variables
+" - This is documentation to the original. PymodeVIM is similar, but does not
+"   expose exactly the same thing variables.
+"
+    let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.sset_trace()  # XXX Breakpoint'
+    let g:pymode_lint_on_write = 0
+    let g:pymode_rope_complete_on_dot = 0
+    let g:pymode_syntax_print_as_function = 1
+
+    nmap <Leader>pl :PymodeLintToggle<CR>
+    nmap <Leader>ll :PymodeLint<CR>
+    nmap <Leader>pmd :call pymode#troubleshooting#test()<CR>
+
+
+"
+" EditorConfig Customization
+"
+" Per the project's README, these changes are recommended.
+"
+    let g:EditorConfig_exclude_patterns = ['fugitive://.*', 'scp://.*']
+
+
