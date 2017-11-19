@@ -11,6 +11,7 @@ Thumbs.db
 .python-version
 ipython_log.py
 ipynb_checkpoints/
+.ropeproject/
 
 
 # VIM #
