@@ -39,6 +39,7 @@
 #  * https://git-scm.com/
 #  * https://github.com/ggreer/the_silver_searcher
 #  * https://hub.github.com/
+#  * https://github.com/joeyespo/grip
 #  * ...
 
     brew install git
@@ -50,6 +51,7 @@
     brew install mitmproxy
     brew install awscli
     brew install editorconfig
+    brew install grip
     #brew install z
 
     # !!!: I'll have to look closer at how these get applied in a virgin system.
