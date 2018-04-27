@@ -44,6 +44,7 @@
 
     brew install git
     brew install git-flow
+    brew install willgit
     brew install hub
     brew install the_silver_searcher
     brew install jq
