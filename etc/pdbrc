@@ -38,22 +38,19 @@ from json import loads
 alias ppj pp loads(%1)
 
 
-# I've enjoyed the having access to the functionality below from by ipdb prompt.  The issue
-# is that it is causing some trouble with Python3000.  It's time to find a more permenant
-# implementation of these that works for the various version of python I am using.
-# ##############################################################################################
-#
-# IDK about this... it's something I do frequently, but I"m not sure this is the best way.
-# Maybe I should re-consider: https://wiki.python.org/moin/PdbRcIdea
-#
-# I frequently set a breakpoint and then run some subset of the test suite to enumerate
-# the tests that will hit the break point (i.e. exercise the code path) that I am examining.
-#
-import os, traceback
-alias trace locals()['frame']=[frame for frame in traceback.extract_stack() if os.path.basename(frame[0]).startswith("test_")][0]
-alias print_trace print traceback.format_list([locals()["frame"]])[0]
 
+# ================================================================================
+# The `trace` and `print_trace` commands have moved to the `pyutils` package.
+#
+# >>> from pyutils.ipython.terminal.utils import which_test
 
-# !!!: This does work, but I need to make this deployable.  This file is
+# ================================================================================
+# This does work, but I need to make this deployable.  This file, pdbrc,  is
 # checked in to my dotfiles, where the file it references is not (yet).
-#execfile('/Users/sully/.ipython/profile_default/startup/10-utils.py')
+#
+# execfile('/Users/sully/.ipython/profile_default/startup/10-utils.py')
+
+# This is an alternative to the execfile approach.  The only drawback is that it
+# pollutes the locals() namespace.
+from pyutils import *
+# ================================================================================
