@@ -6,18 +6,23 @@
 
 # Initialize the Python version manager
 
-    export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-    if which -s pyenv; then
-         eval "$(pyenv init -)"
-    else
-        echo "Failed to initialize PyEnv"
+# XXX: Disabling automatically invoking pyenv, because I want to
+#      try to use the new tools pipenv and hatch.  This initialization
+#      will be replaced by a function.
+#
+    if [[ -z $VIRTUAL_ENV ]]; then
+      export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+      if which -s pyenv; then
+           eval "$(pyenv init -)"
+      else
+          echo "Failed to initialize PyEnv"
+      fi
+      if which -s pyenv-virtualenv; then
+          eval "$(pyenv virtualenv-init -)"
+      else
+          echo "Failed to initialize PyEnv VitualEnv"
+      fi
     fi
-    if which -s pyenv-virtualenv; then
-        eval "$(pyenv virtualenv-init -)"
-    else
-        echo "Failed to initialize PyEnv VitualEnv"
-    fi
-
 
 # Arcanist Configuration
 #

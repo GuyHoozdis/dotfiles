@@ -18,4 +18,3 @@
         [[ -r ${BASH_CONFIG_FILE}.local.bash ]] && source ${BASH_CONFIG_FILE}.local.bash
         [[ -r ${BASH_CONFIG_FILE}.bash ]] && source ${BASH_CONFIG_FILE}.bash
     done
-    unset filename
