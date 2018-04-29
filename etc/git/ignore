@@ -12,14 +12,18 @@ Thumbs.db
 ipython_log.py
 ipynb_checkpoints/
 .ropeproject/
+pylama.ini
 
 
 # VIM #
 #######
 *.swp
+.sessions/
+*.vim
 
 
 # Directories I like to create #
 ################################
 tmp/
+.tmp/
 .env/
