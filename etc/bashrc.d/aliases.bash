@@ -43,14 +43,6 @@
 
     alias env='env | sort'
 
-
-# Run iPython as a shell
-#
-# !!!: The ipysh alias is defined as a function now.
-
-    #alias ipysh='ipython --profile=shell'
-
-
 # PyEnv helper
 #
 # This is a command that I miss from virtualenv_wrapper.  It doesn't work perfectly in PyEnv,
@@ -126,6 +118,11 @@
     alias path='echo -e ${PATH//:/\\n}'
 
 
+# Extensions to standard pyenv commands
+
+    alias pyenv-list-installable="pyenv install -l | egrep '^[ ]+[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
+    alias pyenv-list-installed="pyenv versions --skip-aliases --bare | egrep '^[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
+
 # Render the Zen
 #
 # I've run this command as executing a string for so many years... it only
@@ -142,6 +139,10 @@
 #
 #  https://nodejs.org/api/repl.html#repl_using_the_node_js_repl_with_advanced_line_editors
 
+    # Iterating on this... it's a good start, but will take a little more
+    # effort to provide all the functinality expected in a modern shell. It
+    # mostly just requires configuration to accomplish.
+    #
     if which -s rlwrap; then
       alias node="NODE_NO_READLINE=1 rlwrap node"
     fi
