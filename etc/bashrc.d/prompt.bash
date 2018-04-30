@@ -175,7 +175,8 @@
         __git_ps1 "\n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
     }
 
-    export PROMPT_COMMAND=set_prompt
+    #export PROMPT_COMMAND=set_prompt
+    export PROMPT_COMMAND="history -a; history -c; history -r; set_prompt"
 
 
     unset RED

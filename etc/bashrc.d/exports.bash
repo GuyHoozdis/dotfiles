@@ -21,15 +21,29 @@
     PIPENV_BIN=$HOME/.pipenv/bin
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
+    PERSONAL_PYTHON_BIN=$HOME/Library/Python/3.6/bin
     [[ -d $PIPENV_BIN ]] && PATH=$PIPENV_BIN:$PATH
     [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
+    [[ -d $PERSONAL_PYTHON_BIN ]] && PATH=$PERSONAL_PYTHON_BIN:$PATH
     export PATH
 
 
 # V-I'm in love with your key bindings
+# - rlwrap is a utility to bring the readline behavior to
+#   utilities that do not support it natively.
+# - See rlwrap's man pages for more info on the env vars below.
+# - RLWRAP_FILTERDIR points to where my filters reside.  My filters in turn
+#   use rlwrapfilter.py which resides in /usr/local/shared/rlwrap/filters/
+#   which is a symbolic link into the current version of rlwrap installed via
+#   Homebrew. Pointing RLWRAP_FILTERDIR there or putting my filters in that
+#   directory would mean things break when brew upgrades rlwrap.
 
     export EDITOR=/usr/bin/vim
+    export RLWRAP_HOME=$HOME/.rlwrap
+    export RLWRAP_EDITOR="vi '+call cursor(%L, %C)'"
+    #export RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters
+    export RLWRAP_FILTERDIR=$HOME/.local/share/rlwrap/filters
 
 
 # Customize History
@@ -62,7 +76,7 @@
 
 # Don't record certain commands
 
-    export HISTIGNORE="&:[ ]*:exit:ls:bg:fg:history:clear"
+    export HISTIGNORE="&:[ ]*:exit:ls:ll:bg:fg:history:clear"
 
 
 # Save multi-line commands as one command
@@ -72,7 +86,11 @@
 #
 # !!!: Keep an eye on this, it may not work as expected.
 #  https://stackoverflow.com/questions/338285/prevent-duplicates-from-being-saved-in-bash-history#answer-7449399
-
-    export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
+#
+# Note moving this functionality into `prompt.bash`, which comes later in the
+# config process.  I this this has been overwritten by an assignment to the
+# same variable there.
+#
+#    export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
 
 
