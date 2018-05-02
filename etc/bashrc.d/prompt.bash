@@ -175,8 +175,11 @@
         __git_ps1 "\n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
     }
 
-    #export PROMPT_COMMAND=set_prompt
-    export PROMPT_COMMAND="history -a; history -c; history -r; set_prompt"
+    # Turns out I don't like how this is working in practice.  If I've transitioned back from another terminal and want to execute the previous
+    # command, now I have to scroll past several commands (from other terminals/sessions) to get the last command executed in this terminal. I
+    # will have to think about this some more.
+    export PROMPT_COMMAND=set_prompt
+    #export PROMPT_COMMAND="history -a; history -c; history -r; set_prompt"
 
 
     unset RED
