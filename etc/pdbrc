@@ -52,5 +52,11 @@ alias ppj pp loads(%1)
 
 # This is an alternative to the execfile approach.  The only drawback is that it
 # pollutes the locals() namespace.
-from pyutils import *
+#from pyutils import *
 # ================================================================================
+import pyutils
+alias ppsql pyutils.ppsql
+alias cformat pyutils.cformat
+alias cprint pyutils.cprint
+alias inspect_method pyutils.inspect_method
+
