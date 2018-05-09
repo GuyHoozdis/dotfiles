@@ -26,16 +26,25 @@
 
 
 # Prompt Helpers
+#
+# TODO:
+# - The switch `-v` just wasn't working the way I was using it.  Using `-n` does have the
+#   advantage of being supported on older versions of bash.  I would otherwise have to
+#   introduce version specific logic.  :/
+# - I believe `-n` is the default switch, so `[[ -n $SOME_VAR ]]` can be reduced to
+#   simply `[[ $SOME_VAR ]]`.
+# - In addition to the simplification mentioned above, it looks like a few of these
+#   statements could be cleaned up to be a little tighter.
 
     _is_pyenv_active() {
-      [[ -v PYENV_ACTIVE ]] && return 0
-      [[ -v PYENV_SHELL ]] && return 0
-      [[ -v PYENV_VIRTUALENV_INIT ]] && return 0
+      [[ -n $PYENV_ACTIVE ]] && return 0
+      [[ -n $PYENV_SHELL ]] && return 0
+      [[ -n $PYENV_VIRTUALENV_INIT ]] && return 0
       return 1
     }
 
     _is_standard_virtualenv_active() {
-      [[ -v VIRTUAL_ENV ]] && return 0 || return 1
+      [[ -n $VIRTUAL_ENV ]] && return 0 || return 1
     }
 
     _get_current_branch_name_for_prompt() {
