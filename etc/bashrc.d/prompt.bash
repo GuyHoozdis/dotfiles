@@ -77,7 +77,14 @@
 #        # If any parameters are given, then return the label (i.e. "Brew" or "System")
 #        [[ $# ]] && echo -n "$(basename $python_binary)" || echo -n "${system_or_brew}"
 # ======================================================================================
-        python_binary=$(greadlink $(which python)); echo -n "$(basename $python_binary)"
+        # !!!: Restoring my home directory onto a fresh OS install reveals some weaknesses.
+        # - Applications that are installed outside of $HOME haven't been layed down yet.
+        # - $HOME/node_modules/.bin/which replicates the BSD utility and is found first
+        #   when I prioritize my personal and custom paths over system paths.  The problem
+        #   occurs when node has not been installed yet.
+        # - There are more assumptions built into this logic that really should be abstracted.
+        #python_binary=$(greadlink $(which python)); echo -n "$(basename $python_binary)"
+        echo "Handle this"
       fi
     }
 
