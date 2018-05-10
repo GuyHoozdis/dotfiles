@@ -55,13 +55,10 @@
     brew install grip
     #brew install z
 
-    # !!!: I'll have to look closer at how these get applied in a virgin system.
-    #  * Will `docker-compose` install `docker-machine` since it is a dependancy?
-    #  * Do these need to occur after `VirtualBox` is installed?  (See cask.sh)
 
-# TODO: Manually install this and if this technique is valid, then re-enable.
-    #brew install docker-machine
-    #brew install docker-compose
+# This leaves Kenimatics off the system
+    brew install docker-machine
+    brew install docker-compose
 
     # Install nmap with the GUI commponent
     brew install nmap --with-pygtk
@@ -97,8 +94,10 @@
 #  * Mongo
 
     brew install percona-server
-    brew install postgresql
     brew install redis
+    brew install libcouchbase
+
+    brew install postgresql
     brew install mongo
 
 
