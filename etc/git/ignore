@@ -27,3 +27,4 @@ pylama.ini
 tmp/
 .tmp/
 .env/
+.macros/
