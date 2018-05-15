@@ -53,10 +53,28 @@ alias ppj pp loads(%1)
 # This is an alternative to the execfile approach.  The only drawback is that it
 # pollutes the locals() namespace.
 #from pyutils import *
+#
 # ================================================================================
+# Something isn't quite working here.  Everything looks correct in the namespace
+# until one of the method below are executed.
+#
+# ```
+# ipdb> cprint
+# <function cprint at 0x1132b3668>
+#
+# ipdb> alias cprint
+# cprint = pyutils.cprint
+#
+# ipdb> cprint('{style.bold}{color.red}test{color.stop}')
+# *** NameError: name 'cprint' is not defined
+#
+# ipdb> pyutils.cprint('{style.bold}{color.red}test{color.stop}')
+# test
+# ```
+#
+# I don't see what's wrong yet.
 import pyutils
 alias ppsql pyutils.ppsql
 alias cformat pyutils.cformat
 alias cprint pyutils.cprint
 alias inspect_method pyutils.inspect_method
-
