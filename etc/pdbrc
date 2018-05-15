@@ -73,8 +73,12 @@ alias ppj pp loads(%1)
 # ```
 #
 # I don't see what's wrong yet.
-import pyutils
-alias ppsql pyutils.ppsql
-alias cformat pyutils.cformat
-alias cprint pyutils.cprint
-alias inspect_method pyutils.inspect_method
+#import pyutils
+#alias ppsql pyutils.ppsql
+#alias cformat pyutils.cformat
+#alias cprint pyutils.cprint
+#alias inspect_method pyutils.inspect_method
+
+#
+from pyutils import ppsql, cformat, cprint, inspect_method
+from pyutils.ipython.terminal.utils import which_test
