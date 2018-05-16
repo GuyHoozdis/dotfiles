@@ -76,17 +76,25 @@ if dein#load_state('~/.vim/bundles')
   " This required a bit of setup, more than I would normally tolerate, but it is useful and I do use it.
   "   https://github.com/JamshedVesuna/vim-markdown-preview
   call dein#add('JamshedVesuna/vim-markdown-preview')
-
+  "
   " Experimental - Things I am giving a chance, but might not keep
   call dein#add('alfredodeza/pytest.vim')
   call dein#add('vim-scripts/Conque-Shell')
   call dein#add('tpope/vim-repeat')         " Another tpope miracle
   call dein#add('tpope/vim-speeddating')    " Another tpope miracle
+  call dein#add('ajh17/spacegray.vim')
+  " JavaScript IDE
+  "   https://javascriptplayground.com/vim-for-javascript/
+  " This looks like it will take some getting used to.
+  "   https://github.com/SirVer/ultisnips
+  call dein#add('pangloss/vim-javascript')
+  call dein#add('mxw/vim-jsx')
+  call dein#add('leshill/vim-json')
 
   " -----------------------------------------------------------------------------
   " I want to introduce these too, but I don't want to do too many at once, so
   " these are a reminder to pull them in later.
-  " 
+  "
   "   https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
   "   https://github.com/svermeulen/vim-easyclip
   " -----------------------------------------------------------------------------
@@ -186,16 +194,16 @@ endif
 " These seem to work well for me for code and text files.  The
 " folds are easy to see in these.
 " -------------
-"  * zellner 
+"  * zellner
 "  * ron
 "  * delek
 "  * torte
 "
 " Highcontrast good for diff views
 " -------------
-"  * blue   
+"  * blue
 "
-" 
+"
 "  * murphy
 "  * pablo
 "  * peachpuff
@@ -205,8 +213,11 @@ endif
 "
 " I seem to rotate between slate, zellner, and delek the most.
 "
-    "colorscheme zellner
-    colorscheme delek
+    " https://github.com/ajh17/Spacegray.vim
+    colorscheme spacegray
+    let g:spacegray_underline_search = 1
+    let g:spacegray_use_italics = 1
+
 
     if &diff
       " http://blog.binchen.org/posts/use-vimdiff-to-resolve-git-merge-conflicts-effectively.html
@@ -319,12 +330,19 @@ let vim_markdown_preview_hotkey='<C-m>'
     let g:pymode_lint_on_write = 0
     let g:pymode_doc = 0
     let g:pymode_rope_complete_on_dot = 0
-    let g:pymode_rope_goto_definition_cmd = 'e' 
+    let g:pymode_rope_goto_definition_cmd = 'e'
     let g:pymode_syntax_print_as_function = 1
 
     nmap <Leader>pl :PymodeLintToggle<CR>
     nmap <Leader>ll :PymodeLint<CR>
     nmap <Leader>pmd :call pymode#troubleshooting#test()<CR>
+
+
+"
+" JavaScript
+"
+    let g:javascript_plugin_flow = 1
+    let g:jsx_ext_required = 0
 
 
 "
