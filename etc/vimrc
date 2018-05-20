@@ -207,14 +207,16 @@ endif
 " I seem to rotate between slate, zellner, and delek the most.
 "
     "colorscheme zellner
-    colorscheme delek
+    "colorscheme delek
+    colorscheme solarized
 
     if &diff
       " http://blog.binchen.org/posts/use-vimdiff-to-resolve-git-merge-conflicts-effectively.html
       " https://gist.github.com/mattratleph/4026987
-      "  - See the comment that discusses setting cursorline and some of the
-      "  highlight colors
-      colorscheme slate
+      " - See the comment that discusses setting cursorline and some of the
+      "   highlight colors
+      "
+      "colorscheme slate
       set laststatus=2
       set statusline+=%-10.3n
       map <silent> <leader>1 :diffget 1<CR> :diffupdate<CR>
