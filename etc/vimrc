@@ -82,11 +82,12 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('vim-scripts/Conque-Shell')
   call dein#add('tpope/vim-repeat')         " Another tpope miracle
   call dein#add('tpope/vim-speeddating')    " Another tpope miracle
+  call dein#add('altercation/vim-colors-solarized')
 
   " -----------------------------------------------------------------------------
   " I want to introduce these too, but I don't want to do too many at once, so
   " these are a reminder to pull them in later.
-  " 
+  "
   "   https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
   "   https://github.com/svermeulen/vim-easyclip
   " -----------------------------------------------------------------------------
@@ -186,16 +187,16 @@ endif
 " These seem to work well for me for code and text files.  The
 " folds are easy to see in these.
 " -------------
-"  * zellner 
+"  * zellner
 "  * ron
 "  * delek
 "  * torte
 "
 " Highcontrast good for diff views
 " -------------
-"  * blue   
+"  * blue
 "
-" 
+"
 "  * murphy
 "  * pablo
 "  * peachpuff
@@ -319,7 +320,7 @@ let vim_markdown_preview_hotkey='<C-m>'
     let g:pymode_lint_on_write = 0
     let g:pymode_doc = 0
     let g:pymode_rope_complete_on_dot = 0
-    let g:pymode_rope_goto_definition_cmd = 'e' 
+    let g:pymode_rope_goto_definition_cmd = 'e'
     let g:pymode_syntax_print_as_function = 1
 
     nmap <Leader>pl :PymodeLintToggle<CR>
