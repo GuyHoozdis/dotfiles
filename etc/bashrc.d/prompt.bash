@@ -1,3 +1,13 @@
+# This is to support scenarios where the subshell is passed
+# `PROMPT_COMMAND`, but then can't access `set_prompt` nor
+# any of the functions is relies upon.
+#
+#   https://stackoverflow.com/a/28490273
+#
+# Actually, this sucks... it really messes up the output of the `env` command.
+    #set -a
+
+
 # Everyone needs a little color in their lives
 
     #RED='\[\033[31m\]'
@@ -54,7 +64,12 @@
     }
 
     _get_sourced_environment_name_for_prompt() {
-      echo -n "${APP_ENVIRONMENT-System}"
+      local profile="${ITERM_PROFILE:-${PYTHON_ENVIRONMENT:-Unknown}}"
+      if [[ -z $APP_ENVIRONMENT ]]; then
+        echo -n "System ($profile)"
+      else
+        echo -n "$APP_ENVIRONMENT ($profile)"
+      fi
     }
 
     _get_current_venv_name_for_prompt() {
@@ -167,36 +182,20 @@
     # ==============================================================================
 
     function set_prompt() {
-        # PS1="\n"
-        # PS1+="$APP_ENV_PROMPT\n"
-        # PS1+="$VIRTENV_PROMPT\n"
-        # PS1+="$BRANCH_NAME_PROMPT\n"
-        # PS1+="$HOST_INFO_PROMPT\n"
-        # PS1+="\$ "
-
-        # =========================================================================
-        #
-        # This worked... just need to spend some time configuring it to
-        # my liking.  See the GIT_PS1_* vars above.  Don't forget to source
-        # `/usr/local/opt/git/etc/completeions/git-prompt.sh`. That should
-        # probably be added to the bash-completions.d directory.
-        #
-        #
-        #__git_ps1 "Stuff before it" "$PS1" '(%s)'
-        #__git_ps1 "\n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n(Branch : %s)"
-
-        # This effectively replaces the previous custom impelmentation with
-        # some improvements.  Run it for a little while to be sure you are
-        # going to stick with this, then come back and clean things up here.
-        __git_ps1 "\n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
+      if ! type -t __git_ps1 >/dev/null; then
+        echo "Repairing missing __git_ps1"
+        . /usr/local/opt/git/etc/bash_completion.d/git-prompt.sh
+      fi
+      __git_ps1 "\n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
     }
 
     # Turns out I don't like how this is working in practice.  If I've transitioned back from another terminal and want to execute the previous
     # command, now I have to scroll past several commands (from other terminals/sessions) to get the last command executed in this terminal. I
     # will have to think about this some more.
-    export PROMPT_COMMAND=set_prompt
     #export PROMPT_COMMAND="history -a; history -c; history -r; set_prompt"
 
+    #
+    export PROMPT_COMMAND=set_prompt
 
     unset RED
     unset GREEN
@@ -207,3 +206,7 @@
     unset WHITE
     unset NIL
     unset CLEAR
+
+
+# Revert to normal
+    #set +a

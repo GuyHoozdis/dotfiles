@@ -10,19 +10,44 @@
 #      try to use the new tools pipenv and hatch.  This initialization
 #      will be replaced by a function.
 #
-    if [[ -z $VIRTUAL_ENV ]]; then
-      export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-      if which -s pyenv; then
-           eval "$(pyenv init -)"
-      else
-          echo "Failed to initialize PyEnv"
-      fi
-      if which -s pyenv-virtualenv; then
-          eval "$(pyenv virtualenv-init -)"
-      else
-          echo "Failed to initialize PyEnv VitualEnv"
-      fi
-    fi
+    #if [[ -z $VIRTUAL_ENV ]]; then
+    #  export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+    #  if which -s pyenv; then
+    #       eval "$(pyenv init -)"
+    #  else
+    #      echo "Failed to initialize PyEnv"
+    #  fi
+    #  if which -s pyenv-virtualenv; then
+    #      eval "$(pyenv virtualenv-init -)"
+    #  else
+    #      echo "Failed to initialize PyEnv VitualEnv"
+    #  fi
+    #fi
+
+    # ???: WHY don't I just put these in the thunk itself?
+    case $PYTHON_ENVIRONMENT in
+      pyenv)
+          export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+          if which -s pyenv; then
+            eval "$(pyenv init -)"
+          else
+            echo "Failed to initialize PyEnv"
+          fi
+
+          if which -s pyenv-virtualenv; then
+            eval "$(pyenv virtualenv-init -)"
+          else
+            echo "Failed to initialize PyEnv VitualEnv"
+          fi
+        ;;
+      pipenv)
+          echo "Initialize environment for $PYTHON_ENVIRONMENT"
+          eval "$(pipenv --completion)"
+        ;;
+      *)
+        echo "No python environment initialized"
+        ;;
+    esac
 
 
 # Arcanist Configuration
