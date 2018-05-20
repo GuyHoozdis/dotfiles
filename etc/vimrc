@@ -76,7 +76,7 @@ if dein#load_state('~/.vim/bundles')
   " This required a bit of setup, more than I would normally tolerate, but it is useful and I do use it.
   "   https://github.com/JamshedVesuna/vim-markdown-preview
   call dein#add('JamshedVesuna/vim-markdown-preview')
-  "
+
   " Experimental - Things I am giving a chance, but might not keep
   call dein#add('alfredodeza/pytest.vim')
   call dein#add('vim-scripts/Conque-Shell')
@@ -90,6 +90,9 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('pangloss/vim-javascript')
   call dein#add('mxw/vim-jsx')
   call dein#add('leshill/vim-json')
+
+  " Under Development
+  call dein#add('~/Development/guyhoozdis/vim-thinkscript/')
 
   " -----------------------------------------------------------------------------
   " I want to introduce these too, but I don't want to do too many at once, so
