@@ -17,7 +17,7 @@ pylama.ini
 
 # VIM #
 #######
-*.swp
+*.sw[op]
 .sessions/
 *.vim
 
