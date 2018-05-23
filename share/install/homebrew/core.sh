@@ -56,9 +56,13 @@
     #brew install z
 
 
+# XXX: Docker for Mac runs containers natively and can
+# co-exist with machine, but you should install Docker
+# for Mac first.
+#
 # This leaves Kenimatics off the system
-    brew install docker-machine
-    brew install docker-compose
+    #brew install docker-machine
+    #brew install docker-compose
 
     # Install nmap with the GUI commponent
     brew install nmap --with-pygtk
