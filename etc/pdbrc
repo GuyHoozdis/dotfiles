@@ -40,45 +40,59 @@ alias ppj pp loads(%1)
 
 
 # ================================================================================
-# The `trace` and `print_trace` commands have moved to the `pyutils` package.
 #
-# >>> from pyutils.ipython.terminal.utils import which_test
+# Personal utility library.  These are some nicities, liike colorized printing,
+# or utilities that encapsulate a series of commands I otherwise run frequently.
+# These utilities can be useful to a wide range of projects; in contrast to the
+# utilities that I, by convention, write and keep in a folder named .macros/ in
+# the project where they are useful.
+#
 
-# ================================================================================
-# This does work, but I need to make this deployable.  This file, pdbrc,  is
-# checked in to my dotfiles, where the file it references is not (yet).
-#
-# execfile('/Users/sully/.ipython/profile_default/startup/10-utils.py')
-
-# This is an alternative to the execfile approach.  The only drawback is that it
-# pollutes the locals() namespace.
-#from pyutils import *
-#
-# ================================================================================
-# Something isn't quite working here.  Everything looks correct in the namespace
-# until one of the method below are executed.
-#
-# ```
-# ipdb> cprint
-# <function cprint at 0x1132b3668>
-#
-# ipdb> alias cprint
-# cprint = pyutils.cprint
-#
-# ipdb> cprint('{style.bold}{color.red}test{color.stop}')
-# *** NameError: name 'cprint' is not defined
-#
-# ipdb> pyutils.cprint('{style.bold}{color.red}test{color.stop}')
-# test
-# ```
-#
-# I don't see what's wrong yet.
-#import pyutils
-#alias ppsql pyutils.ppsql
-#alias cformat pyutils.cformat
-#alias cprint pyutils.cprint
-#alias inspect_method pyutils.inspect_method
-
-#
-from pyutils import ppsql, cformat, cprint, inspect_method
+from pyutils import ppsql, cprint, cformat, inspect_method
 from pyutils.ipython.terminal.utils import which_test
+# --------------------------------------------------------------------------------
+#
+# = Which Test
+#
+# Set a break point in the code base, run the test suite, and then use this utility
+# to determine the test that resulted in this code path being exercised.
+#
+# ```
+# ipdb> which_test()
+# test_update_modifier_items_adds_removes_and_updates
+# Line: 344
+# File: "pos_api/tests/controllers/test_modifiergroup.py"
+# ```
+
+# = Colorized print statements
+#
+# Not required, but helpful if it is readily available.  If you are into print
+# debugging, the cprint package offers some useful utility.  You will find a
+# method named the same as the package that implements the same interface as
+# the print function.
+#
+# ```
+# ipdb> cprint.cprint('{style.bold}{color.red}test{color.stop}', sep=' ', file=sys.stdout)
+# test ipdb>
+# ```
+#
+# If you need a little more flexibility, you can format the message yourself and
+# pass it to to any output stream you like.
+#
+# ```
+# ipdb> kermit = cprint.cformat("{color.green}It's not easy being green{color.stop}")
+# ipdb> q_and_a = [cprint.cformat(template, text1, text2) for template, text1, text2 in raw_content]
+# ```
+
+
+# I seem to be typing these commands frequently, so let's see if this will help.
+#
+# TODO:
+# - If you like this, then make it a little more robust
+# - Actually do, the import...
+MACROS = './.macros'
+from os import path
+if path.isdir(MACROS):
+  import sys
+  sys.path.append(MACROS)
+
