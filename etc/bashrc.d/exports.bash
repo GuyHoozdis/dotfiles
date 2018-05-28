@@ -18,14 +18,22 @@
 
 # Enhance application search path
 
-    PIPENV_BIN=$HOME/.pipenv/bin
-    PYENV_BIN=$HOME/.pyenv/bin
+  # Enabling/disabling shell configurations based on envvars
+  # 1. Disable the variations and create the entrypoints
+  # 2. Verify each detects the appropriate signal
+  # 3. Enable the path that replicates the environment that has previously been used
+  # 4. Enable the path that allows for PipEnv and Hatch!
+  # 5. Profit
+
+    #PIPENV_BIN=$HOME/.pipenv/bin
+    #PYENV_BIN=$HOME/.pyenv/bin
+    #[[ -d $PIPENV_BIN ]] && PATH=$PIPENV_BIN:$PATH
+    #[[ $(/usr/bin/which -s pyenv) ]] && [[ -d $PYENV_BIN ]] && PATH=$PYENV_BIN:$PATH
+
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
     PERSONAL_PYTHON_BIN=$HOME/Library/Python/3.6/bin
-    [[ -d $PIPENV_BIN ]] && PATH=$PIPENV_BIN:$PATH
-    [[ -z $(/usr/bin/which -s pyenv) ]] && [[ -d $PYENV_BIN ]] && PATH=$PYENV_BIN:$PATH
-    [[ -z $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
+    [[ $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
     [[ -d $PERSONAL_PYTHON_BIN ]] && PATH=$PERSONAL_PYTHON_BIN:$PATH
     export PATH
