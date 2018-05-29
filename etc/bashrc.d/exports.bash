@@ -33,7 +33,7 @@
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
     PERSONAL_PYTHON_BIN=$HOME/Library/Python/3.6/bin
-    [[ $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
+    [[ -z $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
     [[ -d $PERSONAL_PYTHON_BIN ]] && PATH=$PERSONAL_PYTHON_BIN:$PATH
     export PATH
