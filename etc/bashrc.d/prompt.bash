@@ -65,11 +65,16 @@
 
     _get_sourced_environment_name_for_prompt() {
       local profile="${ITERM_PROFILE:-${PYTHON_ENVIRONMENT:-Unknown}}"
+      local level=${SHLVL-Err}
       if [[ -z $APP_ENVIRONMENT ]]; then
-        echo -n "System ($profile)"
+        echo -n "System ($profile)[$level]"
       else
-        echo -n "$APP_ENVIRONMENT ($profile)"
+        echo -n "$APP_ENVIRONMENT ($profile)[$level]"
       fi
+    }
+
+    _get_sourced_docker_machine_name_for_prompt() {
+      echo "${DOCKER_MACHINE_NAME-System}"
     }
 
     _get_current_venv_name_for_prompt() {
@@ -150,6 +155,9 @@
     APP_ENV_NAME="\$(_get_sourced_environment_name_for_prompt)"
     APP_ENV_PROMPT="${BLUE}(${WHITE}AppEnv : ${PURPLE}${APP_ENV_NAME}${BLUE})${NIL}"
 
+    DOCKER_SWARM_NAME="\$(_get_sourced_docker_machine_name_for_prompt)"
+    DOCKER_SWARM_PROMPT="${BLUE}(${WHITE}Docker : ${PURPLE}${DOCKER_SWARM_NAME}${BLUE})${NIL}"
+
     VIRTENV_NAME="\$(_get_current_venv_name_for_prompt)"
     if _is_standard_virtualenv_active; then
         ####  Using Hatch and VirtualEnv Dev Environment #####
@@ -186,7 +194,7 @@
         echo "Repairing missing __git_ps1"
         . /usr/local/opt/git/etc/bash_completion.d/git-prompt.sh
       fi
-      __git_ps1 "\n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
+      __git_ps1 "\n$DOCKER_SWARM_PROMPT \n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
     }
 
     # Turns out I don't like how this is working in practice.  If I've transitioned back from another terminal and want to execute the previous
