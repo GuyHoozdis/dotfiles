@@ -193,38 +193,12 @@ endif
     set number
 
 "
-" ## Colorschemes:
+" Colorschemes:
 "
-" These seem to work well for me for code and text files.  The
-" folds are easy to see in these.
-" -------------
-"  * zellner
-"  * ron
-"  * delek
-"  * torte
+" The default colorscheme is set here, but will be overriden, per
+" language, under ~/.vim/after/ftplugin/<language>.vim
 "
-" Highcontrast good for diff views
-" -------------
-"  * blue
-"
-"
-"  * murphy
-"  * pablo
-"  * peachpuff
-"  * slate <-- I've enjoyed this one, but Folds are hard to see.
-"  * zellner <-- I've enjoyed this one two
-"  * delek <-- I've enjoyed this one two
-"
-" I seem to rotate between slate, zellner, and delek the most.
-"
-    " https://github.com/ajh17/Spacegray.vim
-    colorscheme spacegray
-    let g:spacegray_underline_search = 1
-    let g:spacegray_use_italics = 1
-
-    "colorscheme zellner
-    "colorscheme delek
-    "colorscheme solarized
+    colorscheme solarized
 
     if &diff
       " http://blog.binchen.org/posts/use-vimdiff-to-resolve-git-merge-conflicts-effectively.html
