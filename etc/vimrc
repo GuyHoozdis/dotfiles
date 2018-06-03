@@ -82,6 +82,17 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('vim-scripts/Conque-Shell')
   call dein#add('tpope/vim-repeat')         " Another tpope miracle
   call dein#add('tpope/vim-speeddating')    " Another tpope miracle
+  call dein#add('ajh17/spacegray.vim')
+  " JavaScript IDE
+  "   https://javascriptplayground.com/vim-for-javascript/
+  " This looks like it will take some getting used to.
+  "   https://github.com/SirVer/ultisnips
+  call dein#add('pangloss/vim-javascript')
+  call dein#add('mxw/vim-jsx')
+  call dein#add('leshill/vim-json')
+
+  " Under Development
+  call dein#add('~/Development/guyhoozdis/vim-thinkscript/')
   call dein#add('altercation/vim-colors-solarized')
 
   " -----------------------------------------------------------------------------
@@ -206,9 +217,14 @@ endif
 "
 " I seem to rotate between slate, zellner, and delek the most.
 "
+    " https://github.com/ajh17/Spacegray.vim
+    colorscheme spacegray
+    let g:spacegray_underline_search = 1
+    let g:spacegray_use_italics = 1
+
     "colorscheme zellner
     "colorscheme delek
-    colorscheme solarized
+    "colorscheme solarized
 
     if &diff
       " http://blog.binchen.org/posts/use-vimdiff-to-resolve-git-merge-conflicts-effectively.html
@@ -291,7 +307,7 @@ let vim_markdown_preview_hotkey='<C-m>'
 " Custom NERDTree Configuration
 "
     nmap <Leader>nt :NERDTreeToggle<CR>
-    let NERDTreeIgnore = ['\.pyc$']
+    let NERDTreeIgnore = ['\.pyc$', 'node_modules/']
 
 "
 " Fugitive customization
@@ -328,6 +344,13 @@ let vim_markdown_preview_hotkey='<C-m>'
     nmap <Leader>pl :PymodeLintToggle<CR>
     nmap <Leader>ll :PymodeLint<CR>
     nmap <Leader>pmd :call pymode#troubleshooting#test()<CR>
+
+
+"
+" JavaScript
+"
+    let g:javascript_plugin_flow = 1
+    let g:jsx_ext_required = 0
 
 
 "
