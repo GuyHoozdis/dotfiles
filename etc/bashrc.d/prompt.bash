@@ -194,7 +194,7 @@
         echo "Repairing missing __git_ps1"
         . /usr/local/opt/git/etc/bash_completion.d/git-prompt.sh
       fi
-      __git_ps1 "\n$DOCKER_SWARM_PROMPT \n$APP_ENV_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
+      __git_ps1 "\n$APP_ENV_PROMPT \n$DOCKER_SWARM_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
     }
 
     # Turns out I don't like how this is working in practice.  If I've transitioned back from another terminal and want to execute the previous
