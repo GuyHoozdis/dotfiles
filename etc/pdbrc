@@ -90,9 +90,8 @@ from pyutils.ipython.terminal.utils import which_test
 # TODO:
 # - If you like this, then make it a little more robust
 # - Actually do, the import...
-MACROS = './.macros'
+import sys
 from os import path
-if path.isdir(MACROS):
-  import sys
-  sys.path.append(MACROS)
-
+MACROS = './.macros'
+sys.path.append(MACROS) if path.isdir(MACROS) else None
+del(MACROS, sys, path)
