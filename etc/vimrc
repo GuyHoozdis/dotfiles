@@ -306,14 +306,22 @@ let vim_markdown_preview_hotkey='<C-m>'
 " RopeVIM
 " - https://github.com/python-rope/ropevim#variables
 " - This is documentation to the original. PymodeVIM is similar, but does not
-"   expose exactly the same thing variables.
+"   expose exactly the same thing/variables.
 "
     let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.sset_trace()  # XXX Breakpoint'
+    let g:pymode_rope = 1
     let g:pymode_lint_on_write = 0
     let g:pymode_doc = 0
     let g:pymode_rope_complete_on_dot = 0
     let g:pymode_rope_goto_definition_cmd = 'e'
     let g:pymode_syntax_print_as_function = 1
+
+    " Folding is broken in pymode
+    let g:pymode_folding = 0
+
+
+    " These are too disruptive unless they have been well tuned.
+    " let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'mccabe']
 
     nmap <Leader>pl :PymodeLintToggle<CR>
     nmap <Leader>ll :PymodeLint<CR>
