@@ -76,7 +76,7 @@
 
     brew install pyenv
     brew install pyenv-virtualenv
-    #brew install rbenv
+    brew install rbenv
 
 
 # Node version manager

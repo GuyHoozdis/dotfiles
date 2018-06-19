@@ -50,6 +50,11 @@
     esac
 
 
+# Initialize the Ruby Version manager
+
+    eval "$(rbenv init -)"
+
+
 # Arcanist Configuration
 #
 # This is actually done in the .local version of this file.  It is just left here
