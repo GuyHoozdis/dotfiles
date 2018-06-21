@@ -42,6 +42,8 @@
 # Make env output easier to read
 
     alias env='env | sort'
+    alias app-env='env | grep -e APP_ -e MYSQL_ -e AWS_'
+
 
 # PyEnv helper
 #
