@@ -49,7 +49,9 @@
 #   Homebrew. Pointing RLWRAP_FILTERDIR there or putting my filters in that
 #   directory would mean things break when brew upgrades rlwrap.
 
-    export EDITOR=/usr/bin/vim
+    [[ -e /usr/local/bin/vi ]] \
+      && export EDITOR=/usr/local/bin/vi \
+      || export EDITOR=/usr/bin/vi
     export RLWRAP_HOME=$HOME/.rlwrap
     export RLWRAP_EDITOR="vi '+call cursor(%L, %C)'"
     #export RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters
