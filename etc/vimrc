@@ -177,8 +177,14 @@ endif
 "
 " Format/Prettify
 "
+" TODO: The hex-editing formatting command is quick-and-dirty.
+" See http://vimdoc.sourceforge.net/htmldoc/tips.html#hex-editing
+" for upgrading hex-editing mode, if it ever comes to that.
+"
     nmap =j :%!python -m json.tool<CR>
     nmap =x :%!xmllint --format --recover --encode UTF-8 -<CR>
+    nmap =hex :%!xxd<CR>
+    nmap =unhex :%!xxd -r<CR>
 
 "
 " Assume these values for filetypes not explicitly defined in
@@ -278,10 +284,19 @@ let vim_markdown_preview_hotkey='<C-m>'
 
 
 "
+" CtrlP
+"
+    let g:ctrlp_working_path_mode = 'rc'
+    let g:ctrlp_lazy_update = 1
+    let g:ctrlp_match_current_file = 0
+    let g:ctrlp_line_prefix = 'search> '
+
+
+"
 " Custom NERDTree Configuration
 "
     nmap <Leader>nt :NERDTreeToggle<CR>
-    let NERDTreeIgnore = ['\.pyc$', 'node_modules/']
+    let NERDTreeIgnore = ['\.pyc$', 'node_modules/', 'venv',]
 
 "
 " Fugitive customization
