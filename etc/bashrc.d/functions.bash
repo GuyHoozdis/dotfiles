@@ -145,3 +145,20 @@
 
       printf "\e[${styles[${STYLE:-normal}]};${colors[${COLOR:-white}]}m%s\e[0m${ORS-\n}" "$*"
     }
+
+
+# JSON CLI Utilities
+
+if ! which -s jq; then
+  function jqless() {
+    echo "You need to install 'jq' first, then start a new terminal session"
+  }
+else
+  function jqless() {
+    [[ -z $# ]] && echo "Missing required input!"
+
+    # Intentionally not using `set -o pipefail`
+    jq -C $@ | less -R --quit-if-one-screen
+    return ${PIPESTATUS[0]}
+  }
+fi
