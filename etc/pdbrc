@@ -29,9 +29,10 @@ alias uuu u;;u;;u
 alias dd d;;d
 alias ddd d;;d;;d
 
-# Cast dict-like or list-like objects and then pretty-print them
+# Cast dict-like, list-like, or object-like instances then pretty-print them
 alias ppd pp dict(%1)
 alias ppl pp list(%1)
+alias ppo pp vars(%1)
 
 # Deserialize a JSON string and then pretty-print it
 from json import loads
@@ -73,7 +74,8 @@ from pyutils.ipython.terminal.utils import which_test
 #
 # ```
 # ipdb> cprint.cprint('{style.bold}{color.red}test{color.stop}', sep=' ', file=sys.stdout)
-# test ipdb>
+# test
+# ipdb>
 # ```
 #
 # If you need a little more flexibility, you can format the message yourself and
