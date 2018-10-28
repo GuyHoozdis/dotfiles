@@ -78,10 +78,16 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('JamshedVesuna/vim-markdown-preview')
 
   " Experimental - Things I am giving a chance, but might not keep
-  call dein#add('alfredodeza/pytest.vim')
-  call dein#add('vim-scripts/Conque-Shell')
   call dein#add('tpope/vim-repeat')         " Another tpope miracle
   call dein#add('tpope/vim-speeddating')    " Another tpope miracle
+  " Above: These should be promoted to standard packages I use
+  " Below: These are things I came upon in http://github.com/docker-library/docs/DockerFile
+  "        but I haven't enabled it yet.
+  "call dein#add('jtratner/vim-flavored-markdown')
+
+  " I haven't used these and don't think that I will
+  call dein#add('vim-scripts/Conque-Shell')
+  call dein#add('alfredodeza/pytest.vim')
   call dein#add('ajh17/spacegray.vim')
   " JavaScript IDE
   "   https://javascriptplayground.com/vim-for-javascript/
