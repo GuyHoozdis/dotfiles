@@ -74,7 +74,11 @@
     }
 
     _get_sourced_docker_machine_name_for_prompt() {
-      echo "${DOCKER_MACHINE_NAME-System}"
+      local machine_name=${DOCKER_MACHINE_NAME-System}
+      printf "${DOCKER_MACHINE_NAME-System}" \
+        && [[ -n $COMPOSE_FILE ]] \
+        && printf " (%s)" $COMPOSE_FILE
+      printf "\n"
     }
 
     _get_current_venv_name_for_prompt() {
