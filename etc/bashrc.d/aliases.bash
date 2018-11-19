@@ -42,7 +42,7 @@
 # Make env output easier to read
 
     alias env='env | sort'
-    alias app-env='env | grep -e APP_ -e MYSQL_ -e AWS_'
+    alias app-env='env | grep -e APP_ -e MYSQL_ -e AWS_ -e CELERY_'
 
 
 # PyEnv helper
@@ -52,6 +52,9 @@
 # example, when a project needs bothPY2 and PY3 available so that tox will run.
 
     alias cdsitepackages='pushd ~/.pyenv/versions/$(pyenv version-name)/lib/python2.7/site-packages/'
+    alias pyenv-list-installable="pyenv install -l | egrep '^[ ]+[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
+    alias pyenv-list-installed="pyenv versions --skip-aliases --bare | egrep '^[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
+    alias pyenv-list-virtualenvs="pyenv virtualenvs --skip-aliases --bare"
 
 
 # Dotfiles helpers
@@ -119,11 +122,6 @@
 
     alias path='echo -e ${PATH//:/\\n}'
 
-
-# Extensions to standard pyenv commands
-
-    alias pyenv-list-installable="pyenv install -l | egrep '^[ ]+[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
-    alias pyenv-list-installed="pyenv versions --skip-aliases --bare | egrep '^[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
 
 # Render the Zen
 #
