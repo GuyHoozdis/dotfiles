@@ -108,7 +108,17 @@
         #   occurs when node has not been installed yet.
         # - There are more assumptions built into this logic that really should be abstracted.
         #python_binary=$(greadlink $(which python)); echo -n "$(basename $python_binary)"
-        echo "Handle this"
+        local python_binary=$(greadlink $(which python))
+        # local system_or_brew="Unknown"
+        if [[ $python_binary = /usr/local/bin/python* ]]; then
+          # system_or_brew="Brew"
+          echo -n "Brewed $(basename $python_binary)"
+        elif [[ $python_binary = /usr/bin/python* ]]; then
+          # system_or_brew="System"
+          echo -n "System $(basename $python_binary)"
+        else
+          echo -n "$python_binary"
+        fi
       fi
     }
 
