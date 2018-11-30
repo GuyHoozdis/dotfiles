@@ -81,7 +81,13 @@
     #alias myip='dig TXT +short o-o.myaddr.l.google.com @ns1.google.com'
     alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 
-    alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
+    if which -s highlight.py ; then
+      alias ifactive="ifconfig \
+        | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active' \
+        | highlight.py -e '(?<=inet )[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ' -"
+    else
+      alias ifactive="ifconfig | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active'"
+    fi
 
     # !!!: ngrep needs to be installed for this to work.
     #alias sniff="sudo ngrep -d 'en0' -t '^(GET|POST) ' 'tcp and port 80'"
