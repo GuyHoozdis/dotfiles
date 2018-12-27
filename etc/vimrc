@@ -77,10 +77,16 @@ if dein#load_state('~/.vim/bundles')
   "   https://github.com/JamshedVesuna/vim-markdown-preview
   call dein#add('JamshedVesuna/vim-markdown-preview')
 
+  " Above: These should be promoted to standard packages I use
   " Experimental - Things I am giving a chance, but might not keep
   call dein#add('tpope/vim-repeat')         " Another tpope miracle
   call dein#add('tpope/vim-speeddating')    " Another tpope miracle
-  " Above: These should be promoted to standard packages I use
+
+  " YAML & Jinja Syntax Highlighting
+  "   https://pinrojas.com/2017/01/25/highlight-ansible-yaml-and-jinja-syntax-in-vim-editor/
+  call dein#add('chase/vim-ansible-yaml')
+  call dein#add('lepture/vim-jinja')
+
   " Below: These are things I came upon in http://github.com/docker-library/docs/DockerFile
   "        but I haven't enabled it yet.
   "call dein#add('jtratner/vim-flavored-markdown')
