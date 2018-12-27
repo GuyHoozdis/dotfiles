@@ -82,6 +82,8 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('tpope/vim-repeat')         " Another tpope miracle
   call dein#add('tpope/vim-speeddating')    " Another tpope miracle
 
+  " XXX: Take a closer look at this.  It may merely be an ordering problem,
+  " but this doesn't appear to work.
   " YAML & Jinja Syntax Highlighting
   "   https://pinrojas.com/2017/01/25/highlight-ansible-yaml-and-jinja-syntax-in-vim-editor/
   call dein#add('chase/vim-ansible-yaml')
