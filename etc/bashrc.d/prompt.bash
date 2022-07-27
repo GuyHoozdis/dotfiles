@@ -87,34 +87,14 @@
       elif _is_pyenv_active; then
         venv=$(pyenv version-name); echo -n "${venv//:/|}"
       else
-# ======================================================================================
-# This approach, just wasn't working.  KISS.
-# ======================================================================================
-#        local python_binary=$(greadlink $(which python))
-#        local system_or_brew="Unknown:"
-#        if [[ $python_binary == /usr/local/bin/* ]]; then
-#          system_or_brew="Brew   :"
-#        elif [[ $python_binary == /usr/bin/* ]]; then
-#          system_or_brew="System :"
-#        fi
-#        # XXX: This is broken for now.
-#        # If any parameters are given, then return the label (i.e. "Brew" or "System")
-#        [[ $# ]] && echo -n "$(basename $python_binary)" || echo -n "${system_or_brew}"
-# ======================================================================================
-        # !!!: Restoring my home directory onto a fresh OS install reveals some weaknesses.
-        # - Applications that are installed outside of $HOME haven't been layed down yet.
-        # - $HOME/node_modules/.bin/which replicates the BSD utility and is found first
-        #   when I prioritize my personal and custom paths over system paths.  The problem
-        #   occurs when node has not been installed yet.
-        # - There are more assumptions built into this logic that really should be abstracted.
-        #python_binary=$(greadlink $(which python)); echo -n "$(basename $python_binary)"
-        local python_binary=$(greadlink $(which python))
-        # local system_or_brew="Unknown"
+        local python_binary="Not Installed"
+        if which -s python; then
+          python_binary=$(greadlink $(which python))
+        fi
+
         if [[ $python_binary = /usr/local/bin/python* ]]; then
-          # system_or_brew="Brew"
           echo -n "Brewed $(basename $python_binary)"
         elif [[ $python_binary = /usr/bin/python* ]]; then
-          # system_or_brew="System"
           echo -n "System $(basename $python_binary)"
         else
           echo -n "$python_binary"
