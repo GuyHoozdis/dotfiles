@@ -49,5 +49,6 @@
 
 [mailmap]
   file = ~/.mailmap.local
+
 [mergetool]
 	prompt = true
