@@ -152,3 +152,10 @@
     if which -s rlwrap; then
       alias node="NODE_NO_READLINE=1 rlwrap node"
     fi
+
+
+# HTTPie w/ SSL by default
+
+  if which -s http; then
+    alias https='http --default-scheme=https'
+  fi
