@@ -1,0 +1,111 @@
+#!/usr/bin/env node
+/*
+ * http://amacfie.github.io/2017/05/20/building-JS-shell/
+ *
+ * I was most of the way through this when I saw
+ *    https://github.com/streamich/jssh
+ *
+ * I might still just like to build my own.
+ *
+ */
+
+const util = require('util');
+const colors = require('colors/safe');
+const { isUndefined, get } = require('lodash');
+const vm = require('vm');
+
+
+var inspect = function(obj) {
+  if (obj && typeof obj === 'object') {
+    obj['__inspect'] = true;
+  }
+
+  return obj;
+};
+
+
+//
+//
+//
+var consoleWriter = function(output) {
+  var isSS = (
+    !isUndefined(output)
+      && get(output, 'hasOwnProperty', false)
+      && output.hasOwnProperty('stdout')
+      && output.hasOwnProperty('stderr')
+  );
+
+  if (isSS) {
+    var stderrPart = output.stderr || '';
+    var stdoutPart = output.stdout || '';
+    return stderrPart + stdoutPart;
+
+  } else {
+
+    // return util.inspect(output, null, null, true);
+    if (typeof output === 'object') {
+      delete output['__inspect'];
+    }
+    return util.inspect(output, null, null, true);
+  }
+};
+
+
+//
+// Custom REPL Input Evaluator
+//
+var myEval = function(cmd, context, filename, callback) {
+  let result;
+  try {
+    result = vm.runInThisContext(cmd)
+  } catch (e) {
+    if (isRecoverableError(e)) {
+      return callback(new repl.Recoverable(e));
+    }
+  }
+  callback(null, result);
+}
+
+
+const isRecoverableError = function(error) {
+  if (error.name === 'SyntaxError') {
+    return /^(Unexpected end of input|Unexpected token)/.test(error.message);
+  }
+  return false;
+}
+
+
+
+//
+// terminal:false disables readline (just like env NODE_NO_READLINE=1):
+//
+const replConfig = {
+  terminal:false,
+  prompt: colors.red('> '),
+  // eval: myEval,
+  ignoreUndefined: true,
+  useColors: true,
+  breakEvalOnSigint: true,
+  writer: consoleWriter,
+};
+
+var myrepl = require("repl").start(replConfig);
+var shell = require('shelljs');
+Object.assign(myrepl.context, shell);
+myrepl.context['inspect'] = inspect;
+
+
+//
+// Add REPL command rlwrap_complete(prefix) that prints a simple list of completions of prefix
+//
+myrepl.context['rlwrap_complete'] = function(prefix) {
+  myrepl.complete(prefix, function(err, data) {
+    for (x of data[0]) { console.log(x); }
+  });
+}
+
+
+myrepl.on('exit', () => {
+  console.log('Received "exit" event from repl!');
+  process.exit();
+});

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+
+# XXX: This is what I originally had.
+# RLWRAP_FILTERDIR=$HOME/.local/share/rlwrap/filters \
+#   rlwrap -z node_complete -e '' -c $HOME/.local/bin/vi-enabled-node
+
+# ######################################################################
+# ######################################################################
+
+
+# XXX: Trying some different approaches
+# RLWRAP_DEFAULT_FILTERDIR=usr/local/share/rlwrap/filters
+# RLWRAP_USER_FILTERDIR=$HOME/.local/share/rlwrap/filters
+
+# export PATH=$PATH:$RLWRAP_DEFAULT_FILTERDIR
+
+# RLWRAP_FILTERDIR=${RLWRAP_FILTERDIR-$RLWRAP_USER_FILTERDIR} \
+#   rlwrap -z node_complete -e '' -c $HOME/.local/bin/vi-enabled-node
+
+
+# ######################################################################
+# ######################################################################
+
+
+# ######################################################################
+# To get this working I had to:
+#   $ pushd /usr/local/share/rlwrap/filters
+#   $ gln -s ~/.local/share/rlwrap/filters/node_complete
+#   $ popd
+#
+# ... and it is ready to go!
+#
+#   $ node-but-better
+#   > var lo = require('lodash')
+#   > lo.<tab><tab>
+#   ...
+
+
+# TODO: Figure out how to pass command-line arguments to node
+RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters \
+  rlwrap -z node_complete -e '' -c $HOME/bin/vi-enabled-node
+
+# XXX: None of these worked... :/
+# RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters \
+#   rlwrap -z node_complete -e '' -c $HOME/bin/vi-enabled-node $@
+
+# RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters \
+#   rlwrap -z node_complete -e '' -c "$HOME/bin/vi-enabled-node $@"
+
+# RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters \
+#   rlwrap -z node_complete -e '' -c "$(which node) $@"
+
+# RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters \
+#   rlwrap -z node_complete -e '' -c /usr/local/bin/node
