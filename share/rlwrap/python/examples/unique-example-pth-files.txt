@@ -1,0 +1,8 @@
+/Users/sully/.pyenv/versions/2.7.13/envs/factory-boy-dev/lib/python2.7/site-packages/sphinxcontrib_websupport-1.0.1-py3.6-nspkg.pth
+/Users/sully/.pyenv/versions/2.7.13/envs/cliffdemo/lib/python2.7/site-packages/easy-install.pth
+/Users/sully/.pyenv/versions/2.7.13/envs/capi/lib/python2.7/site-packages/newrelic.pth
+/Users/sully/.pyenv/versions/2.7.13/envs/bi-tools/lib/python2.7/site-packages/pytest-cov.pth
+/Users/sully/.pyenv/versions/2.7.13/envs/bi-tools/lib/python2.7/site-packages/manhole.pth
+/Users/sully/.pyenv/versions/3.6.1/envs/mitm/lib/python3.6/site-packages/ruamel.yaml-0.13.14-py3.6-nspkg.pth
+/Users/sully/.pyenv/versions/2.7.13/envs/factory-boy-dev/lib/python2.7/site-packages/zest.releaser-6.12.2-py2.7-nspkg.pth
+/Users/sully/.pyenv/versions/2.7.13/envs/bi-tools/lib/python2.7/site-packages/configparser-3.5.0-py2.7-nspkg.pth
