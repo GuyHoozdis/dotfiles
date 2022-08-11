@@ -23,7 +23,8 @@
 #  into a pager where the color is preserved and line numbers are added.
 
     function codetree() {
-        tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
+        local ignore='.git|node_modules|bower_components|.ropeproject|__pycache__|.pytest_cache'
+        tree -aC -I $ignore --dirsfirst "$@" | less -FRNX;
     }
 
 
@@ -134,16 +135,58 @@
       local styles=(["normal"]=0 ["bold"]=1 ["dim"]=2 ["italic"]=3 ["underline"]=4)
       local colors=(["black"]=30 ["red"]=31 ["green"]=32 ["yellow"]=33 ["blue"]=34 ["purple"]=35 ["cyan"]=36 ["white"]=37)
 
+      # TODO: Re-write the help text as a HEREDOC and redirect output to stderr.
+      #  cat - >&2 <<EOM
+      #  Usage: [STYLE=normal] [COLOR=white] [ORS=\\n] ${FUNCNAME[0]} <FMT> [ARG...]
+      #
+      #    STYLE - ...
+      #    COLOR - ...
+      #
+      #.... snip ....
+      #
+      #  EOM
       if [ $# -eq 0 ]; then
-        printf 'Usage: [STYLE=normal] [COLOR=white] [ORS=\\n] %s "your message goes here"\n' ${FUNCNAME[0]}
+        printf 'Usage: [STYLE=normal] [COLOR=white] [ORS=\\n] %s <FMT> [ARG...]\n' ${FUNCNAME[0]}
         printf '\n'
-        printf '  STYLE - Styling to apply (normal, bold, idk, underline, italic)\n'
+        printf '  STYLE - Styling to apply (normal, bold, dim, underline, italic)\n'
         printf '  COLOR - Colors (black, red, green, yellow, blue, purple, cyan, white)\n'
         printf '    ORS - Output record seperator.\n'
-        return
+        printf '\n'
+        printf 'Examples:\n'
+        printf '\n'
+        printf '  Color a simple message w/o any variable replacement.\n'
+        printf '  $ COLOR=red %s "color me bad"\n' ${FUNCNAME[0]}
+        printf '\n'
+        printf '  Format a message template from arguments.\n'
+        printf '  $ COLOR=red %s "color %%s %%s" me bad\n' ${FUNCNAME[0]}
+        printf '\n'
+        printf '  Apply both color and style.\n'
+        printf '  $ COLOR=green STYLE=bold %s "color %%s %%s" you good\n' ${FUNCNAME[0]}
+        printf '\n'
+        printf '  Enclose complex parameters in quotes.\n'
+        printf '  $ COLOR=blue STYLE=underline %s "color %%s %%s" me "both good and bad simultaneously"\n' ${FUNCNAME[0]}
+        printf '\n'
+        printf '  Render multiple messages (seperated by a newline by default).\n'
+        printf '  $ COLOR=blue %s "%%s" a b c d\n' ${FUNCNAME[0]}
+        printf '  $ COLOR=blue %s "%%s" "a b" c d\n' ${FUNCNAME[0]}
+        printf '\n'
+        printf '  Change the ORS to create comma-seperated output (Notice color/style is not applied to the ORS).\n'
+        printf '  $ COLOR=cyan ORS=", " %s "%%s" a b c d\n' ${FUNCNAME[0]}
+        printf '  $ COLOR=cyan ORS=", " %s "%%s" "a b" c d\n' ${FUNCNAME[0]}
+        printf '\n'
+        printf '  Replace printf (Intended to emphasize the similarity in behavior, not a recommendation).\n'
+        printf '  $ alias printf=format-message\n'
+        printf '  $ COLOR=cyan printf "%%s" one two three\n'
+        printf '  $ \printf "%%s" "Execute the original command" "instead of the alias" "by preceding the command with a backslash\n'
+        return 1
       fi
 
-      printf "\e[${styles[${STYLE:-normal}]};${colors[${COLOR:-white}]}m%s\e[0m${ORS-\n}" "$*"
+      # Assume the first parameter is a string template.  Doing this ensures that the behavior of this function, with regard
+      # to processing arguments while rendering a string template, is identical to printf.
+      local FMT=$1; shift;
+
+      # By default, this function post-pends a newline character to the string format template - printf does not do that.
+      printf "\e[${styles[${STYLE:-normal}]};${colors[${COLOR:-white}]}m${FMT}\e[0m${ORS:-\n}" "$@"
     }
 
 
