@@ -71,7 +71,10 @@ if dein#load_state('~/.vim/bundles')
   call dein#add('ctrlpvim/ctrlp.vim')       " Ctrl-P - File/Directory search
   call dein#add('editorconfig/editorconfig-vim')
   call dein#add('fholgado/minibufexpl.vim')   " Mini Buffer Explorer
-  call dein#add('python-mode/python-mode')    " Python Mode
+  " XXX: Disable pymode  :(
+  " This has been causing some problems.  It might be how the rope
+  " package integrates with python3, but I haven't looked into it.
+  "call dein#add('python-mode/python-mode')    " Python Mode
   call dein#add('~/Development/guyhoozdis/vim-n1ql')
   " This required a bit of setup, more than I would normally tolerate, but it is useful and I do use it.
   "   https://github.com/JamshedVesuna/vim-markdown-preview
@@ -310,7 +313,7 @@ let vim_markdown_preview_hotkey='<C-m>'
 " Custom NERDTree Configuration
 "
     nmap <Leader>nt :NERDTreeToggle<CR>
-    let NERDTreeIgnore = ['\.pyc$', 'node_modules/', 'venv',]
+    let NERDTreeIgnore = ['\.pyc$', 'node_modules/', 'venv', '__pycache__']
 
 "
 " Fugitive customization
@@ -337,6 +340,7 @@ let vim_markdown_preview_hotkey='<C-m>'
 " - This is documentation to the original. PymodeVIM is similar, but does not
 "   expose exactly the same thing/variables.
 "
+    let g:pymode_python = 'python3'
     let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.sset_trace()  # XXX Breakpoint'
     let g:pymode_rope = 1
     let g:pymode_lint_on_write = 0
