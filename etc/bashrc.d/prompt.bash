@@ -186,7 +186,12 @@
     function set_prompt() {
       if ! type -t __git_ps1 >/dev/null; then
         echo "Repairing missing __git_ps1"
-        . /usr/local/opt/git/etc/bash_completion.d/git-prompt.sh
+        local filepath_suffix=opt/git/etc/bash_completion.d/git-prompt.sh
+        if [ -f /usr/local/$filepath_suffix ]; then
+          . /usr/local/$filepath_suffix
+        elif [ -f /opt/homebrew/$filepath_suffix ]; then
+          . /opt/homebrew/$filepath_suffix
+        fi
       fi
       __git_ps1 "\n$APP_ENV_PROMPT \n$DOCKER_SWARM_PROMPT \n$VIRTENV_PROMPT" "\n$HOST_INFO_PROMPT \n\$ " "\n$BRANCH_NAME_PROMPT_GIT"
     }
