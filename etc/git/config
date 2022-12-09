@@ -43,6 +43,7 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
+    wipe = !git stash push --include-untracked && git stash drop
 [include]
   path = ~/.gitconfig.local
 
@@ -51,3 +52,5 @@
 
 [mergetool]
 	prompt = true
+[hub]
+	protocol = ssh
