@@ -1,7 +1,7 @@
 # Another Dotfiles Repo
 
 
-Starting from scratch...
+Starting from scratch... again.
 
 
 ## Goals
