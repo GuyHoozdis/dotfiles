@@ -43,7 +43,7 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
-    wipe = !git stash push --include-untracked && git stash drop
+    wipe = clean -xfd
 [include]
   path = ~/.gitconfig.local
 
