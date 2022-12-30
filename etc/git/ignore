@@ -13,6 +13,7 @@ ipython_log.py
 ipynb_checkpoints/
 .ropeproject/
 pylama.ini
+__pycache__
 
 
 # VIM #
