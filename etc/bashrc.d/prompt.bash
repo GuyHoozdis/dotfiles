@@ -1,3 +1,13 @@
+# The exports are sourced before this, so those values are available
+# to be used in this module.  In pseudo code; the load order goes
+# like this:
+#
+#   for filename in {exports,aliases,functions,app-config,prompt};
+#     load filename.local.bash if filename.local.bash exists;
+#     load filename.bash if filename.bash exists;
+#
+# -----------------------------------------------------------------------------
+
 # This is to support scenarios where the subshell is passed
 # `PROMPT_COMMAND`, but then can't access `set_prompt` nor
 # any of the functions is relies upon.

@@ -1,3 +1,12 @@
+# This is the first module to be sourced.  In pseudo code; the load order goes
+# like this:
+#
+#   for filename in {exports,aliases,functions,app-config,prompt};
+#     load filename.local.bash if filename.local.bash exists;
+#     load filename.bash if filename.bash exists;
+#
+# -----------------------------------------------------------------------------
+
 # General System Configuration
 ##############################
 
