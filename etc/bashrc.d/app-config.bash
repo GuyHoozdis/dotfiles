@@ -1,3 +1,12 @@
+# The exports are sourced before this, so those values are available
+# to be used in this module.  In pseudo code; the load order goes
+# like this:
+#
+#   for filename in {exports,aliases,functions,app-config,prompt};
+#     load filename.local.bash if filename.local.bash exists;
+#     load filename.bash if filename.bash exists;
+#
+# -----------------------------------------------------------------------------
 
 # Initialize all the completions
 
@@ -5,24 +14,6 @@
 
 
 # Initialize the Python version manager
-
-# XXX: Disabling automatically invoking pyenv, because I want to
-#      try to use the new tools pipenv and hatch.  This initialization
-#      will be replaced by a function.
-#
-    #if [[ -z $VIRTUAL_ENV ]]; then
-    #  export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-    #  if which -s pyenv; then
-    #       eval "$(pyenv init -)"
-    #  else
-    #      echo "Failed to initialize PyEnv"
-    #  fi
-    #  if which -s pyenv-virtualenv; then
-    #      eval "$(pyenv virtualenv-init -)"
-    #  else
-    #      echo "Failed to initialize PyEnv VitualEnv"
-    #  fi
-    #fi
 
     # ???: WHY don't I just put these in the thunk itself?
     case $PYTHON_ENVIRONMENT in
@@ -52,6 +43,7 @@
 
 # Initialize the Ruby Version manager
 
+    # TODO: Test if rbenv is installed first.
     eval "$(rbenv init -)"
 
 

@@ -21,10 +21,15 @@
     brew install gawk
     brew install tree
     brew install readline
-    brew install rlwrap
+
+# !!!: This was really tedious to get working, but it did work.  I only needed it
+# to get vi-bindings in a node REPL.  I haven't used that in a while, so hold off
+# on this and go back over the whole install and setup process again.  Maybe it has
+# changed and is easier now.
+    #brew install rlwrap
 
 
-# Bash 4
+# Bash 5
 # Note: Don't forget to add `/usr/local/bin/bash` to `/etc/shells` before running `chsh`.
 #
 #  * https://www.gnu.org/software/bash/
@@ -40,29 +45,23 @@
 #  * https://github.com/ggreer/the_silver_searcher
 #  * https://hub.github.com/
 #  * https://github.com/joeyespo/grip
+#  * https://github.com/DanielVartanov/willgit
 #  * ...
 
     brew install git
     brew install git-flow
-    brew install willgit
     brew install hub
     brew install the_silver_searcher
     brew install jq
     brew install httpie
     brew install mitmproxy
-    brew install awscli
     brew install editorconfig
-    brew install grip
+
+# !!!: Review these tools to see if you want to keep them.
+    #brew install willgit
+    #brew install grip
+    #brew install awscli
     #brew install z
-
-
-# XXX: Docker for Mac runs containers natively and can
-# co-exist with machine, but you should install Docker
-# for Mac first.
-#
-# This leaves Kenimatics off the system
-    #brew install docker-machine
-    #brew install docker-compose
 
     # Install nmap with the GUI commponent
     brew install nmap --with-pygtk
@@ -79,17 +78,19 @@
     brew install rbenv
 
 
+# !!!: Disabling this while I check to see if it still needs my work around.
 # Node version manager
 #
 # The brew script seems to be evolving (for the better), but it still needs
 # a little help preparing directories.
 
-    brew install n
-    sudo mkdir -p /usr/local/n/versions/{node,ios}
-    eval $(stat -s $(brew --cellar))
-    sudo chown -R $st_uid:$st_gid /usr/local/n
+    #brew install n
+    #sudo mkdir -p /usr/local/n/versions/{node,ios}
+    #eval $(stat -s $(brew --cellar))
+    #sudo chown -R $st_uid:$st_gid /usr/local/n
 
 
+# XXX: Disabling these because I use docker instead of a local install.
 # Databases
 #
 #  * MySQL (I eff-ing hate you MySQL)
@@ -97,12 +98,12 @@
 #  * Redis
 #  * Mongo
 
-    brew install percona-server
-    brew install redis
-    brew install libcouchbase
+    #brew install percona-server
+    #brew install redis
+    #brew install libcouchbase
 
-    brew install postgresql
-    brew install mongo
+    #brew install postgresql
+    #brew install mongo
 
 
 # Look into these
@@ -124,3 +125,4 @@
 # - ncdu
 # - terminal-notifier
 # - homebrew/completions/brew-cask-completion
+# - zmap (https://zmap.io - saw during a runZero webinar)

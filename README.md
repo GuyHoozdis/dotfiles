@@ -1,7 +1,10 @@
 # Another Dotfiles Repo
 
-
-Starting from scratch...
+Work in-progress:
+- Implement [XDG Base Directory Specification][xdg-base-dir-spec].
+- Investigate using `stow` to [manage configuration][stow-dotfiles] files under `$HOME`.
+- Decide how to handle the fact that OSX terminals are login terminals by default.
+- Reconsider sourcing .local version of bash files after the standard (to allow local overrides)
 
 
 ## Goals
@@ -26,7 +29,7 @@ are made on the system should be committed and pushed back up to the repo.
 
 For now; linking, backing up original files, and invoking the provisioning
 scripts that install a base set of utilities are going to be a manual process.
-I looked at [Dotbot][dotbot]
+I looked at [Dotbot][dotbot].
 
 This repo tries to imitate the [Linux Filesystem Heirarchy Standard][fhs] to
 achieve a sensible orgnization.  To that end, the repo can be cloned into
@@ -61,6 +64,7 @@ TODO ...
 
 ... a lot, but this is a start.
 
+
 Check out these references for further brew inspiration
 - https://gist.github.com/kevinelliott/3135044
 - https://github.com/paulirish/dotfiles
@@ -69,6 +73,8 @@ Check out these references for further brew inspiration
 - https://github.com/donnemartin/dev-setup
 
 
+[xdg-base-dir-spec]: https://specifications.freedesktop.org/basedir-spec/latest/
+[stow-dotfiles]: https://brandon.invergo.net/news/2012-05-26-using-gnu-stow-to-manage-your-dotfiles.html
 [homebrew]: https://brew.sh/
 [dotbot]: https://github.com/anishathalye/dotbot
 [fhs]: http://www.pathname.com/fhs/pub/fhs-2.3.html

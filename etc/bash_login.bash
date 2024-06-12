@@ -57,6 +57,7 @@
 # Files with the extension .local are not committed to the repo and will be sourced
 # immediately before the file of the same name without the .local extention.
 
+    # !!!: Change this to be configurable.
     BASH_CONFIG_DIR=~/.local/etc/bashrc.d
     [[ ! -d $BASH_CONFIG_DIR ]] && return
     for filename in {exports,aliases,functions,app-config,prompt}; do
