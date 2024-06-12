@@ -15,7 +15,8 @@
 
 # Initialize the Python version manager
 
-    if which -s pyenv; then
+    # If pyenv is installed and hasn't been initialized yet.
+    if which -s pyenv && [[ -z "${PYENV_SHELL}" ]]; then
       export PYENV_VIRTUALENV_DISABLE_PROMPT=1
       eval "$(pyenv init -)"
     fi
@@ -23,7 +24,8 @@
 
 # Initialize the Ruby Version manager
 
-    if which -s rbenv; then
+    # If rbenv is installed and hasn't been initialized yet.
+    if which -s rbenv && [[ -z "${RBENV_SHELL}" ]]; then
       eval "$(rbenv init -)"
     fi
 
