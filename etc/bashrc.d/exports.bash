@@ -33,10 +33,22 @@
   # 3. Enable the path that replicates the environment that has previously been used
   # 5. Profit
 
+    function exists_in_path () {
+      target=$1
+      echo -e ${PATH//:/\\n} | egrep "^${target}$" &>/dev/null
+      return $?
+    }
+
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
-    [[ -z $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
-    [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
+    # XXX: This -z isn't working how you intended.  You meant to be checking if the return code was zero.
+    #[[ -z $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
+    if ! exists_in_path $NODE_MODULES_BIN; then
+      [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
+    fi
+    if ! exists_in_path $PERSONAL_BIN; then
+      [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
+    fi
     export PATH
 
 

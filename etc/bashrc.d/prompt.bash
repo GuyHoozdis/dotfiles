@@ -195,7 +195,9 @@
 
     function set_prompt() {
       if ! type -t __git_ps1 >/dev/null; then
-        echo "Repairing missing __git_ps1"
+        # !!!: Leaving this in case I want to turn it on again, so I can see the 
+        # scenarios where this happens.
+        #echo "Repairing missing __git_ps1"
         local filepath_suffix=opt/git/etc/bash_completion.d/git-prompt.sh
         if [ -f /usr/local/$filepath_suffix ]; then
           . /usr/local/$filepath_suffix
