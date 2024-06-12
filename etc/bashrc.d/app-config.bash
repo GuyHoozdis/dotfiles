@@ -15,36 +15,17 @@
 
 # Initialize the Python version manager
 
-    # ???: WHY don't I just put these in the thunk itself?
-    case $PYTHON_ENVIRONMENT in
-      pyenv)
-          export PYENV_VIRTUALENV_DISABLE_PROMPT=1
-          if which -s pyenv; then
-            eval "$(pyenv init -)"
-          else
-            echo "Failed to initialize PyEnv"
-          fi
-
-          if which -s pyenv-virtualenv; then
-            eval "$(pyenv virtualenv-init -)"
-          else
-            echo "Failed to initialize PyEnv VitualEnv"
-          fi
-        ;;
-      pipenv)
-          echo "Initialize environment for $PYTHON_ENVIRONMENT"
-          eval "$(pipenv --completion)"
-        ;;
-      *)
-        echo "No python environment initialized"
-        ;;
-    esac
+    if which -s pyenv; then
+      export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+      eval "$(pyenv init -)"
+    fi
 
 
 # Initialize the Ruby Version manager
 
-    # TODO: Test if rbenv is installed first.
-    eval "$(rbenv init -)"
+    if which -s rbenv; then
+      eval "$(rbenv init -)"
+    fi
 
 
 # Arcanist Configuration

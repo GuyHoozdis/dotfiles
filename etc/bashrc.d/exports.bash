@@ -31,20 +31,12 @@
   # 1. Disable the variations and create the entrypoints
   # 2. Verify each detects the appropriate signal
   # 3. Enable the path that replicates the environment that has previously been used
-  # 4. Enable the path that allows for PipEnv and Hatch!
   # 5. Profit
-
-    #PIPENV_BIN=$HOME/.pipenv/bin
-    #PYENV_BIN=$HOME/.pyenv/bin
-    #[[ -d $PIPENV_BIN ]] && PATH=$PIPENV_BIN:$PATH
-    #[[ $(/usr/bin/which -s pyenv) ]] && [[ -d $PYENV_BIN ]] && PATH=$PYENV_BIN:$PATH
 
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
-    PERSONAL_PYTHON_BIN=$HOME/Library/Python/3.6/bin
     [[ -z $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
-    [[ -d $PERSONAL_PYTHON_BIN ]] && PATH=$PERSONAL_PYTHON_BIN:$PATH
     export PATH
 
 
@@ -61,10 +53,12 @@
     [[ -e /usr/local/bin/vi ]] \
       && export EDITOR=/usr/local/bin/vi \
       || export EDITOR=/usr/bin/vi
-    export RLWRAP_HOME=$HOME/.rlwrap
-    export RLWRAP_EDITOR="vi '+call cursor(%L, %C)'"
-    #export RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters
-    export RLWRAP_FILTERDIR=$HOME/.local/share/rlwrap/filters
+
+    # XXX: Disabling until I review and install rlwrap again.
+    #export RLWRAP_HOME=$HOME/.rlwrap
+    #export RLWRAP_EDITOR="vi '+call cursor(%L, %C)'"
+    ##export RLWRAP_FILTERDIR=/usr/local/share/rlwrap/filters
+    #export RLWRAP_FILTERDIR=$HOME/.local/share/rlwrap/filters
 
 
 # Customize History
@@ -102,16 +96,3 @@
 
 # Save multi-line commands as one command
     shopt -s cmdhist
-
-# - Save and reload the history after each comand
-#
-# !!!: Keep an eye on this, it may not work as expected.
-#  https://stackoverflow.com/questions/338285/prevent-duplicates-from-being-saved-in-bash-history#answer-7449399
-#
-# Note moving this functionality into `prompt.bash`, which comes later in the
-# config process.  I this this has been overwritten by an assignment to the
-# same variable there.
-#
-#    export PROMPT_COMMAND="history -a; history -c; history -r; $PROMPT_COMMAND"
-
-
