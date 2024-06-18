@@ -1,2 +1,5 @@
+# TODO: Is this still useful?
+# - It seems like I have all the functionality I expect in my python REPL from just .inputrc and .editrc
+# - There seem to be a lot of examples on GitHub of people using this instead of iPython (to achive similar functionality)
 import rlcompleter, readline
 readline.parse_and_bind('tab:complete')
