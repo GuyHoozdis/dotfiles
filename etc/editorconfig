@@ -46,3 +46,6 @@ insert_final_newline = ignore
 
 [*.{sql,sh,txt}]
 max_line_length =
+
+[*.rst]
+indent_size = 3
