@@ -71,6 +71,7 @@ Check out these references for further brew inspiration
 - https://github.com/mathiasbynens/dotfiles
 - http://blog.apps.npr.org/2013/06/06/how-to-setup-a-developers-environment.html
 - https://github.com/donnemartin/dev-setup
+- https://dotfiles.github.io
 
 
 [xdg-base-dir-spec]: https://specifications.freedesktop.org/basedir-spec/latest/
