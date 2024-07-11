@@ -51,10 +51,9 @@
 # the issue arises when there are more than one virtualenv in scope when the command is run; for
 # example, when a project needs bothPY2 and PY3 available so that tox will run.
 
-    alias cdsitepackages='pushd ~/.pyenv/versions/$(pyenv version-name)/lib/python2.7/site-packages/'
-    alias pyenv-list-installable="pyenv install -l | egrep '^[ ]+[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
-    alias pyenv-list-installed="pyenv versions --skip-aliases --bare | egrep '^[0-9\.]\.[0-9]\.[0-9]{1,2}$'"
-    alias pyenv-list-virtualenvs="pyenv virtualenvs --skip-aliases --bare"
+    alias cdsitepackages='pushd ~/.pyenv/versions/$(pyenv version-name)/lib/python*/site-packages/'
+    alias pyenv-list-installable="pyenv install -l | egrep '^[ ]+[2,3]\.[0-9]{1,2}'"
+    alias pyenv-list-installed="pyenv versions --skip-aliases --bare | egrep '^[2,3]\.[0-9\.]*$'"
 
 
 # Dotfiles helpers

@@ -1,0 +1,39 @@
+--TerminalIPythonApp.code_to_run=<Unicode>
+    Default: ''
+    Execute the given command string.
+--TerminalIPythonApp.copy_config_files=<Bool>
+    Default: False
+    Whether to install the default config files into the profile dir. If a new
+    profile is being created, and IPython contains config files for that
+    profile, then they will be staged into the new directory.  Otherwise,
+    default config files will be automatically generated.
+--TerminalIPythonApp.display_banner=<Bool>
+    Default: True
+    Whether to display a banner upon starting IPython.
+--TerminalIPythonApp.exec_PYTHONSTARTUP=<Bool>
+    Default: True
+    Run the file referenced by the PYTHONSTARTUP environment variable at IPython
+    startup.
+--TerminalIPythonApp.exec_files=<List>
+    Default: []
+    List of files to run at IPython startup.
+--TerminalIPythonApp.exec_lines=<List>
+    Default: []
+    lines of code to run at IPython startup.
+--TerminalIPythonApp.extensions=<List>
+    Default: []
+    A list of dotted module names of IPython extensions to load.
+--TerminalIPythonApp.extra_config_file=<Unicode>
+    Default: u''
+    Path to an extra config file to load.
+    If specified, load this config file in addition to any other IPython config.
+--TerminalIPythonApp.extra_extension=<Unicode>
+    Default: ''
+    dotted module name of an IPython extension to load.
+--TerminalIPythonApp.file_to_run=<Unicode>
+    Default: ''
+    A file to be run
+--TerminalIPythonApp.force_interact=<Bool>
+    Default: False
+    If a command or file is given via the command-line, e.g. 'ipython foo.py',
+    start an interactive shell after executing the file or command.

@@ -33,7 +33,7 @@
 #  into a pager where the color is preserved and line numbers are added.
 
     function codetree() {
-        local ignore='.git|node_modules|bower_components|.ropeproject|__pycache__|.pytest_cache'
+        local ignore='.git|node_modules|bower_components|.ropeproject|__pycache__|.pytest_cache|.tox|.nox'
         tree -aC -I $ignore --dirsfirst "$@" | less -FRNX;
     }
 

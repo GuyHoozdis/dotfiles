@@ -43,7 +43,10 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
-    wipe = clean -xfd
+    wipe = clean -xfd -e .python-version -e tmp/
+
+    aliases = --get-regexp ^alias
+
 [include]
   path = ~/.gitconfig.local
 
@@ -52,5 +55,9 @@
 
 [mergetool]
 	prompt = true
-[hub]
-	protocol = ssh
+
+# This section is managed in .gitconfig.local
+#[hub] # protocol = ssh
+
+[init]
+	defaultBranch = main
