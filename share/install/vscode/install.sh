@@ -9,5 +9,6 @@
 
 echo "[*] Installing dotfiles for VSCode Dev Container."
 echo "[-] CWD: ${PWD}"
-cp ~/dotfiles/etc/git/ignore ~/.gitignore
-cp ~/dotfiles/etc/inputrc ~/.inputrc
+cp etc/git/ignore ~/.gitignore
+cp etc/inputrc ~/.inputrc
+cp etc/bashrc.d/aliases.bash ~/.bash_aliases
