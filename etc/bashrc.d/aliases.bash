@@ -11,7 +11,7 @@
 # Use the GNU utilities, for these specific commands, if they are installed on
 # OSX.  Only do this to a select few commands.  Otherwise explicitly use g<cmd>.
 
-    if [ "Darwin" = "$(uname -s)" ] && [ -f /usr/local/bin/gls ]; then
+    if [ "Linux" = "$(uname -s)" ] || [ -f /usr/local/bin/gls ]; then
       CMD_LS="gls --color --group-directories-first"
       CMD_ENV=genv
       CMD_RM=grm
