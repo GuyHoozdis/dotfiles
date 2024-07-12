@@ -8,44 +8,56 @@
 #
 # -----------------------------------------------------------------------------
 
-# Use the GNU utilities if they are installed.
+# Use the GNU utilities, for these specific commands, if they are installed on
+# OSX.  Only do this to a select few commands.  Otherwise explicitly use g<cmd>.
 
-    if [ -f /usr/local/bin/gls ]; then
-        alias ls='gls --color --group-directories-first'
+    if [ "Darwin" = "$(uname -s)" ] && [ -f /usr/local/bin/gls ]; then
+      CMD_LS="gls --color --group-directories-first"
+      CMD_ENV=genv
+      CMD_RM=grm
+      CMD_MV=gmv
+      CMD_CP=gcp
     else
-        alias ls='ls -G'
+      CMD_LS='ls -G'
+      CMD_ENV=env
+      CMD_RM=rm
+      CMD_MV=mv
+      CMD_CP=cp
     fi
-    alias ll='ls -l'
-    alias la='ll -A'
+
+# Make directory listing easier to read.
+    alias ls=${CMD_LS}
+    alias ll="ls -l"
+    alias la="ll -A"
 
 
-# Make dangerous operations prompt for confirmation
+# Make dangerous operations prompt for confirmation.
 
-    alias rm='rm -i'
-    alias mv='mv -i'
-    alias cp='cp -i'
-
-
-# Increase the scope of files that ag will search
-
-    alias ag='ag -f --hidden'
+    alias rm="${CMD_RM} -i"
+    alias mv="${CMD_MV} -i"
+    alias cp="${CMD_CP} -i"
 
 
-# Colorize grep
+# Increase the scope of files that ag will search.
 
-    alias grep='grep --color'
-    alias egrep='egrep --color'
-    alias fgrep='fgrep --color'
-    alias zgrep='zgrep --color'
+    alias ag="ag -f --hidden"
 
 
-# Make env output easier to read
+# Colorize grep.
 
-    alias env='env | sort'
-    alias app-env='env | grep -e APP_ -e MYSQL_ -e AWS_ -e CELERY_'
+    alias grep="grep --color"
+    alias egrep="egrep --color"
+    alias fgrep="fgrep --color"
+    alias zgrep="zgrep --color"
 
 
-# PyEnv helper
+# Make env output easier to read.
+
+    alias env="${CMD_ENV} | sort"
+    alias app-env="env | grep -e APP_ -e MYSQL_ -e AWS_ -e CELERY_"
+
+
+# PyEnv helper.
 #
 # This is a command that I miss from virtualenv_wrapper.  It doesn't work perfectly in PyEnv,
 # the issue arises when there are more than one virtualenv in scope when the command is run; for
@@ -56,11 +68,10 @@
     alias pyenv-list-installed="pyenv versions --skip-aliases --bare | egrep '^[2,3]\.[0-9\.]*$'"
 
 
-# Dotfiles helpers
-#
-# Quickly jump to the ~/.local directory
+# Dotfiles helpers.
 
-    alias cdlocal='pushd ~/.local'
+    alias cdlocal="pushd ~/.local"
+    alias cddotfiles="pushd ~/dotfiles"
 
 
 # Homebrew
@@ -78,7 +89,7 @@
     # The second form is a little easier to read, but mostly I prefer the second one because
     # it returns the result without quotes.  Otherwise, the two are identical.
     #alias myip='dig TXT +short o-o.myaddr.l.google.com @ns1.google.com'
-    alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+    alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
 
     if which -s highlight.py ; then
       alias ifactive="ifconfig \
@@ -93,13 +104,15 @@
     #alias httpdump='sudo tcpdump -i en0 -n -s 0 -w - | grep -a -o -E "Host: .*|GET \/.*"'
 
 
-# Hide/show hidden files in Finder... meh
+# Hide/show hidden files in Finder.
 #
 # There are several interesting aliases in Mathias B's dotfiles.  Go check them out.
 #  https://github.com/mathiasbynens/dotfiles/blob/master/.aliases
 
-    alias show='defaults write come.apple.finder AppleShowAllFiles -bool true && killall Finder'
-    alias hide='defaults write come.apple.finder AppleShowAllFiles -bool false && killall Finder'
+    if [ "Darwin" = $(uname -s) ]; then
+      alias show='defaults write come.apple.finder AppleShowAllFiles -bool true && killall Finder'
+      alias hide='defaults write come.apple.finder AppleShowAllFiles -bool false && killall Finder'
+    fi
 
 
 # Ring the terminal bell and put a badge on Terminal.app's dock icon
@@ -118,9 +131,14 @@
     alias pumpitup="osascript -e 'set volume output volume 60'"
 
 
-# Reload the shell without starting a new subshell
+# Reload the shell without starting a new subshell.
 
-    alias reload='exec $SHELL --login'
+    # OSX Terminal starts --login shells for some reason.
+    if shopt -q login_shell; then
+      alias reload='exec $SHELL --login'
+    else
+      alias reload='exec $SHELL'
+    fi
 
 
 # Print path components on their own line
@@ -129,12 +147,8 @@
 
 
 # Render the Zen
-#
-# I've run this command as executing a string for so many years... it only
-# recently occurred to me that it could be executed as a module.  Duh!
 
-    #alias zen='python -c "import this"'
-    alias zen='python -m this'
+    alias zen="python -m this"
 
 
 # Readline behavior for node repl!!!  Oh, happy day!
