@@ -11,14 +11,17 @@
 # Use the GNU utilities, for these specific commands, if they are installed on
 # OSX.  Only do this to a select few commands.  Otherwise explicitly use g<cmd>.
 
-    if [ "Linux" = "$(uname -s)" ] || [ -f /usr/local/bin/gls ]; then
+    if [ -f /usr/local/bin/gls ]; then
+      # This is Darwin with GNU coreutils installed
       CMD_LS="gls --color --group-directories-first"
       CMD_ENV=genv
       CMD_RM=grm
       CMD_MV=gmv
       CMD_CP=gcp
     else
-      CMD_LS='ls -G'
+      [ "Darwin" = "$(uname -s)" ] && \
+        CMD_LS="ls -G" || \                             # Darwin / BSD without coreutils installed
+        CMD_LS="ls --color --group-directories-first"   # Standard Linux / GNU
       CMD_ENV=env
       CMD_RM=rm
       CMD_MV=mv
@@ -26,7 +29,7 @@
     fi
 
 # Make directory listing easier to read.
-    alias ls=${CMD_LS}
+    alias ls="${CMD_LS}"
     alias ll="ls -l"
     alias la="ll -A"
 
