@@ -5,6 +5,10 @@
     editor = /usr/bin/vim
     attributesFile = ~/.gitattributes
 
+[user]
+  name = Guy Hoozdis
+  email = GuyHoozdis@users.noreply.github.com
+
 [color]
     ui = auto
     status = auto
@@ -45,7 +49,7 @@
 
     wipe = clean -xfd -e .python-version -e tmp/
 
-    aliases = --get-regexp ^alias
+    aliases = config --get-regexp ^alias
 
 [include]
   path = ~/.gitconfig.local
