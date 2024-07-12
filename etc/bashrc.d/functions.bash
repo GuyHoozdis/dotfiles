@@ -29,12 +29,12 @@
 
 
 # The `codetree` funciton is a wrapper for a specialized imvocation of `tree`.  The output
-#  is color enabled, it excludes the .git and node_modules directories, pipes the output
+#  is color enabled, it excludes the .git and everyting defined in .gitignore, pipes the output
 #  into a pager where the color is preserved and line numbers are added.
 
     function codetree() {
-        local ignore='.git|node_modules|bower_components|.ropeproject|__pycache__|.pytest_cache|.tox|.nox'
-        tree -aC -I $ignore --dirsfirst "$@" | less -FRNX;
+        local ignore='.git'
+        tree -aC -I $ignore --gitignore --dirsfirst "$@" | less -FRNX;
     }
 
 
