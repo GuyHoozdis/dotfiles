@@ -91,7 +91,7 @@
     #alias myip='dig TXT +short o-o.myaddr.l.google.com @ns1.google.com'
     alias myip="dig +short myip.opendns.com @resolver1.opendns.com"
 
-    if which -s highlight.py ; then
+    if which highlight.py &>/dev/null; then
       alias ifactive="ifconfig \
         | pcregrep -M -o '^[^\t:]+:([^\n]|\n\t)*status: active' \
         | highlight.py -e '(?<=inet )[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3} ' -"
@@ -162,13 +162,13 @@
     # effort to provide all the functinality expected in a modern shell. It
     # mostly just requires configuration to accomplish.
     #
-    if which -s rlwrap; then
+    if which rlwrap &>/dev/null; then
       alias node="NODE_NO_READLINE=1 rlwrap node"
     fi
 
 
 # HTTPie w/ SSL by default
 
-  if which -s http; then
+  if which http &>/dev/null; then
     alias https='http --default-scheme=https'
   fi
