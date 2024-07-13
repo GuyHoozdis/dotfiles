@@ -20,8 +20,8 @@
       CMD_CP=gcp
     else
       [ "Darwin" = "$(uname -s)" ] && \
-        CMD_LS="ls -G" || \                             # Darwin / BSD without coreutils installed
-        CMD_LS="ls --color --group-directories-first"   # Standard Linux / GNU
+        CMD_LS="ls -G" || \
+        CMD_LS="ls --color --group-directories-first"
       CMD_ENV=env
       CMD_RM=rm
       CMD_MV=mv
