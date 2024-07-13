@@ -12,3 +12,8 @@ echo "[-] CWD: ${PWD}"
 cp etc/git/ignore ~/.gitignore
 cp etc/inputrc ~/.inputrc
 cp etc/bashrc.d/aliases.bash ~/.bash_aliases
+cp etc/pdbrc ~/.pdbrc
+
+# TODO: Configuring these is a little more complicated.  For now, if you need them manually configure.
+#  - ipython profiles
+#  - vim plugins
