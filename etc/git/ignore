@@ -29,6 +29,7 @@ tmp/
 .tmp/
 .env/
 .venv/
+.devenv/
 .macros/
 # When I make a symlink into .tmp/ it shows as
 # a file (no slash) to git.
