@@ -45,11 +45,10 @@ project_macros = path.abspath(
 sys.path.append(project_macros) if path.isdir(project_macros) else None
 """).strip()
 
+
 c.InteractiveShellApp.exec_lines = [
     # PyStdLib Staples
     "import collections, functools, itertools, operator",
-    "import decimal",
-    "from decimal import Decimal as _D",
     "from importlib import reload",
 
     # Personal Utilities and project conventions

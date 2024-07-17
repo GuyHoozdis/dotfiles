@@ -1,18 +1,18 @@
 """Utilities used for trading.
 """
 from collections import namedtuple
-from decimal import Decimal
+# from decimal import Decimal
 
 
 ExpectedMove = namedtuple('ExpectedMove', ['upper', 'close', 'lower'])
 
 
-def to_decimal(value):
-    """Wrap numerical values as a string before passing to Decimal.
-    """
-    return Decimal(str(value))
-
-_D = to_decimal
+# def to_decimal(value):
+#     """Wrap numerical values as a string before passing to Decimal.
+#     """
+#     return Decimal(str(value))
+# 
+# _D = to_decimal
 
 
 def calc_expected_move(close, delta):
