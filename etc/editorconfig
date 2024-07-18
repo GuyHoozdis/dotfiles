@@ -37,15 +37,17 @@ max_line_length = 79
 [{package.json,tox.ini}]
 insert_final_newline = ignore
 
-[{*.html,*.css}]
-indent_size = 2
-
 [**.min.js]
 indent_style = ignore
 insert_final_newline = ignore
 
-[*.{sql,sh,txt}]
+[*.{sql,txt}]
 max_line_length =
 
+[*.{sh,bash}]
+max_line_length = 79
+
 [*.rst]
+# Three spaces are used, by convention, because it lines up directives with their content.
+#   https://cjolowicz.github.io/posts/hypermodern-python-05-documentation/#:~:text=Indentation%20is%20significant%2C%20like%20in%20Python.%20Three%20spaces%20are%20customary%2C%20because%20they%20line%20up%20directives%20with%20their%20content.
 indent_size = 3
