@@ -59,6 +59,7 @@ function _check_required_programs() {
     done
 
 }
+
 function cleanup() {
     rm -f ${TMP_FILE_PREFIX}.*
 
