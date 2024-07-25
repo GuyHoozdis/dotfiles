@@ -34,6 +34,7 @@
     lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --branches --remotes
     supr = submodule update --recursive
     unstage = reset HEAD
+    amend = commit --amend --no-edit
 
     # Prune all tracking local branches that have been removed from remote
     prune-all = !git remote | xargs -n 1 git remote prune
