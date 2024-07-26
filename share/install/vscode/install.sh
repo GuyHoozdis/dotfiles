@@ -26,7 +26,7 @@ function _is_installed() {
     exit 1
   fi
 
-  if ! which ${application} &>/dev/null; then
+  if ! which "${application}" &>/dev/null; then
     echo "[-] ${application} is not installed."
     returncode=1
   fi
@@ -58,7 +58,7 @@ if ! _is_installed ipython; then
 fi
 
 echo -e "[*] ${GREEN}Creating ipython default profile${RESET}."
-if [ -d $HOME/.ipython/profile_default ]; then
+if [ -d "${HOME}/.ipython/profile_default" ]; then
   echo "[-] Default profile already exists."
 else
   ipython profile create
