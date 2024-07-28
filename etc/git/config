@@ -48,7 +48,7 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
-    wipe = clean -xfd -e .python-version -e tmp/
+    wipe = clean -xfd -e .python-version -e tmp/ -e .devenv
 
     aliases = config --get-regexp ^alias
 
