@@ -33,6 +33,23 @@
   # 3. Enable the path that replicates the environment that has previously been used
   # 5. Profit
 
+# Initialize the Python version manager
+
+    # If pyenv is installed and hasn't been initialized yet.
+    if which -s pyenv && [[ -z "${PYENV_SHELL}" ]]; then
+      export PYENV_VIRTUALENV_DISABLE_PROMPT=1
+      eval "$(pyenv init -)"
+    fi
+
+# Initialize the Ruby Version manager
+
+    # If rbenv is installed and hasn't been initialized yet.
+    if which -s rbenv && [[ -z "${RBENV_SHELL}" ]]; then
+      eval "$(rbenv init -)"
+    fi
+
+# Put my personal executables after pyenv and rbenv so that my custom executables
+# and pipx executables are located before any shims.
     function exists_in_path () {
       target=$1
       echo -e ${PATH//:/\\n} | egrep "^${target}$" &>/dev/null
@@ -41,8 +58,6 @@
 
     NODE_MODULES_BIN=$HOME/node_modules/.bin
     PERSONAL_BIN=$HOME/.local/bin
-    # XXX: This -z isn't working how you intended.  You meant to be checking if the return code was zero.
-    #[[ -z $(/usr/bin/which -s node) ]] && [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     if ! exists_in_path $NODE_MODULES_BIN; then
       [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
     fi
