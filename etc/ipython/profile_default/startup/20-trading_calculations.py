@@ -3,9 +3,24 @@
 from argparse import Namespace
 from collections import namedtuple
 from math import floor
+from textwrap import dedent
 
 
-ExpectedMove = namedtuple('ExpectedMove', ['upper', 'close', 'lower'])
+ExpectedMove = namedtuple('ExpectedMove', 'upper close lower channel')
+ChannelSettings = namedtuple('ChannelSettings', 'price height')
+
+def __em_str__(self):
+    return dedent(f"""
+    ExpectedMove:
+      Upper: {self.upper}
+      Close: {self.close}
+      Lower: {self.lower}
+    Channel:
+      Price:  {self.channel.price}
+      Height: {self.channel.height}
+    """)
+
+ExpectedMove.__str__ = __em_str__
 
 
 def calc_expected_move(close, delta):
@@ -28,7 +43,11 @@ def calc_expected_move(close, delta):
     return ExpectedMove(
         upper=close+delta,
         close=close,
-        lower=close-delta
+        lower=close-delta,
+        channel=ChannelSettings(
+            price=close-delta,
+            height=delta*2,
+        )
     )
 
 
