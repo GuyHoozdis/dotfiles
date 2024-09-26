@@ -24,6 +24,24 @@
     shopt -s dirspell 2> /dev/null
     shopt -s globstar 2> /dev/null
 
+# Export Homebrew Environment
+# - On Apple Silicon Homebrew installs under `/opt/homebrew` instead of `/usr/local` (it does this to
+#   avoid requiring `sudo` and/or requiring `chmod -R <foo>:<bar> /usr/local`).
+# - If `brew` isn't configured when things like `pyenv` or `gls` are used or even tested if they are
+#   installed, then things won't work as expected.
+# - That is why this has to be done pretty early on.
+
+  function initialize_homebrew() {
+    local path_suffix=bin/brew
+    if [ -x /usr/local/${path_suffix} ]; then
+      eval "$(/usr/local/${path_suffix} shellenv)"
+    elif [ -x /opt/homebrew/$path_suffix ]; then
+      eval "$(/opt/homebrew/${path_suffix} shellenv)"
+    fi
+  }
+
+  initialize_homebrew && echo "Homebrew initialized" || echo "Homebrew not installed"
+
 
 # Enhance application search path
 

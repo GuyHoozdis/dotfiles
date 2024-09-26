@@ -11,7 +11,7 @@
 # Use the GNU utilities, for these specific commands, if they are installed on
 # OSX.  Only do this to a select few commands.  Otherwise explicitly use g<cmd>.
 
-    if [ -f /usr/local/bin/gls ]; then
+    if [ -f "$(brew --prefix &>/dev/null)/bin/gls" ]; then
       # This is Darwin with GNU coreutils installed
       CMD_LS="gls --color --group-directories-first"
       CMD_ENV=genv
