@@ -2,8 +2,9 @@
 #
 # A template to use as a starting point for shell scripts.  To use or maintain
 # this program:
-#  1. Define the external utilities that are dependencies of this program in REQUIRED_PROGRAMS
-#  2. Add program logic to "main" near the end of this template.
+#  1. Define the external utilities that are dependencies of this program in REQUIRED_PROGRAMS.
+#  2. Design command line inputs: update help and parameter parsing functions.
+#  3. Add program logic to "main" near the end of this template.
 #
 # ------------------------------------------------------------------------------
 # Based on the "Minimal Safe Bash Script Template" article and the
@@ -304,6 +305,7 @@ function main() {
   # script logic here
 
 }
+
 
 # Initialize program
 _setup_colors
