@@ -193,10 +193,11 @@ Script description here.
 
 Available options:
 
--h, --help      Print this help and exit
--v, --verbose   Print script debug info
--f, --flag      Some flag description
--p, --param     Some param description
+-h, --help      Print this help and exit.
+-v, --verbose   Print script debug info.
+-f, --flag      Some flag description.
+-p, --param     Some param description.
+--no-color      Do not use terminal escape codes for color in output.
 --version       Print the script's version number.
 EOF
   exit "${exitcode}"
