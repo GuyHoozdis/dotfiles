@@ -106,6 +106,12 @@
     #export RLWRAP_FILTERDIR=$HOME/.local/share/rlwrap/filters
 
 
+# Configure env vars for Golang
+
+    export GOPATH=$HOME/.go
+    export PATH=$GOPATH/bin:$PATH
+
+
 # Customize History
 ###################
 
