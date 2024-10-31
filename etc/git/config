@@ -5,9 +5,36 @@
     editor = /usr/bin/vim
     attributesFile = ~/.gitattributes
 
-[user]
-  name = Guy Hoozdis
-  email = GuyHoozdis@users.noreply.github.com
+# ======================================================
+# For one GH accounts on a single machine
+# ------------------------------------------------------
+# Put this in ~/.gitconfig.local on machines where you
+# only have one GH account.
+#
+#[user]
+#  name = Guy Hoozdis
+#  email = GuyHoozdis@users.noreply.github.com
+#
+# ======================================================
+# For multiple GH accounts on a single machine
+# ------------------------------------------------------
+# 1. Put this in ~/.gitconfig.local 
+#
+#[user]
+#  name = Primary Account
+#  email = primary-account@email.com
+#[includeIf "gitdir:~/path/to/secondary/"]
+#  path = ~/path/to/secondary/.gitconfig
+#
+# ------------------------------------------------------
+# 2. Put the following in ~/path/to/secondary/.gitconfig 
+#[user]
+#  name = Secondary Account
+#  email = secondary-account@email.com
+#
+#[core]
+#  sshCommand = "ssh -o IdentitiesOnly -i ~/.ssh/secondary_rsa -F /dev/null"
+# ======================================================
 
 [color]
     ui = auto
