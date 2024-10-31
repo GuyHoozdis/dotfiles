@@ -21,4 +21,6 @@
 bin/pew
 bin/pipenv
 share/virtualenvs/
+share/NuGet/
 venvs/
+
