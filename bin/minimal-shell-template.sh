@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 #
-# A template to use as a starting point for shell scripts.
+# A template to use as a starting point for shell scripts.  To use or maintain
+# this program:
+#  1. Define the external utilities that are dependencies of this program in REQUIRED_PROGRAMS.
+#  2. Design command line inputs: update help and parameter parsing functions.
+#  3. Add program logic to "main" near the end of this template.
+#
 # ------------------------------------------------------------------------------
-# Based on the "Minimal Safe Bash Script Template" article and the 
+# Based on the "Minimal Safe Bash Script Template" article and the
 # article 12-Factor CLI Apps.
 #   https://betterdev.blog/minimal-safe-bash-script-template/
 #   https://medium.com/@jdxcode/12-factor-cli-apps-dd3c227a0e46
@@ -20,7 +25,7 @@
 # ... and when you may need to do something different.
 #   https://www.reddit.com/r/commandline/comments/g1vsxk/the_first_two_statements_of_your_bash_script/fniifmk?utm_source=share&utm_medium=web2x&context=3
 set -Eeuo pipefail
-trap cleanup SIGINT SIGTERM ERR EXIT
+trap _cleanup SIGINT SIGTERM ERR EXIT
 
 
 # ==============================================================================
@@ -31,46 +36,46 @@ trap cleanup SIGINT SIGTERM ERR EXIT
 # but use BASH_SOURCE[0].
 SCRIPTNAME="$(basename "${BASH_SOURCE[0]}")"
 SCRIPTPATH="$(cd -- "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)"
-VERSION="v0.1.0"
+VERSION="0.1.0"
 readonly SCRIPTNAME SCRIPTPATH VERSION
 
 # Always check return values and give informative return values.
 #   https://google.github.io/styleguide/shellguide.html#s8.1-checking-return-values
 EXIT_SUCCESS=0
 # generic error
-EXIT_ERROR=1         
+EXIT_ERROR=1
 # command line usage error
-EXIT_USAGE=64	      
+EXIT_USAGE=64
 # data format error
-EXIT_DATAERR=65	    
+EXIT_DATAERR=65
 # cannot open input
-EXIT_NOINPUT=66	    
+EXIT_NOINPUT=66
 # addressee unknown
-EXIT_NOUSER=67	      
+EXIT_NOUSER=67
 # host name unknown
-EXIT_NOHOST=68	      
+EXIT_NOHOST=68
 # service unavailable
-EXIT_UNAVAILABLE=69	
+EXIT_UNAVAILABLE=69
 # internal software error
-EXIT_SOFTWARE=70	    
+EXIT_SOFTWARE=70
 # system error (e.g., can't fork)
-EXIT_OSERR=71	      
+EXIT_OSERR=71
 # critical OS file missing
-EXIT_OSFILE=72	      
+EXIT_OSFILE=72
 # can't create (user) output file
-EXIT_CANTCREAT=73	  
+EXIT_CANTCREAT=73
 # input/output error
-EXIT_IOERR=74	      
+EXIT_IOERR=74
 # temp failure; user is invited to retry
-EXIT_TEMPFAIL=75	    
+EXIT_TEMPFAIL=75
 # remote error in protocol
-EXIT_PROTOCOL=76	    
+EXIT_PROTOCOL=76
 # permission denied
-EXIT_NOPERM=77	      
+EXIT_NOPERM=77
 # configuration error
-EXIT_CONFIG=78	      
+EXIT_CONFIG=78
 declare -rx EXIT_SUCCESS EXIT_ERROR EXIT_USAGE EXIT_DATAERR EXIT_NOINPUT EXIT_NOUSER EXIT_NOHOST EXIT_UNAVAILABLE
-declare -rx EXIT_SOFTWARE EXIT_OSERR EXIT_OSFILE EXIT_CANTCREAT EXIT_IOERR EXIT_TEMPFAIL EXIT_PROTOCOL EXIT_NOPERM 
+declare -rx EXIT_SOFTWARE EXIT_OSERR EXIT_OSFILE EXIT_CANTCREAT EXIT_IOERR EXIT_TEMPFAIL EXIT_PROTOCOL EXIT_NOPERM
 declare -rx EXIT_CONFIG
 
 
@@ -108,8 +113,8 @@ function _setup_colors() {
 ################################################################################
 function stderr() {
   local msg="${1-}"
-  
-  # TODO(guyhoozdis): Make this more like your format-message() function 
+
+  # TODO(guyhoozdis): Make this more like your format-message() function
   # that uses printf and string interpolation.
   echo >&2 -e "${msg}"
 }
@@ -152,32 +157,34 @@ function error() {
 }
 
 ################################################################################
-# [function description]
+# Log error message and exit program.
 # ------------------------------------------------------------------------------
 # Globals:
-#   None
+#   EXIT_ERROR
 # Arguments:
-#   None
+#   msg         Required parameter
+#   exitcode    Defaults to 1 - EXIT_ERROR
 ################################################################################
 function die() {
   local msg="$1"
-  local exitcode="${2-1}"
+  local exitcode="${2-$EXIT_ERROR}"
 
-  error "$RED}${msg}${RESET}"
+  error "${msg}"
   exit "${exitcode}"
 }
 
 
 ################################################################################
-# [function description]
+# Display program usage help and exit pogram.
 # ------------------------------------------------------------------------------
 # Globals:
-#   None
+#   EXIT_SUCCESS
+#   SCRIPTNAME
 # Arguments:
-#   None
+#   exitcode    Defaults to 0 - success
 ################################################################################
 function usage() {
-  local exitcode=${1-0}
+  local exitcode=${1-$EXIT_SUCCESS}
 
   cat <<EOF
 Usage: ${SCRIPTNAME} [options] arg1 arg2 [...argN]
@@ -186,10 +193,11 @@ Script description here.
 
 Available options:
 
--h, --help      Print this help and exit
--v, --verbose   Print script debug info
--f, --flag      Some flag description
--p, --param     Some param description
+-h, --help      Print this help and exit.
+-v, --verbose   Print script debug info.
+-f, --flag      Some flag description.
+-p, --param     Some param description.
+--no-color      Do not use terminal escape codes for color in output.
 --version       Print the script's version number.
 EOF
   exit "${exitcode}"
@@ -197,14 +205,14 @@ EOF
 
 
 ################################################################################
-# [function description]
+# Custom clean up logic called upon program exit
 # ------------------------------------------------------------------------------
 # Globals:
 #   None
 # Arguments:
 #   None
 ################################################################################
-function cleanup() {
+function _cleanup() {
   trap - SIGINT SIGTERM ERR EXIT
   #
   # Add cleanup logic here.
@@ -213,10 +221,10 @@ function cleanup() {
 
 
 ################################################################################
-# [function description]
+# Verify required programs are installed on host or exit with error code.
 # ------------------------------------------------------------------------------
 # Globals:
-#   None
+#   EXIT_CONFIG
 # Arguments:
 #   None
 ################################################################################
@@ -224,6 +232,7 @@ function _check_required_programs() {
   # Required program(s)
   local -a req_progs=(git awk)
   for p in "${req_progs[@]}"; do
+    # XXX: This approach, using `hash`, does not seem to work for everything.  Switch to using `which`.
     hash "${p}" 2>&- || \
 	    { echo >&2 " Required program \"${p}\" not installed or in search PATH."; exit $EXIT_CONFIG; }
   done
@@ -231,12 +240,15 @@ function _check_required_programs() {
 
 
 ################################################################################
-# [function description]
+# Parse commandline options and arguments.
 # ------------------------------------------------------------------------------
 # Globals:
-#   None
+#   SCRIPTNAME
+#   VERSION
+#   EXIT_SUCCESS
+#   EXIT_USAGE
 # Arguments:
-#   None
+#   *       Consumes $@
 ################################################################################
 function _parse_params() {
   # default values of variables set from params
@@ -277,25 +289,30 @@ function _parse_params() {
 
 
 ################################################################################
-# [function description]
+# Program entrypoint
 # ------------------------------------------------------------------------------
 # Globals:
-#   None
+#   SCRIPTPATH
+#   SCRIPTNAME
 # Arguments:
 #   None
 ################################################################################
 function main() {
   log "Executing ${SCRIPTPATH}/${SCRIPTNAME}"
+  log "Read parameters:"
+  log "- flag: ${flag}"
+  log "- param: ${param}"
+  log "- arguments: ${args[*]-}"
+  # script logic here
+
 }
 
 
+# Initialize program
 _setup_colors
 _check_required_programs
 _parse_params "$@"
 
-# script logic here
-
-log "Read parameters:"
-log "- flag: ${flag}"
-log "- param: ${param}"
-log "- arguments: ${args[*]-}"
+# Invoke entrypoint
+main
+exit $?
