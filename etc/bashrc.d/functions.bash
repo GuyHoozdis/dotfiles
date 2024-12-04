@@ -33,7 +33,7 @@
 #  into a pager where the color is preserved and line numbers are added.
 
     function codetree() {
-        local ignore='.git'
+        local ignore='.git|.ruff_cache'
         tree -aC -I $ignore --gitignore --dirsfirst "$@" | less -FRNX;
     }
 
