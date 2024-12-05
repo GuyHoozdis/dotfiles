@@ -18,7 +18,7 @@
 # ======================================================
 # For multiple GH accounts on a single machine
 # ------------------------------------------------------
-# 1. Put this in ~/.gitconfig.local 
+# 1. Put this in ~/.gitconfig.local
 #
 #[user]
 #  name = Primary Account
@@ -27,7 +27,7 @@
 #  path = ~/path/to/secondary/.gitconfig
 #
 # ------------------------------------------------------
-# 2. Put the following in ~/path/to/secondary/.gitconfig 
+# 2. Put the following in ~/path/to/secondary/.gitconfig
 #[user]
 #  name = Secondary Account
 #  email = secondary-account@email.com
@@ -75,7 +75,7 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
-    wipe = clean -xfd -e .python-version -e tmp/ -e .devenv
+    wipe = clean -xfd -e .python-version -e tmp/ -e *env
 
     aliases = config --get-regexp ^alias
 
