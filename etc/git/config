@@ -75,6 +75,10 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
+    # Show author of last commit on every branch on the remote
+    branch-owners = for-each-ref --format='%(committerdate:short) | %(refname:short) | %(authorname)' --sort="committerdate" refs/remotes
+    branch-owners-table = !git branch-owners | column -s='|' -t
+
     wipe = clean -xfd -e .python-version -e tmp/ -e *env
 
     aliases = config --get-regexp ^alias
