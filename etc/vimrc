@@ -159,6 +159,12 @@ endif
     let mapleader=','
 
 "
+" Write files with sudo
+"
+    noremap <leader>W :w !sudo tee %<CR>
+
+
+"
 " Airline customization
 "
 " Here are a few themes that look decent on my current setup
