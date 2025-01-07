@@ -1,0 +1,37 @@
+; https://coverage.readthedocs.io/en/latest/config.html
+
+[run]
+branch = True
+relative_files = True
+source =
+  tests/
+  ; Remove this if not using src/ layout.
+  src/
+  ; Remove this if not using app-style layout, change it to be your application
+  ; name if you are using app-style layout.
+  python_project_template
+
+
+[report]
+show_missing = True
+skip_covered = True
+sort = "-Cover"
+exclude_also =
+  ; Don't complain about missing debug-only code:
+  def __repr__
+  if self\.debug
+
+  ; Don't complain if tests don't hit defensive assertion code:
+  raise AssertionError
+  raise NotImplementedError
+
+  ; Don't complain if non-runnable code isn't run:
+  if 0:
+  if __name__ == .__main__.:
+
+  ; Don't complain about abstract methods:
+  @(abc\.)?abstractmethod
+
+
+[html]
+show_contents = True
