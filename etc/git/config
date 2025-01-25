@@ -83,6 +83,8 @@
 
     aliases = config --get-regexp ^alias
 
+    snapshot = !git stash push --include-untracked --message \"snapshot: $(date)\" && git stash apply \"stash@{0}\" --index
+
 [include]
   path = ~/.gitconfig.local
 
