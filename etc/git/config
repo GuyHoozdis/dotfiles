@@ -76,6 +76,9 @@
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
+    # Show insertions/deletions to guage PR size.
+    prsize = diff --shortstat main...HEAD
+
     # Show author of last commit on every branch on the remote
     branch-owners = for-each-ref --format='%(committerdate:short) | %(refname:short) | %(authorname)' --sort="committerdate" refs/remotes
     branch-owners-table = !git branch-owners | column -s='|' -t
