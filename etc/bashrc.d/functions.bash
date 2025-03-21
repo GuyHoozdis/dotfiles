@@ -187,7 +187,7 @@
         printf '  Replace printf (Intended to emphasize the similarity in behavior, not a recommendation).\n'
         printf '  $ alias printf=format-message\n'
         printf '  $ COLOR=cyan printf "%%s" one two three\n'
-        printf '  $ \printf "%%s" "Execute the original command" "instead of the alias" "by preceding the command with a backslash\n'
+        printf '  $ \printf "%%s" "Execute the original command" "instead of the alias" "by preceding the command with a backslash"\n'
         return 1
       fi
 
@@ -213,5 +213,47 @@ else
     # Intentionally not using `set -o pipefail`
     jq -C $@ | less -R --quit-if-one-screen
     return ${PIPESTATUS[0]}
+  }
+fi
+
+
+# NOTE: Trying this out to see if it obviates the need for me to put more work into my devenv utility.
+if ! which -s pyenv; then
+  function pyenv-venv-reset() {
+    echo "You need to install (or initialize) pyenv"
+  }
+else
+  function pyenv-venv-reset() {
+    if [ $# -eq 0 ]; then
+      cat - >&2 <<EOM
+
+Usage: ${FUNCNAME[0]} <VENV_DIR>
+
+  Delete an existing virtualenv and recreate it.  Preserve the '.python-version' file, if
+  it exists.
+
+  VENV_DIR - the full or relative path to the virtual environment directory.
+EOM
+      return 0
+    fi
+
+    local name="${1:-.venv}"
+    local python_cmd="${2:-python}"
+    if [ ! -d ${name} ]; then
+      COLOR=red format-message "Invalid input - ${name} is not a path to a virtual env." >&2
+      return 1
+    elif [ ! -f ${name}/pyvenv.cfg ]; then
+      COLOR=red format-message "Invalid input - ${name} is not a virtual env." >&2
+      return 1
+    fi
+
+    if [ -f .python-version ]; then
+      mv .python-version break-python-version
+    fi
+    rm -rf ${name}
+    ${python_cmd} -m venv ${name}
+    if [ -f break-python-version ]; then
+      mv break-python-version .python-version
+    fi
   }
 fi
