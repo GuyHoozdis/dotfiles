@@ -257,3 +257,46 @@ EOM
     fi
   }
 fi
+
+
+# Create a Python virtual environment using python3 -m venv.
+function mkvenv() {
+  local RED='\033[0;31m' GREEN='\033[0;32m' NC='\033[0m' # No Color
+  local venv_name=$1
+  local python_cmd=${PYTHON:-python3}
+  shift;
+
+  # Check to see if parameter is -h or --help
+  # if so, pass -h to python3 -m venv.
+  if [[ "$venv_name" == "-h" || "$venv_name" == "--help" ]]; then
+    # echo -e "${GREEN}Usage: mkvenv <venv_name> [<options>]${NC}"
+    # echo -e "${GREEN}Options:${NC}"
+    # echo -e "  ${GREEN}-h, --help${NC}        Show this help message and exit"
+    # echo -e "  ${GREEN}-p, --python <path>${NC} Specify the Python interpreter to use"
+    $python_cmd -m venv $venv_name
+    return 0
+  fi
+  if [ -z "$venv_name" ]; then
+    echo -e "${GREEN}Usage: mkvenv <venv_name> [<options>]${NC}"
+    return 1
+  fi
+
+  if [ -d "$venv_name" ]; then
+    echo -e "${RED}Virtual environment ${NC}$venv_name ${RED}already exists.${NC}"
+    return 1
+  fi
+
+  if [ -z "$VIRTUAL_ENV" ]; then
+    echo -e "${GREEN}Creating virtual environment...${NC}"
+    if $python_cmd -m venv "$venv_name" "$@"; then
+      source "$venv_name/bin/activate"
+      echo -e "${GREEN}Virtual environment ${NC}$venv_name ${GREEN}created and activated.${NC}"
+      pip install --upgrade pip setuptools
+    fi
+  else
+    echo -e "${RED}You are already in a virtual environment. Please deactivate it first.${NC}"
+    return 1
+  fi
+
+  return 0
+}
