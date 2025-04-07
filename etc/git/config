@@ -53,15 +53,17 @@
     tool = vimdiff
 
 [alias]
-    co = checkout
+    sw = switch
+    co = switch
     st = status
+    b = branch
     fap = fetch --all --prune --prune-tags
     lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
     lg1 = log --graph --pretty=oneline --abbrev-commit --decorate
     lgn = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -n 10
     lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --branches --remotes
     supr = submodule update --recursive
-    unstage = reset HEAD
+    unstage = restore --staged
     amend = commit --amend --no-edit
 
     # Prune all tracking local branches that have been removed from remote
