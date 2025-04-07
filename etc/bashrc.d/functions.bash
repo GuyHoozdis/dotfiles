@@ -232,13 +232,16 @@ Usage: ${FUNCNAME[0]} <VENV_DIR>
   Delete an existing virtualenv and recreate it.  Preserve the '.python-version' file, if
   it exists.
 
-  VENV_DIR - the full or relative path to the virtual environment directory.
+  Args:
+    VENV_DIR - the full or relative path to the virtual environment directory.
+
+  Env Vars:
+    PYTHON - the python command to use to create the virtual environment.  Defaults to 'python3'.
 EOM
       return 0
     fi
 
     local name="${1:-.venv}"
-    local python_cmd="${2:-python}"
     if [ ! -d ${name} ]; then
       COLOR=red format-message "Invalid input - ${name} is not a path to a virtual env." >&2
       return 1
@@ -250,6 +253,8 @@ EOM
     if [ -f .python-version ]; then
       mv .python-version break-python-version
     fi
+    local python_cmd=${PYTHON:-python3}
+
     rm -rf ${name}
     ${python_cmd} -m venv ${name}
     if [ -f break-python-version ]; then
@@ -258,10 +263,21 @@ EOM
   }
 fi
 
-
+# ===========================================================================
 # Create a Python virtual environment using python3 -m venv.
+#
+# TODO: This was a quick-and-dirty creation, but it could be much
+# better.  If it turns out to be useful, then spend some more time on it.
+#
+# XXX: This assumes that $1 is either `-h/--help` or the name of a virtual
+# environment.  It would be better if it simply passed $@ to the
+# `python3 -m venv` command, but then the checks and error messages would
+# all be impossible.
+#
+# XXX: As it stands, there are two code paths that try to display help
+# info and they both output something different. :(
 function mkvenv() {
-  local RED='\033[0;31m' GREEN='\033[0;32m' NC='\033[0m' # No Color
+  local RED='\033[0;31m' GREEN='\033[0;32m' NC='\033[0m'
   local venv_name=$1
   local python_cmd=${PYTHON:-python3}
   shift;
@@ -269,15 +285,11 @@ function mkvenv() {
   # Check to see if parameter is -h or --help
   # if so, pass -h to python3 -m venv.
   if [[ "$venv_name" == "-h" || "$venv_name" == "--help" ]]; then
-    # echo -e "${GREEN}Usage: mkvenv <venv_name> [<options>]${NC}"
-    # echo -e "${GREEN}Options:${NC}"
-    # echo -e "  ${GREEN}-h, --help${NC}        Show this help message and exit"
-    # echo -e "  ${GREEN}-p, --python <path>${NC} Specify the Python interpreter to use"
     $python_cmd -m venv $venv_name
     return 0
   fi
   if [ -z "$venv_name" ]; then
-    echo -e "${GREEN}Usage: mkvenv <venv_name> [<options>]${NC}"
+    echo -e "Usage: ${GREEN}mkvenv <venv_name> [<options>]${NC}"
     return 1
   fi
 
