@@ -304,6 +304,7 @@ function mkvenv() {
       source "$venv_name/bin/activate"
       echo -e "${GREEN}Virtual environment ${NC}$venv_name ${GREEN}created and activated.${NC}"
       pip install --upgrade pip setuptools
+      echo -e "${GREEN}Updated pip and setuptools.${NC}"
     fi
   else
     echo -e "${RED}You are already in a virtual environment. Please deactivate it first.${NC}"
