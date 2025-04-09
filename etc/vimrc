@@ -1,12 +1,41 @@
-" .vimrc created per Dein installer instructions
+" =======================================================================
+" Installation and Setup
 "
-"   $ curl https://raw.githubusercontent.com/Shougo/dein.vim/master/bin/installer.sh > installer.sh
-"   $ sh ./installer.sh <INSTALL_DIR>
+" On a new machine:
+" 1. Create your ~/.vim directory with structure for native plugin manager
 "
-" I used ./vim/bundles for the INSTALL_DIR, because that is what I had been
-" using with NeoBundle.  It could have been any number of directories though.
+"   mkdir -p ~/.vim/pack/{colors,plugins,syntax}/{opt,start}
 "
-" ==== Inspiration =====
+" 2. Install the desired plugins by cloning them into the appropriate
+" directory.
+"
+"   cd ~/.vim/pack/plugins/start
+"   hub clone scrooloose/nerdtree
+"
+" Example:
+"
+".vim
+"└── pack
+"    ├── colors
+"    │   ├── opt
+"    │   └── start
+"    │       └── vim-colors-solarized
+"    ├── plugins
+"    │   ├── opt
+"    │   └── start
+"    │       ├── copilot.vim
+"    │       ├── ctrlp.vim
+"    │       ├── editorconfig-vim
+"    │       ├── nerdtree
+"    │       ├── vim-repeat
+"    │       └── vim-surround
+"    └── syntax
+"        ├── opt
+"        └── start
+"
+" 3. Copy this file to ~/.vimrc and modify to fit that machine's needs.
+"
+" ========================= Reference ===================================
 " The vimrc in this repo looks like it is a good resource.  Check out the
 " syntax highlighting plugin.
 "
@@ -24,122 +53,73 @@
 " - https://github.com/spf13/spf13-vim#a-highly-optimized-vimrc-config-file
 "
 " ----------------------------------------------------------------------
-" I'll have double check, but unless tyat is the, I think it was called
-" "pymode", plugin that I very recenly have been using, then that is still
-" the shit... no, just shit.
+" Leaving these for reference.
 "
-" ~~~I've tried these plugins in the past, but didn't feel like it was worth
-" ~~~it.  It's been a few years since I've reviewed them, so I'm going to give
-" ~~~them another review.
+"  call dein#add('scrooloose/nerdtree')      " NerdTree - filesystem explorer
+"  call dein#add('tpope/vim-fugitive')       " Fugitive - git wrapper
+"  call dein#add('tpope/vim-surround')       " Another tpope miracle
+"  call dein#add('tpope/vim-commentary')     " Another tpope miracle
+"  call dein#add('stephpy/vim-yaml')         " YAML Syntax
+"  call dein#add('vim-airline/vim-airline')  " Status/tabline enhancement
+"  call dein#add('vim-airline/vim-airline-themes')
+"  call dein#add('ctrlpvim/ctrlp.vim')       " Ctrl-P - File/Directory search
+"  call dein#add('editorconfig/editorconfig-vim')
+"  call dein#add('fholgado/minibufexpl.vim')   " Mini Buffer Explorer
+"  call dein#add('~/Development/guyhoozdis/vim-n1ql')
+"  " This required a bit of setup, more than I would normally tolerate, but it is useful and I do use it.
+"  "   https://github.com/JamshedVesuna/vim-markdown-preview
+"  call dein#add('JamshedVesuna/vim-markdown-preview')
 "
-"   http://200ok.ch/posts/vim-as-python-ide.html
+"  " Above: These should be promoted to standard packages I use
+"  " Experimental - Things I am giving a chance, but might not keep
+"  call dein#add('tpope/vim-repeat')         " Another tpope miracle
+"  call dein#add('tpope/vim-speeddating')    " Another tpope miracle
 "
+"  " XXX: Take a closer look at this.  It may merely be an ordering problem,
+"  " but this doesn't appear to work.
+"  " YAML & Jinja Syntax Highlighting
+"  "   https://pinrojas.com/2017/01/25/highlight-ansible-yaml-and-jinja-syntax-in-vim-editor/
+"  call dein#add('chase/vim-ansible-yaml')
+"  call dein#add('lepture/vim-jinja')
+"
+"  " Below: These are things I came upon in http://github.com/docker-library/docs/DockerFile
+"  "        but I haven't enabled it yet.
+"  "call dein#add('jtratner/vim-flavored-markdown')
+"
+"  " I haven't used these and don't think that I will
+"  call dein#add('vim-scripts/Conque-Shell')
+"  call dein#add('alfredodeza/pytest.vim')
+"  call dein#add('ajh17/spacegray.vim')
+"  " JavaScript IDE
+"  "   https://javascriptplayground.com/vim-for-javascript/
+"  " This looks like it will take some getting used to.
+"  "   https://github.com/SirVer/ultisnips
+"  call dein#add('pangloss/vim-javascript')
+"  call dein#add('mxw/vim-jsx')
+"  call dein#add('leshill/vim-json')
+"
+"  " Under Development
+"  call dein#add('~/Development/guyhoozdis/vim-thinkscript/')
+"  call dein#add('altercation/vim-colors-solarized')
+"
+"  " -----------------------------------------------------------------------------
+"  " I want to introduce these too, but I don't want to do too many at once, so
+"  " these are a reminder to pull them in later.
+"  "
+"  "   https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
+"  "   https://github.com/svermeulen/vim-easyclip
+"  " -----------------------------------------------------------------------------
+"
+"  "call dein#add('jeffkreeftmeijer/vim-dims')
 " ----------------------------------------------------------------------
-"  Dein startup and VI/VIM plugin management
-" ----------------------------------------------------------------------
+
 if &compatible
   set nocompatible	" Be iMproved
 endif
 
-
-" Required: Put Dein on the runtimepath
-set runtimepath+=~/.vim/bundles/repos/github.com/Shougo/dein.vim
-
-
-" Required: Dein startup and plugin activation logic
-if dein#load_state('~/.vim/bundles')
-  call dein#begin('~/.vim/bundles')
-
-  " Required: Let dein manage dein
-  call dein#add('~/.vim/bundles/repos/github.com/Shougo/dein.vim')
-
-  " Add/Remove your plugins here
-  " -------------------------------
-  " Some examples:
-  "  * call dein#add('Shougo/neosnippet.vim')
-  "  * call dein#add('Shougo/neosnippet-snippets')
-  "  * call dein#add('Shougo/vimshell', { 'rev': '3787e5' })
-  " ---------------------------------------------------------
-
-  call dein#add('scrooloose/nerdtree')      " NerdTree - filesystem explorer
-  call dein#add('tpope/vim-fugitive')       " Fugitive - git wrapper
-  call dein#add('tpope/vim-surround')       " Another tpope miracle
-  call dein#add('tpope/vim-commentary')     " Another tpope miracle
-  call dein#add('stephpy/vim-yaml')         " YAML Syntax
-  call dein#add('vim-airline/vim-airline')  " Status/tabline enhancement
-  call dein#add('vim-airline/vim-airline-themes')
-  call dein#add('ctrlpvim/ctrlp.vim')       " Ctrl-P - File/Directory search
-  call dein#add('editorconfig/editorconfig-vim')
-  call dein#add('fholgado/minibufexpl.vim')   " Mini Buffer Explorer
-  " XXX: Disable pymode  :(
-  " This has been causing some problems.  It might be how the rope
-  " package integrates with python3, but I haven't looked into it.
-  "call dein#add('python-mode/python-mode')    " Python Mode
-  call dein#add('~/Development/guyhoozdis/vim-n1ql')
-  " This required a bit of setup, more than I would normally tolerate, but it is useful and I do use it.
-  "   https://github.com/JamshedVesuna/vim-markdown-preview
-  call dein#add('JamshedVesuna/vim-markdown-preview')
-
-  " Above: These should be promoted to standard packages I use
-  " Experimental - Things I am giving a chance, but might not keep
-  call dein#add('tpope/vim-repeat')         " Another tpope miracle
-  call dein#add('tpope/vim-speeddating')    " Another tpope miracle
-
-  " XXX: Take a closer look at this.  It may merely be an ordering problem,
-  " but this doesn't appear to work.
-  " YAML & Jinja Syntax Highlighting
-  "   https://pinrojas.com/2017/01/25/highlight-ansible-yaml-and-jinja-syntax-in-vim-editor/
-  call dein#add('chase/vim-ansible-yaml')
-  call dein#add('lepture/vim-jinja')
-
-  " Below: These are things I came upon in http://github.com/docker-library/docs/DockerFile
-  "        but I haven't enabled it yet.
-  "call dein#add('jtratner/vim-flavored-markdown')
-
-  " I haven't used these and don't think that I will
-  call dein#add('vim-scripts/Conque-Shell')
-  call dein#add('alfredodeza/pytest.vim')
-  call dein#add('ajh17/spacegray.vim')
-  " JavaScript IDE
-  "   https://javascriptplayground.com/vim-for-javascript/
-  " This looks like it will take some getting used to.
-  "   https://github.com/SirVer/ultisnips
-  call dein#add('pangloss/vim-javascript')
-  call dein#add('mxw/vim-jsx')
-  call dein#add('leshill/vim-json')
-
-  " Under Development
-  call dein#add('~/Development/guyhoozdis/vim-thinkscript/')
-  call dein#add('altercation/vim-colors-solarized')
-
-  " -----------------------------------------------------------------------------
-  " I want to introduce these too, but I don't want to do too many at once, so
-  " these are a reminder to pull them in later.
-  "
-  "   https://github.com/tpope/vim-unimpaired/blob/master/doc/unimpaired.txt
-  "   https://github.com/svermeulen/vim-easyclip
-  " -----------------------------------------------------------------------------
-
-  "call dein#add('jeffkreeftmeijer/vim-dims')
-
-  " -------------------------------
-  " End "Add/Remove your plugins"
-  " -------------------------------
-  " Required: End Dein startup and plugin activation logic
-  call dein#end()
-  call dein#save_state()
-endif
-
-
 " Required
 filetype plugin indent on
 syntax enable
-
-
-" Automatically install plugins on startup
-if dein#check_install()
-  call dein#install()
-endif
 
 
 " ----------------------------------------------------------------------
@@ -197,6 +177,7 @@ endif
     let g:airline_theme = 'murmur'
     let g:airline_powerline_fonts = 1
 
+
 "
 " Format/Prettify
 "
@@ -209,9 +190,9 @@ endif
     nmap =hex :%!xxd<CR>
     nmap =unhex :%!xxd -r<CR>
 
+
 "
-" Assume these values for filetypes not explicitly defined in
-" the ~/.vim/after/ftplugin directory
+" Base VIM configuration
 "
     set tabstop=2
     set softtabstop=2
@@ -220,6 +201,7 @@ endif
     set nowrap
     set relativenumber
     set number
+
 
 "
 " Colorschemes:
@@ -263,35 +245,6 @@ let vim_markdown_preview_github=1
 let vim_markdown_preview_hotkey='<C-m>'
 
 
-" ----------------------------------------------------------------------
-"
-" VIM IDE Configuration
-"
-"   http://200ok.ch/posts/vim-as-python-ide.html
-"
-" Notes:
-" - The global configuration flags, form MiniBufExpl, cited by the article are
-"   all obsolete.  The only thing that needs to be added is a key mapping.
-" - If you like the TagList + CTags functionality, then you should add the
-"   installation command `brew install ctags-exuberant` to the proper script.
-" - To prevent rendering corruption, in the tag list window, after a tag is
-"   selected the `TList_Inc_Winwidth` option is set to zero.
-" - TagList is taking a lot of configuration to start working like I expect. I
-"   think it is in a basic usable state right now, but you probably still need
-"   to go over the "Commands" section of the documentation and possibly tweak
-"   a few more of the plugin settings.
-" - The article describes using VIM's `omnifunc` to gain code completion. That
-"   has never worked very well for me.  I'm going to give `jedi-vim` a try
-"   again.
-"
-" Update:
-" - I've come to enjoy Mini Buff Explorer.
-" - I don't use TagList.  I'm removing any related config for it.
-" - I discovered `pymode` recently and have been very happy with the
-"   functionality and features it offers, but it might be a dying
-"   project.
-" ----------------------------------------------------------------------
-
 "
 " Mini Buff Explorer
 "
@@ -321,6 +274,7 @@ let vim_markdown_preview_hotkey='<C-m>'
     nmap <Leader>nt :NERDTreeToggle<CR>
     let NERDTreeIgnore = ['\.pyc$', 'node_modules/', 'venv', '__pycache__']
 
+
 "
 " Fugitive customization
 "
@@ -331,47 +285,12 @@ let vim_markdown_preview_hotkey='<C-m>'
     "nmap <Leader>gc :Gcommit<CR>
     "nmap <Leader>gp :Gpush<CR>
 
-"
-" PyMode VIM
-"
-" Documentation:
-" - ":help pymode help"
-" - https://github.com/vim-scripts/Python-mode-klen/blob/master/doc/pymode.txt
-"
-" Troubleshooting:
-" - ":call pymode#troubleshooting#test()"
-"
-" RopeVIM
-" - https://github.com/python-rope/ropevim#variables
-" - This is documentation to the original. PymodeVIM is similar, but does not
-"   expose exactly the same thing/variables.
-"
-    let g:pymode_python = 'python3'
-    let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.sset_trace()  # XXX Breakpoint'
-    let g:pymode_rope = 1
-    let g:pymode_lint_on_write = 0
-    let g:pymode_doc = 0
-    let g:pymode_rope_complete_on_dot = 0
-    let g:pymode_rope_goto_definition_cmd = 'e'
-    let g:pymode_syntax_print_as_function = 1
-
-    " Folding is broken in pymode
-    let g:pymode_folding = 0
-
-
-    " These are too disruptive unless they have been well tuned.
-    " let g:pymode_lint_checkers = ['pyflakes', 'pep8', 'mccabe']
-
-    nmap <Leader>pl :PymodeLintToggle<CR>
-    nmap <Leader>ll :PymodeLint<CR>
-    nmap <Leader>pmd :call pymode#troubleshooting#test()<CR>
-
 
 "
 " JavaScript
 "
-    let g:javascript_plugin_flow = 1
-    let g:jsx_ext_required = 0
+"    let g:javascript_plugin_flow = 1
+"    let g:jsx_ext_required = 0
 
 
 "
