@@ -54,7 +54,7 @@
 
 [alias]
     sw = switch
-    co = switch
+    co = checkout
     st = status
     b = branch
     fap = fetch --all --prune --prune-tags
