@@ -66,6 +66,13 @@
       eval "$(rbenv init -)"
     fi
 
+
+    # If n is installed and hasn't been initialized yet.
+    if which -s n && [[ -z "${N_PREFIX}" ]]; then
+      export N_PREFIX=$HOME/.n
+      export PATH=$N_PREFIX/bin:$PATH
+    fi
+
 # Put my personal executables after pyenv and rbenv so that my custom executables
 # and pipx executables are located before any shims.
     function exists_in_path () {
