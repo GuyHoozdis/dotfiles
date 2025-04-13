@@ -263,52 +263,43 @@ EOM
   }
 fi
 
+
 # ===========================================================================
 # Create a Python virtual environment using python3 -m venv.
+# ---------------------------------------------------------------------------
+# Set the PYTHON environment variable to use a different Python version.
 #
-# TODO: This was a quick-and-dirty creation, but it could be much
-# better.  If it turns out to be useful, then spend some more time on it.
-#
-# XXX: This assumes that $1 is either `-h/--help` or the name of a virtual
-# environment.  It would be better if it simply passed $@ to the
-# `python3 -m venv` command, but then the checks and error messages would
-# all be impossible.
-#
-# XXX: As it stands, there are two code paths that try to display help
-# info and they both output something different. :(
+#   $ PYTHON=python3.12 mkvenv .venv
+
 function mkvenv() {
   local RED='\033[0;31m' GREEN='\033[0;32m' NC='\033[0m'
-  local venv_name=$1
   local python_cmd=${PYTHON:-python3}
-  shift;
+  declare -a venvs=()
 
-  # Check to see if parameter is -h or --help
-  # if so, pass -h to python3 -m venv.
-  if [[ "$venv_name" == "-h" || "$venv_name" == "--help" ]]; then
-    $python_cmd -m venv $venv_name
-    return 0
-  fi
-  if [ -z "$venv_name" ]; then
-    echo -e "Usage: ${GREEN}mkvenv <venv_name> [<options>]${NC}"
-    return 1
-  fi
-
-  if [ -d "$venv_name" ]; then
-    echo -e "${RED}Virtual environment ${NC}$venv_name ${RED}already exists.${NC}"
-    return 1
-  fi
-
-  if [ -z "$VIRTUAL_ENV" ]; then
-    echo -e "${GREEN}Creating virtual environment...${NC}"
-    if $python_cmd -m venv "$venv_name" "$@"; then
-      source "$venv_name/bin/activate"
-      echo -e "${GREEN}Virtual environment ${NC}$venv_name ${GREEN}created and activated.${NC}"
-      pip install --upgrade pip setuptools
-      echo -e "${GREEN}Updated pip and setuptools.${NC}"
-    fi
-  else
+  if [ ! -z "$VIRTUAL_ENV" ]; then
     echo -e "${RED}You are already in a virtual environment. Please deactivate it first.${NC}"
     return 1
+  else
+    if $python_cmd -m venv $@; then
+      for venv in "$@"; do
+        if [ -d "${venv}" ]; then
+          venvs+=("${venv}")
+          echo -e "${GREEN}Virtual environment ${NC}${venv} ${GREEN}created.${NC}"
+          source "${venv}/bin/activate"
+          pip install --upgrade pip setuptools
+          deactivate
+          echo -e "${GREEN}Updated core dependencies for ${NC}${venv}"
+        fi
+      done
+
+      # If only one venv was created, activate it
+      if [ ${#venvs[@]} -eq 1 ]; then
+        echo -e "${GREEN}Activating virtual environment ${NC}${venvs[0]}"
+        source ${venvs[0]}/bin/activate
+      elif [ ${#venvs[@]} -gt 1 ]; then
+        echo -e "${GREEN}Multiple virtual environments created. Please activate them manually.${NC}"
+      fi
+    fi
   fi
 
   return 0
