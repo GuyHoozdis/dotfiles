@@ -28,6 +28,14 @@ c.TerminalInteractiveShell.autocall = SMART
 c.TerminalInteractiveShell.show_rewritten_input = True
 
 
+## Execute these lines of code.
+# Note: If the `hide_initial_ns` option is set to True, any code here
+# that creates objects will not be visible to the user.
+c.InteractiveShellApp.exec_lines = [
+    "ipy = get_ipython()",
+]
+
+
 ## If a command or file is given via the command-line, e.g. 'ipython foo.py',
 #  start an interactive shell after executing the file or command.
 c.TerminalIPythonApp.force_interact = True
