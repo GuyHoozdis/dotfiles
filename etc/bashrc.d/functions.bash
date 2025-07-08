@@ -304,3 +304,34 @@ function mkvenv() {
 
   return 0
 }
+
+# ===========================================================================
+# Run shellcheck on the specified files or directories.
+# ===========================================================================
+# If no arguments are provided, it will display the help message.
+#
+# Usage:
+#   $ shellcheck <file1> <file2> ...
+function shellcheck() {
+  [[ -z "$1" ]] && files="--help" || files="$@"
+  docker run --rm -v "$PWD:/mnt" koalaman/shellcheck:stable shellcheck "$files"
+}
+
+
+# ===========================================================================
+# Run hadolint on the specified Dockerfiles.
+# ===========================================================================
+# # If no arguments are provided, it will display the help message.
+#
+# Usage:
+#  $ hadolint <Dockerfile1> path/to/<Dockerfile2> ...
+function hadolint() {
+  [[ -z "$1" ]] && echo "Usage: hadolint [DockerFile ...]" && return 1
+  for dockerfile in "$@"; do
+    echo "== Linting $dockerfile"
+    if docker run --rm -i hadolint/hadolint < "$dockerfile"; then
+      echo "No issues identified"
+    fi
+    echo
+  done
+}
