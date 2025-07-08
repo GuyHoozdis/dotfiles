@@ -53,43 +53,57 @@
     tool = vimdiff
 
 [alias]
-    sw = switch
-    co = checkout
-    st = status
+    a = add
     b = branch
-    fap = fetch --all --prune --prune-tags
+    c = commit -m
+    d = diff
+    co = checkout
+    ds = diff --staged
+    st = status
+    sw = switch
+
+    fap = fetch --all --prune
+    fapt = fetch --all --prune --prune-tags
+
     lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
     lg1 = log --graph --pretty=oneline --abbrev-commit --decorate
     lgn = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -n 10
     lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --branches --remotes
-    supr = submodule update --recursive
-    unstage = restore --staged
-    amend = commit --amend --no-edit
 
-    # Prune all tracking local branches that have been removed from remote
-    prune-all = !git remote | xargs -n 1 git remote prune
+    aliases = config --get-regexp ^alias
+    amend = commit --amend --no-edit
+    prsize = diff --shortstat main...HEAD
+    supr = submodule update --recursive
+    wipe = clean -xfd -e .python-version -e tmp/ -e *env
+
+    rank = shortlog -sn --no-merges
+    count = shortlog -sn
+
+    # TODO: Come up with a better name for these aliases.
+    # Show author of last commit on every branch on the remote
+    branch-owners = for-each-ref --format='%(committerdate:short) | %(refname:short) | %(authorname)' --sort="committerdate" refs/remotes
+    branch-owners-table = !git branch-owners | column -s='|' -t
 
     # Given a string for an author, try to figure out full name and email:
     whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
     # Given any git object, try to show it briefly
     whatis = show -s --pretty='tformat:%h (%s, %ad)' --date=short
 
-    # Show list of contributors
-    rank = shortlog -sn --no-merges
-    count = shortlog -sn
-
-    # Show insertions/deletions to guage PR size.
-    prsize = diff --shortstat main...HEAD
-
-    # Show author of last commit on every branch on the remote
-    branch-owners = for-each-ref --format='%(committerdate:short) | %(refname:short) | %(authorname)' --sort="committerdate" refs/remotes
-    branch-owners-table = !git branch-owners | column -s='|' -t
-
-    wipe = clean -xfd -e .python-version -e tmp/ -e *env
-
-    aliases = config --get-regexp ^alias
-
     snapshot = !git stash push --include-untracked --message \"snapshot: $(date)\" && git stash apply \"stash@{0}\" --index
+
+    # Prune all tracking local branches that have been removed from remote
+    prune-all = !git remote | xargs -n 1 git remote prune
+
+    # WIP: Hmm, not quite working as expected.  Defining a function worked, but I don't have the
+    #  correct reference for the commit author.  Do I need the email too?  What about the author
+    #  versions of these same fields?
+    #
+    # Given an object name or reference, extract the commit date and author.  Use these to
+    # preserve original values when amending commits / tags.
+    #commit-date = show -s --format=%cd
+    commit-date = "!c() { git show -s --format=%cd "${1:-HEAD}^{commit}"; }; c"
+    #commit-author = "!a() { git show -s --format=%ca "${1:-HEAD}^{commit}"; }; a"
+
 
 [include]
   path = ~/.gitconfig.local
