@@ -66,23 +66,21 @@
     fapt = fetch --all --prune --prune-tags
 
     lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative
-    lg1 = log --graph --pretty=oneline --abbrev-commit --decorate
     lgn = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative -n 10
     lga = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cd) %C(bold blue)<%an>%Creset' --abbrev-commit --date=relative --branches --remotes
 
     aliases = config --get-regexp ^alias
     amend = commit --amend --no-edit
     prsize = diff --shortstat main...HEAD
-    supr = submodule update --recursive
     wipe = clean -xfd -e .python-version -e tmp/ -e *env
 
     rank = shortlog -sn --no-merges
     count = shortlog -sn
 
-    # TODO: Come up with a better name for these aliases.
-    # Show author of last commit on every branch on the remote
-    branch-owners = for-each-ref --format='%(committerdate:short) | %(refname:short) | %(authorname)' --sort="committerdate" refs/remotes
-    branch-owners-table = !git branch-owners | column -s='|' -t
+    # Show author and date of last commit on every branch on the remote
+    list-refs = for-each-ref --format='%(committerdate:short) | %(refname:short) | %(authorname)' --sort="committerdate"
+    local-branches = !git list-refs refs/heads | column -s='|' -t
+    remote-branches = !git list-refs refs/remotes | column -s='|' -t
 
     # Given a string for an author, try to figure out full name and email:
     whois = "!sh -c 'git log -i -1 --pretty=\"format:%an <%ae>\n\" --author=\"$1\"' -"
