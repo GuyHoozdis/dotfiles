@@ -1,21 +1,20 @@
 ; https://coverage.readthedocs.io/en/latest/config.html
 
 [run]
+parallel = true
+data_file = coverage/.coverage
 branch = True
 relative_files = True
 source =
   tests/
-  ; Remove this if not using src/ layout.
   src/
-  ; Remove this if not using app-style layout, change it to be your application
-  ; name if you are using app-style layout.
-  python_project_template
-
+context = ${CONTEXT}
+dynamic_context = test_function
 
 [report]
-show_missing = True
+show_missing = False
 skip_covered = True
-sort = "-Cover"
+sort = -Cover
 exclude_also =
   ; Don't complain about missing debug-only code:
   def __repr__
@@ -24,14 +23,24 @@ exclude_also =
   ; Don't complain if tests don't hit defensive assertion code:
   raise AssertionError
   raise NotImplementedError
+  except PackageNotFoundError
 
   ; Don't complain if non-runnable code isn't run:
   if 0:
   if __name__ == .__main__.:
+  if TYPE_CHECKING:
 
   ; Don't complain about abstract methods:
   @(abc\.)?abstractmethod
-
+; format = markdown
 
 [html]
-show_contents = True
+directory = coverage/html
+show_contexts = True
+
+[xml]
+output = coverage/coverage.xml
+
+[json]
+output = coverage/coverage.json
+show_contexts = True

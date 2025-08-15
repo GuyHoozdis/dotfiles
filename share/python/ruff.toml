@@ -56,11 +56,13 @@ select = ["ANN", "B", "B9", "C", "D", "E", "F", "I", "S", "W"]
 
 # https://docs.astral.sh/ruff/rules/
 #
+# D105 - Missing docstring in magic (e.g., `__str__`, `__repr__`, etc.) method.
+# D107 - Missing docstring in `__init__` method.
 # E203 - Whitespace before ':'
 # E501 - Line too long; With B9 enabled this is a duplicate of B950.  Disable it to avoid duplicate.
 #        Unlike E501, from pycodestyle, B950 only triggers if max-line-length is exceeded by 10% or
 #        more.  Inspired by Raymond Hettinger's "Beyond PEP8" talk.
-ignore = ["E203", "E501"]
+ignore = ["D105", "D107", "E203", "E501"]
 
 
 # Require that a human fix these classes of errors.
@@ -69,8 +71,10 @@ unfixable = ["B"]
 
 [lint.per-file-ignores]
 # D104 - Missing docstring in public package.
+# S101 - Use of assert keyword.
 "__init__.py" = ["D104"]
 "tests/*" = ["D"]
+"integration-tests/*" = ["S101"]
 
 
 [lint.isort]
@@ -81,18 +85,20 @@ section-order = [
     "third-party",
     "first-party",
     "local-folder",
-    "testing"
+    "testing",
+    "first-party-testsuite",
 ]
 
 
 [lint.isort.sections]
-"testing" = ["unittest", "pytest", "hypothesis"]
+"testing" = ["unittest", "pytest", "hypothesis", "testcontainers", "behave"]
 "langchain" = ["langchain-*"]
+"first-party-testsuite" = ["tests"]
 
 
 [lint.mccabe]
 # Flag errors (`C901`) whenever the complexity level exceeds this value.
-max-complexity = 5
+max-complexity = 7
 
 
 [lint.pep8-naming]
