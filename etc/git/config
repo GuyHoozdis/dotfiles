@@ -61,6 +61,7 @@
     ds = diff --staged
     st = status
     sw = switch
+    wt = worktree
 
     fap = fetch --all --prune
     fapt = fetch --all --prune --prune-tags
