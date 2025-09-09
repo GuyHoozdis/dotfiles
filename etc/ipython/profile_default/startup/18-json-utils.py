@@ -11,7 +11,7 @@ def load_json(file_path: PathLike) -> dict:
         return json.load(fp)
 
 
-def dump_json(file_path: PathLike, force=False, **options: dict) -> PathLike:
+def dump_json(file_path: PathLike, data: dict, *, force=False, **options: dict) -> PathLike:
     """Dump JSON data to a file."""
     outfile = pathlib.Path(file_path)
     if outfile.exists() and not force:
