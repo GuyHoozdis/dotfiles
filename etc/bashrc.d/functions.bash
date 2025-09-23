@@ -335,3 +335,34 @@ function hadolint() {
     echo
   done
 }
+
+
+# ===========================================================================
+# Transparently append the authentication parameters to an Httpie request.
+# ===========================================================================
+# A wrapper around Httpie that inserts the parameters for authentication.
+#
+# By convention, I have been storing the token JSON in a file named .token.json
+# in the current working directory.  The location of the file can be overridden
+# by setting the TOKEN_FILE environment variable.
+#
+# Usage:
+#   $ api [args ...]
+#
+# Env Vars:
+#  TOKEN_FILE - the path to the token JSON file.  [Defaults to .token]
+#  TOKEN_FIELD - a JQ filter to extract the token from the JSON file.  [Defaults to .accessToken]
+#  TOKEN - the token value.  If set, this value takes precedence over the token file.
+function api() {
+  local token_file=${TOKEN_FILE-.token}
+  local token_field=${TOKEN_FIELD:-.accessToken}
+  if [[ -z "${TOKEN:+notset}" && ! -f "$token_file" ]]; then
+    echo "WARNING: No TOKEN environment variable set." >&2
+    echo "WARNING: Token file not found: \"${PWD}/${token_file}\"" >&2
+    echo "If authentication is not required, use 'http' directly." >&2
+    return 1
+  fi
+
+  local token=${TOKEN:-$(jq -r "${token_field}" "${token_file}")}
+  http --default-scheme=https --auth-type=bearer --auth="$token" "$@"
+}
