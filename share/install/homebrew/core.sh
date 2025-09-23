@@ -19,6 +19,7 @@
     brew install coreutils
     brew install findutils
     brew install gawk
+    brew install gnu-tar
     brew install tree
     brew install readline
 

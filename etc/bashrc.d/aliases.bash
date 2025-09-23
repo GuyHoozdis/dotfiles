@@ -28,6 +28,13 @@
       CMD_CP=cp
     fi
 
+    # Use GNU tar if installed on OSX.
+    [ -f "$(brew --prefix 2>/dev/null)/bin/gtar" ] && \
+      CMD_TAR="gtar" || \
+      CMD_TAR="tar --disable-copyfile --no-xattrs"
+    alias tar="${CMD_TAR}"
+
+
 # Make directory listing easier to read.
     alias ls="${CMD_LS}"
     alias ll="ls -l"
