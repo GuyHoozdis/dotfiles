@@ -32,6 +32,7 @@ tmp/
 .devenv/
 .macros/
 .code-review/
+.worktree/
 # When I make a symlink into .tmp/ it shows as
 # a file (no slash) to git.
 tmp

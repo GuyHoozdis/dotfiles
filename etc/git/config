@@ -118,3 +118,7 @@
 
 [init]
 	defaultBranch = main
+
+# This is not standard Git. Created for use by my aliases.
+[worktree]
+	defaultDir = ./.worktree
