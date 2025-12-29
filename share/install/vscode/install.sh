@@ -43,10 +43,10 @@ echo -e "[!] ${RED}That is the only scenario that is currently supported${RESET}
 
 echo -e "[*] ${GREEN}Installing standard user configuration files${RESET}."
 # VSCode already copies and adds to .gitconfig, so don't overwrite it.
-cp etc/git/ignore ~/.gitignore
-cp etc/inputrc ~/.inputrc
-cp etc/bashrc.d/aliases.bash ~/.bash_aliases
-cp etc/pdbrc ~/.pdbrc
+cp config/git/ignore ~/.gitignore
+cp config/inputrc ~/.inputrc
+cp config/bash/aliases.bash ~/.bash_aliases
+cp config/pdbrc ~/.pdbrc
 
 if ! _is_installed ipython; then
   echo -e "[*] ${GREEN}Installing ipython${RESET}."
@@ -65,4 +65,4 @@ else
 fi
 
 echo -e "[*] ${GREEN}Installing custom default profile${RESET}."
-cp -f etc/ipython/profile_default/ipython_config.py ~/.ipython/profile_default/
+cp -f config/ipython/profile_default/ipython_config.py ~/.ipython/profile_default/
