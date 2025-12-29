@@ -6,18 +6,8 @@
         "when": "editorHasSignatureHelpProvider && editorTextFocus"
     },
     {
-        "key": "shift+cmd+space",
-        "command": "-editor.action.triggerParameterHints",
-        "when": "editorHasSignatureHelpProvider && editorTextFocus"
-    },
-    {
         "key": "space",
         "command": "closeParameterHints",
-        "when": "editorFocus && parameterHintsVisible"
-    },
-    {
-        "key": "escape",
-        "command": "-closeParameterHints",
         "when": "editorFocus && parameterHintsVisible"
     },
     {

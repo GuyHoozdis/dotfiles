@@ -1,37 +1,76 @@
 {
-    "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true,
-    "editor.minimap.enabled": false,
-    "editor.wrappingIndent": "indent",
-    "workbench.sideBar.location": "right",
-    "editor.parameterHints.enabled": false,
-    // "settingsSync.ignoredSettings": [
-    //     "-dotfiles.installCommand"
-    // ],
-    "files.autoSave": "onFocusChange",
-    "files.exclude": {
-        ".devenv-*": true,
-        ".nox": true,
-        ".pytest_cache": true,
-        ".tox": true,
-        ".venv*": true,
-        "__pycache__": true,
-        ".python-version": true
-    },
-    "editor.tabSize": 4,
-    "vim.smartRelativeLine": true,
-    "workbench.startupEditor": "none",
-    "evenBetterToml.formatter.allowedBlankLines": 2,
-    "evenBetterToml.formatter.columnWidth": 80,
-    // "editor.formatOnSave": true,
-    "ruff.lint.run": "onSave",
-    "ruff.configurationPreference": "filesystemFirst",
-    "[python]": {
-      "editor.formatOnSave": true,
-      "editor.defaultFormatter": "charliermarsh.ruff",
-      "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit",
-        "source.fixAll": "explicit"
-      },
+  "codellm.openai.useLocalEmbedding": true,
+  "codellm.pasteOnClick": false,
+  "codellm.provider": "ollama",
+  "editor.codeActions.triggerOnFocusChange": true,
+  "editor.minimap.enabled": false,
+  "editor.parameterHints.enabled": false,
+  "evenBetterToml.formatter.allowedBlankLines": 2,
+  "evenBetterToml.formatter.columnWidth": 80,
+  "files.autoSave": "onFocusChange",
+  "files.autoSaveWorkspaceFilesOnly": true,
+  "files.exclude": {
+    ".devenv-*": true,
+    ".nox": true,
+    ".pytest_cache": true,
+    ".tox": true,
+    ".venv": true,
+    "__pycache__": true,
+    ".python-version": true
+  },
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "notebook.formatOnSave.enabled": true,
+  // This is no longer supported by ruff (native server).  It was used by ruff-lsp, which is now deprecated.
+  //   https://docs.astral.sh/ruff/editors/migration/
+  // "ruff.lint.run": "onSave",
+  // ==================================================
+  "ruff.configurationPreference": "filesystemFirst",
+  "workbench.sideBar.location": "right",
+  "workbench.startupEditor": "none",
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit",
+      "source.fixAll": "explicit"
     }
+  },
+  "editor.wrappingIndent": "indent",
+  "docker.commands.attach": "${containerCommand} exec -it ${containerId} ${shellCommand}",
+  "editor.wordWrap": "on",
+  "autoDocstring.docstringFormat": "google-notypes",
+  "@azure.argTenant": "",
+  "files.associations": {
+    "*.env": "properties"
+  },
+  "githubPullRequests.pullBranch": "never",
+  "editor.fontSize": 10,
+  "git.openRepositoryInParentFolders": "never",
+  "editor.unicodeHighlight.invisibleCharacters": false,
+  "workbench.editor.enablePreview": false,
+  "editor.lineNumbers": "relative",
+  "github.copilot.nextEditSuggestions.enabled": true,
+  "docker.extension.dockerEngineAvailabilityPrompt": false,
+  // "python.analysis.typeCheckingMode": "strict",
+  "python.analysis.typeCheckingMode": "off",
+  "github.copilot.chat.azureModels": {},
+  "todo-tree.general.tags": [
+    "BUG",
+    "HACK",
+    "FIXME",
+    "TODO",
+    "XXX",
+    "[ ]",
+    "[x]",
+    "!!!",
+    "???"
+  ],
+  "chat.tools.terminal.autoApprove": {
+    "uv": true,
+    "python": true,
+    "s=get_settings()": true,
+    "print(s.app_name,": true
+  },
+  "terminal.integrated.stickyScroll.enabled": false,
 }
