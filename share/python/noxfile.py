@@ -53,7 +53,7 @@ def tests(session: Session) -> None:
     """Run the test suite."""
     args = session.posargs or ["discover", "--start-directory", "tests/", "--top-level-directory", "."]
     session.run_install("uv", "sync", "--extra=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location})
-    session.run("coverage", "run", "-m", "unittest", *args)
+    session.run("coverage", "run", "--context", session.name, "-m", "unittest", *args)
     session.log("Run the coverage task to generate a report after running the tests.")
 
 

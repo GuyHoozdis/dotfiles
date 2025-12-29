@@ -44,13 +44,67 @@ docstring-code-format = true
 # B - Issues raised by flake8-bugbear, includes the B9xx which are more opinionated
 # BLK - Issues raised by Black
 # C - Issues rasied by mccabe (complexity)
-# D - Issues raised by flake8-docstrings
+# D - Issues raised by pydocstyle
 # E - Errors reported by pycodestyle
 # DAR - Issues raised by darglint
 # F - Errors raised by pyflakes
 # I - Issues raised by flake8-import-order
 # S - Issues raised by flake8-bandit (security)
 # W - Warnings reported by pycodestyle
+# ---
+# !!!: I was looking at the `pyproject.toml` for pendulum and saw some things that interested me.
+# 1. Review https://docs.astral.sh/ruff/rules/ for groups that are not yet included.
+# 1. Experiment if needed.
+# 1. Add to the list below.
+# 1. Process the old + new list.
+# 1. Output this structure:
+#    - In alphabetical order, comment with description for the group.
+#    - In alphabetical order, the `select = [...]` line.
+# ???: See if there is a way that you can eaisily test each of these groups to see how they might
+#      impact existing code.
+# ???: Would it be better to invert the selection?  Can I do a `select ['*']` and then `ignore = [...]`?
+# ???: Currently, I use `C` for complexity, but the docs now say `C90`.  Should I change that?  See `T10` below too.
+# ???: Conflicts?  Will all of these play well together?
+# !!!: See the `ruff.toml` file in the [faststream](https://github.com/ag2ai/faststream/blob/main/ruff.toml) repo for a reference on how someone else has done this.
+# ---
+# FAST - Issues raised by FastAPI linter
+# ASYNC - Issues raised by flake8-async
+# BLE - Issues raised by flake8-blind-except
+# FBT - Issues raised by flake8-boolean-trap
+# A - Issues raised by flake8-builtins
+# COM - Issues raised by flake8-commas
+# C4 - Issues raised by flake8-comprehensions
+# DTZ - Issues raised by flake8-datetimez
+# T10 - Issues raised by flake8-debugger
+# EM - Issues raised by flake8-errormsg
+# EXE - Issues raised by flake8-executable
+# ISC - Issues raised by flake8-implicit-str-concat
+# LOG - Issues raised by flake8-logging
+# G - Issues raised by flake8-logging-format
+# ?PIE - Issues raised by flake8-pie
+# T20 - Issues raised by flake8-print
+# RSE - Issues raised by flake8-raise
+# ?RET - Issues raised by flake8-return
+# ?PT - Issues raised by flake8-pytest-style
+# ?SLF - Issues raised by flake8-self
+# SIM - Issues raised by flake8-simplify
+# SLOT - Issues raised by flake8-slots
+# ?TD - Issues raised by flake8-todos
+# ?TC - Issues rasied by flake8-type-checking
+# PTH - Issues raised by flake8-use-pathlib
+# NPY - Numpy specific rules
+# PD - Issues raised by pandas-vet
+# ?N - Issues raised by pip8-naming
+# PERF - Issues raised by perflint
+# ?DOC - Issues raised by pydoclint
+# ?PLC - Issues rased by pylint (convention)
+# ?PLE - Issues rased by pylint (error)
+# ?PLR - Issues rased by pylint (refactor)
+# ?PLW - Issues rased by pylint (warning)
+# UP - Issues raised by pyupgrade
+# FURB - Issues raised by refurb
+# RUF - Ruff specific rules
+# ?TRY - Issues raised by tryceratops
 select = ["ANN", "B", "B9", "C", "D", "E", "F", "I", "S", "W"]
 
 

@@ -8,7 +8,6 @@ relative_files = True
 source =
   tests/
   src/
-context = ${CONTEXT}
 dynamic_context = test_function
 
 [report]
