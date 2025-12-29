@@ -1,0 +1,177 @@
+name: Test Installation
+
+on:
+  push:
+    branches: [ main, refactor-install-workflow ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create dummy existing dotfiles (to test backup)
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            echo "# Original bash_login" > ~/.bash_login
+            echo "# Original bash_logout" > ~/.bash_logout
+            echo "# Original bash_profile" > ~/.bash_profile
+          else
+            echo "# Original bashrc" > ~/.bashrc
+            echo "# Original bash_profile" > ~/.bash_profile
+          fi
+          mkdir -p ~/.config
+          echo "# Original config" > ~/.config/test.conf
+
+      - name: Display environment info
+        shell: bash
+        run: |
+          echo "OS: $RUNNER_OS"
+          echo "Runner: ${{ matrix.os }}"
+          echo "Shell: $SHELL"
+          echo "Home: $HOME"
+          echo "Working directory: $PWD"
+          ls -la ~/ | head -20
+
+      - name: Run install script (dry-run)
+        shell: bash
+        run: |
+          ./install.sh --dry-run
+
+      - name: Run install script
+        shell: bash
+        run: |
+          ./install.sh
+
+      - name: Verify installation
+        shell: bash
+        run: |
+          echo "=== Verifying symlinks ==="
+
+          # Check XDG config directories
+          test -L ~/.config/bash && echo "✓ ~/.config/bash symlink exists" || { echo "✗ ~/.config/bash missing"; exit 1; }
+          test -L ~/.config/git && echo "✓ ~/.config/git symlink exists" || { echo "✗ ~/.config/git missing"; exit 1; }
+          test -L ~/.config/vim && echo "✓ ~/.config/vim symlink exists" || { echo "✗ ~/.config/vim missing"; exit 1; }
+          test -L ~/.config/ipython && echo "✓ ~/.config/ipython symlink exists" || { echo "✗ ~/.config/ipython missing"; exit 1; }
+
+          # Check bash init files (OS-specific)
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            test -L ~/.bash_login && echo "✓ ~/.bash_login symlink exists" || { echo "✗ ~/.bash_login missing"; exit 1; }
+            test -L ~/.bash_logout && echo "✓ ~/.bash_logout symlink exists" || { echo "✗ ~/.bash_logout missing"; exit 1; }
+          else
+            test -L ~/.bashrc && echo "✓ ~/.bashrc symlink exists" || { echo "✗ ~/.bashrc missing"; exit 1; }
+            test -L ~/.bash_logout && echo "✓ ~/.bash_logout symlink exists" || { echo "✗ ~/.bash_logout missing"; exit 1; }
+          fi
+
+          # Check traditional dotfiles
+          test -L ~/.vimrc && echo "✓ ~/.vimrc symlink exists" || { echo "✗ ~/.vimrc missing"; exit 1; }
+          test -L ~/.inputrc && echo "✓ ~/.inputrc symlink exists" || { echo "✗ ~/.inputrc missing"; exit 1; }
+          test -L ~/.pdbrc && echo "✓ ~/.pdbrc symlink exists" || { echo "✗ ~/.pdbrc missing"; exit 1; }
+
+          echo ""
+          echo "=== Verifying manifest ==="
+          test -f ~/.local/state/dotfiles/installed.json && echo "✓ Manifest exists" || { echo "✗ Manifest missing"; exit 1; }
+
+          echo ""
+          echo "=== Verifying backups ==="
+          BACKUP_DIR=$(find ~/.local/state/dotfiles/backup -type d -mindepth 1 -maxdepth 1 | head -1)
+          echo "Backup directory: $BACKUP_DIR"
+          ls -la "$BACKUP_DIR"
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            test -f "$BACKUP_DIR/.bash_login" && echo "✓ Backup of .bash_login exists" || { echo "✗ Backup missing"; exit 1; }
+            grep -q "Original bash_login" "$BACKUP_DIR/.bash_login" && echo "✓ Backup contains original content" || { echo "✗ Backup corrupted"; exit 1; }
+          else
+            test -f "$BACKUP_DIR/.bashrc" && echo "✓ Backup of .bashrc exists" || { echo "✗ Backup missing"; exit 1; }
+            grep -q "Original bashrc" "$BACKUP_DIR/.bashrc" && echo "✓ Backup contains original content" || { echo "✗ Backup corrupted"; exit 1; }
+          fi
+
+      - name: Test bash config can be sourced
+        shell: bash
+        run: |
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            bash -c "source ~/.bash_login" && echo "✓ Bash config sources successfully"
+          else
+            bash -c "source ~/.bashrc" && echo "✓ Bash config sources successfully"
+          fi
+
+      - name: Display installation state
+        shell: bash
+        run: |
+          echo "=== Symlinks ==="
+          ls -la ~/ | grep '^l' || true
+          echo ""
+          echo "=== XDG Config ==="
+          ls -la ~/.config/ || true
+          echo ""
+          echo "=== Manifest contents ==="
+          cat ~/.local/state/dotfiles/installed.json
+
+      - name: Run uninstall script (dry-run)
+        shell: bash
+        run: |
+          ./uninstall.sh --dry-run
+
+      - name: Run uninstall script
+        shell: bash
+        run: |
+          ./uninstall.sh
+
+      - name: Verify uninstallation
+        shell: bash
+        run: |
+          echo "=== Verifying symlinks removed ==="
+
+          # Verify symlinks are gone
+          test ! -L ~/.config/bash && echo "✓ ~/.config/bash removed" || { echo "✗ ~/.config/bash still exists"; exit 1; }
+          test ! -L ~/.config/git && echo "✓ ~/.config/git removed" || { echo "✗ ~/.config/git still exists"; exit 1; }
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            test ! -L ~/.bash_login && echo "✓ ~/.bash_login removed" || { echo "✗ ~/.bash_login still exists"; exit 1; }
+          else
+            test ! -L ~/.bashrc && echo "✓ ~/.bashrc removed" || { echo "✗ ~/.bashrc still exists"; exit 1; }
+          fi
+
+          echo ""
+          echo "=== Verifying original files restored ==="
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            test -f ~/.bash_login && echo "✓ ~/.bash_login exists" || { echo "✗ ~/.bash_login missing"; exit 1; }
+            grep -q "Original bash_login" ~/.bash_login && echo "✓ Original .bash_login restored" || { echo "✗ .bash_login not restored"; exit 1; }
+          else
+            test -f ~/.bashrc && echo "✓ ~/.bashrc exists" || { echo "✗ ~/.bashrc missing"; exit 1; }
+            grep -q "Original bashrc" ~/.bashrc && echo "✓ Original .bashrc restored" || { echo "✗ .bashrc not restored"; exit 1; }
+          fi
+
+          echo ""
+          echo "=== Verifying manifest removed ==="
+          test ! -f ~/.local/state/dotfiles/installed.json && echo "✓ Manifest removed" || { echo "✗ Manifest still exists"; exit 1; }
+
+      - name: Display final state
+        if: always()
+        shell: bash
+        run: |
+          echo "=== Home directory ==="
+          ls -la ~/ | head -30
+          echo ""
+          echo "=== Config directory ==="
+          ls -la ~/.config/ 2>/dev/null || echo "~/.config does not exist"
+          echo ""
+          echo "=== State directory ==="
+          ls -la ~/.local/state/ 2>/dev/null || echo "~/.local/state does not exist"
+
+      - name: Test summary
+        if: success()
+        run: |
+          echo "::notice title=Tests Passed::All installation and uninstallation tests passed on ${{ matrix.os }}"

@@ -1,0 +1,29 @@
+# Test environment for dotfiles installation
+FROM ubuntu:22.04
+
+# Install basic dependencies
+RUN apt-get update && apt-get install -y \
+    bash \
+    git \
+    vim \
+    curl \
+    tree \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create a test user (non-root)
+RUN useradd -m -s /bin/bash testuser
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Copy dotfiles into the container
+COPY --chown=testuser:testuser . /home/testuser/dotfiles
+
+# Set up some dummy existing dotfiles to test backup functionality
+RUN echo "# Original bashrc" > /home/testuser/.bashrc && \
+    echo "# Original bash_profile" > /home/testuser/.bash_profile && \
+    mkdir -p /home/testuser/.config && \
+    echo "# Original config" > /home/testuser/.config/test.conf
+
+CMD ["/bin/bash"]
