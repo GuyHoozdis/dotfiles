@@ -82,9 +82,13 @@
     }
 
     NODE_MODULES_BIN=$HOME/node_modules/.bin
+    BUN_BIN=$HOME/.bun/bin
     PERSONAL_BIN=$HOME/.local/bin
     if ! exists_in_path $NODE_MODULES_BIN; then
       [[ -d $NODE_MODULES_BIN ]] && PATH=$NODE_MODULES_BIN:$PATH
+    fi
+    if ! exists_in_path $BUN_BIN; then
+      [[ -d $BUN_BIN ]] && PATH=$BUN_BIN:$PATH
     fi
     if ! exists_in_path $PERSONAL_BIN; then
       [[ -d $PERSONAL_BIN ]] && PATH=$PERSONAL_BIN:$PATH
