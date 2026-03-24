@@ -32,9 +32,10 @@ tmp/
 .devenv/
 .macros/
 .code-review/
+.obsidian/
 .worktree/
 # When I make a symlink into .tmp/ it shows as
-# a file (no slash) to git.
+# a file (no slash) to git (same with data/).
 tmp
 
 
