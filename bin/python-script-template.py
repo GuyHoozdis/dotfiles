@@ -1,9 +1,9 @@
 #!/usr/bin/env -S uv run --script
 """A template Python script with argument parsing, logging, and error handling.
 
-This example script is given enough functionality to make it acutally do
-something, but not much.  Follow the patterns for the shabang, error handling
-around `main`, and the signature for `main` itself.  Everything else is up to
+This example script is given enough functionality to make it actually do
+something, but not much. Follow the patterns for the shebang, error handling
+around `main`, and the signature for `main` itself. Everything else is up to
 you.
 """
 
@@ -21,6 +21,7 @@ import os
 import pathlib
 import sys
 
+from functools import wraps
 from enum import IntEnum
 from pprint import pp
 from pydantic import AnyHttpUrl
@@ -32,7 +33,7 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 
-logger = logging.getLogger("vdb_utils")
+logger = logging.getLogger("python_script_template")
 
 
 VERBOSITY_LEVELS: list[int] = [logging.WARNING, logging.INFO, logging.DEBUG]
@@ -51,28 +52,38 @@ class ExitCode(IntEnum):
     UNAVAILABLE = 69
 
 
+class ScriptError(Exception):
+    """Base exception for expected template script failures."""
+
+    def __init__(self, message: str, exit_code: ExitCode = ExitCode.ERROR) -> None:
+        super().__init__(message)
+        self.exit_code = exit_code
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser for the script."""
-    parser = argparse.ArgumentParser(description="Load data into ChromaDB from a JSON file.")
+    parser = argparse.ArgumentParser(
+        description="Template utility script with file input and optional HTTP endpoint."
+    )
     parser.add_argument(
-        "-d",
-        "--data-file",
+        "-i",
+        "--input-file",
         type=pathlib.Path,
         required=True,
-        help="Path to the input JSON file containing documents.",
+        help="Path to the input file for this utility.",
     )
     parser.add_argument(
-        "-c",
-        "--collection-name",
+        "-n",
+        "--target-name",
         type=str,
         required=True,
-        help="Name of the ChromaDB collection to load data into.",
+        help="Logical target name used by this utility.",
     )
     parser.add_argument(
-        "--chroma",
+        "--endpoint",
         type=AnyHttpUrl,
-        default="http://localhost:8002",
-        help="URL of the ChromaDB server.",
+        default="http://localhost:8000",
+        help="HTTP endpoint used by this utility.",
     )
     parser.add_argument(
         "-v",
@@ -96,8 +107,18 @@ def create_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def configure_logging(verbose: int, debug: bool) -> None:
+    """Set logging level from verbosity flags."""
+    if debug:
+        level = logging.DEBUG
+    else:
+        verbosity_index = min(verbose, len(VERBOSITY_LEVELS) - 1)
+        level = VERBOSITY_LEVELS[verbosity_index]
+    logging.getLogger().setLevel(level)
+    logger.setLevel(level)
 
-def display_env(args: argparse.Namespace) -> None:
+
+def display_env() -> None:
     print("== Utility Environment ==")
     print(f"Python version: {sys.version}")
     print(f"Python executable: {sys.executable}")
@@ -121,37 +142,46 @@ def display_args(args: argparse.Namespace) -> None:
 def error_handling(func):
     """Decorator for error handling in the main function."""
 
+    @wraps(func)
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except DataLoadError as e:
-            show_stack_trace = True if args[0].verbose > 1 else False
-            logger.error("Failed to load data", exc_info=show_stack_trace)
+        except ScriptError as e:
+            parsed_args = args[0]
+            show_stack_trace = parsed_args.debug or parsed_args.verbose > 1
+            logger.error("%s", e, exc_info=show_stack_trace)
             return e.exit_code
-        except Exception as e:
-            logger.exception("An unexpected error occurred: %s", e)
+        except Exception:
+            logger.exception("An unexpected error occurred")
             return ExitCode.ERROR
 
     return wrapper
 
 
-def main(args: argparse.Namespace) -> int:
-    print("Running utility...")
-    display_env(args)
-    display_args(args)
+@error_handling
+def main(args: argparse.Namespace) -> ExitCode:
+    configure_logging(args.verbose, args.debug)
+    logger.info("Running utility...")
+    logger.debug("Input file: %s", args.input_file)
+    logger.debug("Target name: %s", args.target_name)
+    logger.debug("Endpoint: %s", args.endpoint)
+
+    if not args.input_file.exists():
+        raise ScriptError(f"Input file does not exist: {args.input_file}", ExitCode.NOINPUT)
+
+    if args.debug:
+        display_env()
+        display_args(args)
+
+    if args.dry_run:
+        logger.info("Dry-run mode enabled; no changes will be made.")
+        return ExitCode.SUCCESS
+
+    logger.info("Template script completed successfully.")
+    return ExitCode.SUCCESS
 
 
 if __name__ == "__main__":
     parser = create_parser()
     args = parser.parse_args()
-    try:
-        rc = main(args)
-    except DataLoadError as e:
-        show_stack_trace = True if args.verbose > 1 else False
-        logger.error("Failed to load data", exc_info=show_stack_trace)
-        rc = e.exit_code
-    except Exception as e:
-        logger.exception("An unexpected error occurred: %s", e)
-        rc = ExitCode.ERROR
-    sys.exit(rc)
-
+    sys.exit(int(main(args)))
