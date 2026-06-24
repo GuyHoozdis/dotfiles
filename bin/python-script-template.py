@@ -12,6 +12,7 @@ you.
 # dependencies = [
 #     "pydantic",
 #     "python-dotenv",
+#     "python-json-logger",
 # ]
 # ///
 
@@ -25,13 +26,17 @@ from functools import wraps
 from enum import IntEnum
 from pprint import pp
 from pydantic import AnyHttpUrl
+from pythonjsonlogger import jsonlogger
 
 
-logging.basicConfig(
-    format="[%(levelname)-8s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    stream=sys.stderr,
+stderr_handler = logging.StreamHandler(stream=sys.stderr)
+stderr_handler.setFormatter(
+    jsonlogger.JsonFormatter(
+        "%(asctime)s %(levelname)s %(name)s %(message)s",
+        rename_fields={"asctime": "timestamp", "levelname": "level", "name": "logger"},
+    )
 )
+logging.basicConfig(level=logging.WARNING, handlers=[stderr_handler], force=True)
 
 logger = logging.getLogger("python_script_template")
 
