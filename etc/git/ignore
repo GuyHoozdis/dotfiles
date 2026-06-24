@@ -34,12 +34,15 @@ tmp/
 .code-review/
 .obsidian/
 .worktree/
+.worktrees/
 # When I make a symlink into .tmp/ it shows as
 # a file (no slash) to git (same with data/).
 tmp
 
 
 # !!!: I'm not 100% sure I want to keep this.  Watch out.
-.cursor
-.claude
+.cursor/
+.claude/
 CLAUDE.md
+AGENTS.md
+
