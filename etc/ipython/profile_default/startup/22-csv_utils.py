@@ -18,8 +18,9 @@ def load_csv(file_path: PathLike, encoding="UTF-8") -> Iterable[DictRow]:
     Returns:
         Iterable[DictRow]: A list of dictionaries representing the rows in the CSV file.
     """
-    infile = pathlib.Path(file_path)
-    with infile.open(encoding=encoding) as fp:
-        reader = csv.DictReader(fp)
-        yield from reader
+    infiles = pathlib.Path().glob(str(file_path))
+    for infile in infiles:
+        with infile.open(encoding=encoding) as fp:
+            reader = csv.DictReader(fp)
+            yield from reader
 
