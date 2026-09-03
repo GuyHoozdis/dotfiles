@@ -148,12 +148,12 @@
 
     HISTCONTROL="erasedups:ignoreboth"
     HISTSIZE=100000
-    HISTFILESIZE=10000
+    HISTFILESIZE=100000
     shopt -s histappend
 
 # Don't record certain commands
 
-    export HISTIGNORE="&:[ ]*:exit:ls:ll:bg:fg:history:clear"
+    export HISTIGNORE="&:[ ]*:exit:l[sla]::[bf]g:history:clear:pwd:pushd:popd"
 
 
 # Save multi-line commands as one command
