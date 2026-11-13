@@ -17,8 +17,9 @@ Verify native notification routing before building the feature.
 stdlib unittest, the iTerm2 Python API, Git, and native iTerm2 OSC 9/BEL output.
 No notification helper application or persistent daemon.
 
-**Status:** Planned, not implemented. The spec was approved on 2026-11-13.
-Task 1 is a hard gate, including operator-observed click routing.
+**Status:** Task 1 probe implemented; live transport gate pending. The spec was
+approved on 2026-11-13. Tasks 2–6 have not started. Task 1 is a hard gate,
+including operator-observed click routing.
 
 ---
 
@@ -85,13 +86,13 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
 **Files:** Create `tests/copilot/probe_notifications.py`, its script lock,
 `tests/copilot/README.md`, and the plan-local `verification.md`.
 
-- [ ] **Step 1: Inspect the installed API and create the opt-in probe.**
+- [x] **Step 1: Inspect the installed API and create the opt-in probe.**
   Use the uv shebang `#!/usr/bin/env -S uv run --script`, Python `>=3.12`,
   and inline `dependencies = ["iterm2"]`; make the probe executable.
   Implement `--session UUID --transport tty|api --kind waiting|done`.
   Require an explicit UUID; never default to the active pane. No hooks are
   installed and no persistent preferences are changed by this probe.
-- [ ] **Step 2: Resolve the exact source and profile through the Python API.**
+- [x] **Step 2: Resolve the exact source and profile through the Python API.**
   Connect using `iterm2.run_until_complete`, obtain the app with
   `async_get_app`, and find the session by UUID. Fetch
   `await session.async_get_profile()` and use

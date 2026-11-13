@@ -2,10 +2,10 @@
 
 ## Gate: PENDING
 
-Probe preparation only. No live session was created, inspected, or sent an
-alert. No notification, bell, baseline, presentation, or click-routing result
-has been observed. No transport is selected. Tasks 2–6 remain blocked pending
-operator confirmation and review.
+Probe prepared and the current source session inspected read-only. No live
+session was created or sent an alert. No notification, bell, presentation, or
+click-routing result has been observed. No transport is selected. Tasks 2–6
+remain blocked pending operator confirmation.
 
 Installed iTerm2: **3.7.7** (build 3.7.7). The locked Python `iterm2` package is
 **2.30**. Local inspection of that package confirmed `run_until_complete`,
@@ -16,7 +16,9 @@ injection as program output. These findings do not establish actual delivery.
 
 Preparation checks: the locked script's `--help` and `uv lock --check --script`
 passed; invalid UUID and incomplete invocation failed before connection. The
-host-safe unittest suite uses mocks and does not connect to iTerm.
+host-safe unittest suite uses mocks and does not connect to iTerm. All nine
+cases passed with Python 3.12. Spec compliance and code quality were reviewed
+directly before live inspection; no blocking probe issues were identified.
 
 ## Operator procedure
 
@@ -78,7 +80,28 @@ transports fail, stop and request a revised design.
 
 ## Live evidence
 
-- Source and effective profile baseline: **pending operator inspection**.
+- Read-only baseline from the current agent pane, before any changes:
+  session `4C2C5FBB-CE22-4C7F-9116-D469BC5ED8B6`,
+  window `pty-AF051993-E271-47F6-B812-7EA32A416EB1`, tab `23`,
+  tty `/dev/ttys036`. Its original profile GUID matches Copilot Agents;
+  its session-local GUID is `DEA5F930-46F3-493C-9166-48B85E1A4493`.
+  This is not yet a disposable probe source selected by the operator.
+
+  | Effective setting | Value |
+  | --- | --- |
+  | BM Growl | 1 |
+  | Send Terminal Generated Alerts | 1 |
+  | Send Bell Alert | 1 |
+  | Send Idle Alert | 0 |
+  | Send New Output Alert | 0 |
+  | Send Session Ended Alert | 0 |
+  | Suppress Alerts in Active Session | 1 |
+  | Send Alerts To Companion | 0 |
+  | Silence Bell | 1 |
+
+  Current inherited settings may suppress the audible done bell and convert
+  BEL into a popup; observe unchanged behavior first rather than changing them
+  preemptively. Inspect the eventual disposable source separately.
 - macOS permission, Focus, and presentation: **not observed; unchanged**.
 - tty waiting, visibility, persistence, click routing, input: **pending**.
 - tty done bell and absence of popup: **pending**.
