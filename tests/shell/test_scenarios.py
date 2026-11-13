@@ -11,6 +11,8 @@ import pytest
 
 import scenarios
 import test_dotfiles as dotfiles
+import probe
+import test_bash as bash_suite
 from probe import SERIALIZE, launch_environment, launch_script, parse_shopt, run_scenario
 from test_dotfiles import _check_integrity
 
@@ -27,6 +29,8 @@ RUNNABLE_IDS = {
     "S08-fresh-c",
     "S08-fresh-login-c",
 }
+
+SYNTAX_IDS = {"S09-noexec"}
 
 PENDING = {
     **dict.fromkeys(
@@ -305,7 +309,7 @@ def test_scenario_ids_are_unique_and_indexed():
     ids = [scenario.id for scenario in scenarios.SCENARIOS]
     assert len(ids) == len(set(ids))
     assert scenarios.SCENARIO == {scenario.id: scenario for scenario in scenarios.SCENARIOS}
-    assert set(ids) == RUNNABLE_IDS | PENDING.keys()
+    assert set(ids) == RUNNABLE_IDS | SYNTAX_IDS | PENDING.keys()
 
 
 def test_launchers_exist_and_precede_children():
@@ -318,9 +322,14 @@ def test_launchers_exist_and_precede_children():
 
 
 def test_params_skip_only_pending_scenarios():
-    params = list(scenarios.scenario_params())
-    assert [param.id for param in params] == [scenario.id for scenario in scenarios.SCENARIOS]
-    for param, scenario in zip(params, scenarios.SCENARIOS, strict=True):
+    params = [
+        param
+        for kind in scenarios.OBSERVATION_KINDS
+        for param in scenarios.scenario_params(kind=kind)
+    ]
+    ordered = sorted(params, key=lambda param: scenarios.SCENARIOS.index(param.values[0]))
+    assert [param.id for param in ordered] == [scenario.id for scenario in scenarios.SCENARIOS]
+    for param, scenario in zip(ordered, scenarios.SCENARIOS, strict=True):
         assert param.values == (scenario,)
         assert scenario.pending == PENDING.get(scenario.id)
         if scenario.id in PENDING:
@@ -359,6 +368,7 @@ def test_runnable_scenario_shell_structures():
         ),
         "S08-fresh-c": (scenarios.Shell("fresh", ()),),
         "S08-fresh-login-c": (scenarios.Shell("fresh", ("-l",)),),
+        "S09-noexec": (scenarios.Shell("noexec", ("-n",)),),
     }
     assert {s.id: s.shells for s in scenarios.SCENARIOS if not s.pending} == expected
 
@@ -567,3 +577,267 @@ def test_runner_clears_stale_shell_artifacts_before_failed_launch(monkeypatch, t
     assert not (root / f"{shell_name}.aliases").exists()
     assert not (root / f"{shell_name}.shopt").exists()
     assert unrelated.read_text(encoding="utf-8") == "preserve"
+
+
+HOST_BASH = "/bin/bash"
+
+
+def _syntax_environment(home: Path) -> dict[str, str]:
+    """A minimal explicit environment; no production startup files exist in home."""
+    return {"HOME": str(home), "PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C"}
+
+
+def test_params_partition_registry_by_observation_kind():
+    assert scenarios.OBSERVATION_KINDS == ("state", "syntax")
+    by_kind = {
+        kind: [param.values[0] for param in scenarios.scenario_params(kind=kind)]
+        for kind in scenarios.OBSERVATION_KINDS
+    }
+    assert all(s.observation_kind == "state" for s in by_kind["state"])
+    assert [s.id for s in by_kind["syntax"]] == ["S09-noexec"]
+    combined = [s.id for kind in by_kind.values() for s in kind]
+    assert sorted(combined) == sorted(s.id for s in scenarios.SCENARIOS)
+    assert scenarios.S09_NOEXEC.observation_kind == "syntax"
+    assert scenarios.S01.observation_kind == "state"
+    with pytest.raises(TypeError):
+        scenarios.scenario_params()
+    with pytest.raises(ValueError):
+        scenarios.scenario_params(kind="process")
+
+
+@pytest.mark.parametrize(
+    "build",
+    [
+        lambda: scenarios.Scenario("x", "x", (scenarios.Shell("a", ()),), observation_kind="process"),
+        lambda: scenarios.Scenario("x", "x", (scenarios.Shell("a", ("-n",)),)),
+        lambda: scenarios.Scenario("x", "x", (scenarios.Shell("a", ()),), observation_kind="syntax"),
+        lambda: scenarios.Scenario(
+            "x", "x", (scenarios.Shell("a", ("-n",)), scenarios.Shell("b", ("-n",))),
+            observation_kind="syntax",
+        ),
+        lambda: scenarios.Scenario(
+            "x", "x", (scenarios.Shell("a", ("-n", "-i")),), observation_kind="syntax"
+        ),
+        lambda: scenarios.Scenario(
+            "x", "x", (scenarios.Shell("a", ("-n", "-c")),), observation_kind="syntax"
+        ),
+        lambda: scenarios.Scenario(
+            "x", "x", (scenarios.Shell("a", ("-n",), launcher="parent"),),
+            observation_kind="syntax",
+        ),
+        lambda: scenarios.Scenario(
+            "x", "x", (scenarios.Shell("a", ("-n",), source_bashrc=True),),
+            observation_kind="syntax",
+        ),
+        lambda: scenarios.Scenario(
+            "x", "x", (scenarios.Shell("a", ("-n",), environment=(("A", "1"),)),),
+            observation_kind="syntax",
+        ),
+        lambda: scenarios.Scenario("x", "x", observation_kind="syntax", pending="later"),
+    ],
+)
+def test_malformed_observation_variants_are_rejected(build):
+    with pytest.raises(ValueError):
+        build()
+
+
+def test_state_runner_rejects_syntax_scenario_without_launching(monkeypatch, tmp_path):
+    def forbidden_run(*args, **kwargs):
+        pytest.fail("a syntax-only scenario must not be launched with the -c probe")
+
+    monkeypatch.setattr(subprocess, "run", forbidden_run)
+    with pytest.raises(ValueError, match="syntax"):
+        run_scenario(scenarios.S09_NOEXEC, tmp_path, {"PATH": "/bin"}, HOST_BASH, tmp_path / "r")
+    assert not (tmp_path / "r" / "noexec.json").exists()
+
+
+def test_syntax_runner_rejects_state_scenario(tmp_path):
+    fixtures = probe.write_syntax_fixtures(tmp_path / "syntax fixtures")
+    with pytest.raises(ValueError, match="state"):
+        probe.run_syntax_check(
+            scenarios.S08_FRESH_C, fixtures["valid"], tmp_path, {"PATH": "/bin"},
+            HOST_BASH, tmp_path / "r", "noexec-valid",
+        )
+
+
+def test_syntax_runner_invokes_bash_n_with_script_file(monkeypatch, tmp_path):
+    fixtures = probe.write_syntax_fixtures(tmp_path / "syntax fixtures")
+    root = tmp_path / "run root"
+    root.mkdir()
+    (root / "noexec-valid.stdout").write_text("stale", encoding="utf-8")
+    observed = {}
+
+    def fake_run(command, **kwargs):
+        observed["command"] = command
+        observed.update(kwargs)
+        return subprocess.CompletedProcess(command, 3, "raw out\n", "raw err\n")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    environment = {"PATH": "/bin", "KEEP": "yes"}
+    result = probe.run_syntax_check(
+        scenarios.S09_NOEXEC, fixtures["valid"], tmp_path / "home", environment,
+        HOST_BASH, root, "noexec-valid",
+    )
+    assert observed["command"] == [HOST_BASH, "-n", str(fixtures["valid"])]
+    assert "-c" not in observed["command"]
+    assert observed["cwd"] == root
+    assert observed["stdin"] is subprocess.DEVNULL
+    assert observed["start_new_session"] is True
+    assert observed["timeout"] == 120
+    assert observed["check"] is False
+    assert observed["env"] == {**environment, "HOME": str((tmp_path / "home").resolve())}
+    assert environment == {"PATH": "/bin", "KEEP": "yes"}
+    assert result == {
+        "argv": observed["command"], "status": 3, "stdout": "raw out\n", "stderr": "raw err\n",
+    }
+    assert (root / "noexec-valid.stdout").read_text(encoding="utf-8") == "raw out\n"
+    assert (root / "noexec-valid.stderr").read_text(encoding="utf-8") == "raw err\n"
+    assert (root / "noexec-valid.status").read_text(encoding="utf-8") == "3\n"
+    assert json.loads((root / "noexec-valid.argv.json").read_text()) == observed["command"]
+
+
+def test_syntax_runner_requires_existing_script(monkeypatch, tmp_path):
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail("launched"))
+    with pytest.raises(FileNotFoundError):
+        probe.run_syntax_check(
+            scenarios.S09_NOEXEC, tmp_path / "missing.sh", tmp_path, {"PATH": "/bin"},
+            HOST_BASH, tmp_path / "r", "noexec-valid",
+        )
+
+
+def test_host_bash_n_parses_without_executing_script_or_bash_env(tmp_path):
+    home = tmp_path / "home with spaces"
+    home.mkdir()
+    fixtures = probe.write_syntax_fixtures(tmp_path / "syntax fixtures")
+    unrelated = fixtures["directory"] / "unrelated keep.txt"
+    unrelated.write_text("preserve", encoding="utf-8")
+    root = tmp_path / "observation root"
+    observations = probe.observe_syntax_scenario(
+        scenarios.S09_NOEXEC, fixtures, home, _syntax_environment(home), HOST_BASH, root
+    )
+    probe.check_syntax_observations(observations)
+
+    assert " " in str(fixtures["valid"]) and " " in str(fixtures["bash_env"])
+    assert observations["control"]["argv"] == [HOST_BASH, str(fixtures["valid"])]
+    assert observations["valid"]["argv"] == [HOST_BASH, "-n", str(fixtures["valid"])]
+    assert observations["invalid"]["argv"] == [HOST_BASH, "-n", str(fixtures["invalid"])]
+    assert observations["after_control"] == {
+        "valid": "valid-script\n", "invalid": None, "bash_env": "bash-env\n",
+    }
+    assert observations["valid"] == {
+        **observations["valid"], "status": 0, "stdout": "", "stderr": "",
+    }
+    assert observations["invalid"]["status"] == 2
+    assert "syntax error" in observations["invalid"]["stderr"]
+    for snapshot in ("before", "after_reset", "after_valid", "after_invalid"):
+        assert set(observations[snapshot].values()) == {None}, snapshot
+    assert unrelated.read_text(encoding="utf-8") == "preserve"
+    assert not list(home.iterdir())
+    recorded = json.loads((root / "syntax-observations.json").read_text(encoding="utf-8"))
+    assert recorded["valid"] == observations["valid"]
+    assert recorded["environment"]["BASH_ENV"] == str(fixtures["bash_env"])
+    for name in ("control-valid", "noexec-valid", "noexec-invalid"):
+        for suffix in ("stdout", "stderr", "status", "argv.json"):
+            assert (root / f"{name}.{suffix}").is_file(), (name, suffix)
+
+
+def _observations(**changes):
+    clean = dict.fromkeys(("valid", "invalid", "bash_env"))
+    observations = {
+        "before": dict(clean),
+        "control": {"argv": [], "status": 0, "stdout": "", "stderr": ""},
+        "after_control": {"valid": "valid-script\n", "invalid": None, "bash_env": "bash-env\n"},
+        "after_reset": dict(clean),
+        "valid": {"argv": [], "status": 0, "stdout": "", "stderr": ""},
+        "after_valid": dict(clean),
+        "invalid": {
+            "argv": [], "status": 2, "stdout": "",
+            "stderr": "/x/invalid script.sh: line 3: syntax error: unexpected end of file\n",
+        },
+        "after_invalid": dict(clean),
+        "fixtures": {"invalid": "/x/invalid script.sh"},
+    }
+    for key, value in changes.items():
+        section, _, field = key.partition("__")
+        observations[section][field] = value
+    return observations
+
+
+def test_syntax_observation_check_accepts_expected_evidence():
+    probe.check_syntax_observations(_observations())
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"before__valid": "stale\n"},
+        {"control__status": 1},
+        {"control__stderr": "noise\n"},
+        {"after_control__bash_env": None},
+        {"after_control__valid": None},
+        {"after_reset__valid": "valid-script\n"},
+        {"valid__status": 2},
+        {"valid__stdout": "output\n"},
+        {"valid__stderr": "warning\n"},
+        {"after_valid__valid": "valid-script\n"},
+        {"after_valid__bash_env": "bash-env\n"},
+        {"invalid__status": 0},
+        {"invalid__stdout": "output\n"},
+        {"invalid__stderr": ""},
+        {"invalid__stderr": "/elsewhere: line 3: syntax error\n"},
+        {"after_invalid__invalid": "invalid-script\n"},
+        {"after_invalid__bash_env": "bash-env\n"},
+    ],
+)
+def test_syntax_observation_check_detects_execution_or_missing_diagnostic(changes):
+    with pytest.raises(AssertionError):
+        probe.check_syntax_observations(_observations(**changes))
+
+
+def test_host_observation_detects_bash_that_executes_instead_of_parsing(monkeypatch, tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    fixtures = probe.write_syntax_fixtures(tmp_path / "syntax fixtures")
+    run_script = probe.run_script
+
+    def executing_check(scenario, script, home, environment, bash, root, name):
+        return run_script((), script, home, environment, bash, root, name)
+
+    monkeypatch.setattr(probe, "run_syntax_check", executing_check)
+    observations = probe.observe_syntax_scenario(
+        scenarios.S09_NOEXEC, fixtures, home, _syntax_environment(home), HOST_BASH,
+        tmp_path / "root",
+    )
+    assert observations["after_valid"]["valid"] == "valid-script\n"
+    assert observations["after_valid"]["bash_env"] == "bash-env\n"
+    with pytest.raises(AssertionError):
+        probe.check_syntax_observations(observations)
+
+
+@pytest.mark.parametrize(
+    ("module", "axis", "values"),
+    [
+        (bash_suite, "present", bash_suite.PRESENT_CONFIGURATIONS),
+        (dotfiles, "dotfiles_home", dotfiles.DOTFILES_CONFIGURATIONS),
+    ],
+)
+def test_both_suites_cover_every_scenario_across_full_axes(module, axis, values):
+    covered = {kind: set() for kind in scenarios.OBSERVATION_KINDS}
+    for name in dir(module):
+        item = getattr(module, name)
+        if not name.startswith(("test_", "Test")):
+            continue
+        marks = {mark.args[0]: mark.args[1] for mark in getattr(item, "pytestmark", [])
+                 if mark.name == "parametrize" and isinstance(mark.args[0], str)}
+        if "scenario" not in marks:
+            continue
+        kinds = {param.values[0].observation_kind for param in marks["scenario"]}
+        assert len(kinds) == 1, name
+        kind = kinds.pop()
+        assert tuple(param.id for param in marks["scenario"]) == tuple(
+            param.id for param in scenarios.scenario_params(kind=kind)
+        ), name
+        assert tuple(marks[axis]) == tuple(values), name
+        covered[kind].add(name)
+    assert all(covered.values()), covered
+    assert len(values) == (16 if axis == "present" else 3)

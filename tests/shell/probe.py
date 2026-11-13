@@ -8,6 +8,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from scenarios import STATE, SYNTAX
+
 
 def parse_aliases(text: str) -> dict[str, str]:
     """Parse Bash ``alias -p`` output, including definitions spanning lines."""
@@ -198,6 +200,11 @@ def launch_environment(scenario, base: dict[str, str]) -> dict[str, str]:
 
 def run_scenario(scenario, home, environment, bash, root) -> dict:
     """Run a scenario and return each shell's probe record."""
+    if scenario.observation_kind != STATE:
+        raise ValueError(
+            f"{scenario.id} is a {scenario.observation_kind} scenario; "
+            "the -c probe cannot observe it"
+        )
     root = Path(root).resolve()
     home = Path(home).resolve()
     root.mkdir(parents=True, exist_ok=True)
@@ -281,3 +288,166 @@ def run_scenario(scenario, home, environment, bash, root) -> dict:
         record["stderr"] = (root / f"{shell.name}.stderr").read_text(encoding="utf-8")
         records[shell.name] = record
     return records
+
+
+SYNTAX_MARKERS = ("valid", "invalid", "bash_env")
+SCRIPT_ARTIFACTS = (".stdout", ".stderr", ".status", ".argv.json")
+
+
+def write_syntax_fixtures(directory) -> dict:
+    """Write fixture scripts whose only side effects are fixture-owned sentinels.
+
+    The invalid script appends its sentinel before an unterminated ``if`` so an
+    executing shell would leave evidence before reporting the syntax error.
+    """
+    directory = Path(directory).resolve()
+    directory.mkdir(parents=True, exist_ok=True)
+    markers = {
+        "valid": directory / "valid script ran",
+        "invalid": directory / "invalid script ran",
+        "bash_env": directory / "bash env ran",
+    }
+    scripts = {
+        "valid": (
+            directory / "valid script.sh",
+            f"printf '%s\\n' valid-script >>{shlex.quote(str(markers['valid']))}\n",
+        ),
+        "invalid": (
+            directory / "invalid script.sh",
+            f"printf '%s\\n' invalid-script >>{shlex.quote(str(markers['invalid']))}\n"
+            "if true; then\n"
+            "    printf '%s\\n' unreachable\n",
+        ),
+        "bash_env": (
+            directory / "bash env.sh",
+            f"printf '%s\\n' bash-env >>{shlex.quote(str(markers['bash_env']))}\n",
+        ),
+    }
+    fixtures = {"directory": directory, "markers": markers}
+    for name, (path, text) in scripts.items():
+        path.write_text(text, encoding="utf-8")
+        fixtures[name] = path
+    return fixtures
+
+
+def run_script(options, script, home, environment, bash, root, name) -> dict:
+    """Run ``bash [options] <script>`` and record its raw status and output."""
+    script = Path(script)
+    if not script.is_file():
+        raise FileNotFoundError(f"script fixture is missing: {script}")
+    root = Path(root).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    for suffix in SCRIPT_ARTIFACTS:
+        artifact = root / f"{name}{suffix}"
+        if artifact.is_file() or artifact.is_symlink():
+            artifact.unlink()
+    argv = [os.path.abspath(bash), *options, str(script)]
+    result = subprocess.run(
+        argv,
+        env={**environment, "HOME": str(Path(home).resolve())},
+        cwd=root,
+        stdin=subprocess.DEVNULL,
+        start_new_session=True,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    (root / f"{name}.stdout").write_text(result.stdout, encoding="utf-8")
+    (root / f"{name}.stderr").write_text(result.stderr, encoding="utf-8")
+    (root / f"{name}.status").write_text(f"{result.returncode}\n", encoding="utf-8")
+    (root / f"{name}.argv.json").write_text(json.dumps(argv), encoding="utf-8")
+    return {
+        "argv": argv,
+        "status": result.returncode,
+        "stdout": result.stdout,
+        "stderr": result.stderr,
+    }
+
+
+def run_syntax_check(scenario, script, home, environment, bash, root, name) -> dict:
+    """Run a syntax scenario's shell as ``bash -n <script>``; no probe or state exists."""
+    if scenario.observation_kind != SYNTAX:
+        raise ValueError(
+            f"{scenario.id} is a {scenario.observation_kind} scenario; "
+            "only syntax scenarios run bash -n <script>"
+        )
+    (shell,) = scenario.shells
+    return run_script(shell.options, script, home, environment, bash, root, name)
+
+
+def observe_syntax_scenario(scenario, fixtures, home, environment, bash, root) -> dict:
+    """Run a positive control, then ``-n`` on valid and invalid scripts.
+
+    ``BASH_ENV`` names a fixture script for every run. The ordinary control must
+    create both script and ``BASH_ENV`` sentinels; only those sentinels are then
+    removed before the syntax-only runs.
+    """
+    if scenario.observation_kind != SYNTAX:
+        raise ValueError(f"{scenario.id} is not a syntax scenario")
+    root = Path(root).resolve()
+    root.mkdir(parents=True, exist_ok=True)
+    markers = fixtures["markers"]
+    environment = {**environment, "BASH_ENV": str(fixtures["bash_env"])}
+
+    def snapshot() -> dict:
+        state = {}
+        for marker, path in markers.items():
+            if path.is_file():
+                state[marker] = path.read_text(encoding="utf-8")
+            else:
+                state[marker] = "<not a regular file>" if os.path.lexists(path) else None
+        return state
+
+    observations = {
+        "scenario": scenario.id,
+        "observation_kind": scenario.observation_kind,
+        "fixtures": {
+            name: str(fixtures[name]) for name in ("directory", "valid", "invalid", "bash_env")
+        },
+        "markers": {marker: str(path) for marker, path in markers.items()},
+        "environment": environment,
+        "before": snapshot(),
+    }
+    observations["control"] = run_script(
+        (), fixtures["valid"], home, environment, bash, root, "control-valid"
+    )
+    observations["after_control"] = snapshot()
+    for path in markers.values():
+        if path.is_file():
+            path.unlink()
+    observations["after_reset"] = snapshot()
+    for name in ("valid", "invalid"):
+        observations[name] = run_syntax_check(
+            scenario, fixtures[name], home, environment, bash, root, f"noexec-{name}"
+        )
+        observations[f"after_{name}"] = snapshot()
+    (root / "syntax-observations.json").write_text(
+        json.dumps(observations, indent=2), encoding="utf-8"
+    )
+    return observations
+
+
+def check_syntax_observations(observations: dict) -> None:
+    """Assert ``-n`` parsed without executing the script or ``BASH_ENV``."""
+    absent = dict.fromkeys(SYNTAX_MARKERS)
+    assert observations["before"] == absent, observations["before"]
+    control = observations["control"]
+    assert (control["status"], control["stdout"], control["stderr"]) == (0, "", ""), control
+    assert observations["after_control"] == {
+        "valid": "valid-script\n",
+        "invalid": None,
+        "bash_env": "bash-env\n",
+    }, observations["after_control"]
+    assert observations["after_reset"] == absent, observations["after_reset"]
+
+    valid = observations["valid"]
+    assert (valid["status"], valid["stdout"], valid["stderr"]) == (0, "", ""), valid
+    assert observations["after_valid"] == absent, observations["after_valid"]
+
+    invalid = observations["invalid"]
+    assert invalid["status"] != 0, invalid
+    assert invalid["stdout"] == "", invalid
+    assert "syntax error" in invalid["stderr"], invalid
+    assert observations["fixtures"]["invalid"] in invalid["stderr"], invalid
+    assert observations["after_invalid"] == absent, observations["after_invalid"]

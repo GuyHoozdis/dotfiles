@@ -10,7 +10,14 @@ import pytest
 
 import scenarios
 from conftest import _create_dotfiles_home
-from probe import PROBE, SERIALIZE, run_scenario
+from probe import (
+    PROBE,
+    SERIALIZE,
+    check_syntax_observations,
+    observe_syntax_scenario,
+    run_scenario,
+    write_syntax_fixtures,
+)
 
 
 DOTFILES_CONFIGURATIONS = ("tracked", "tracked+local", "tracked-home-spaces")
@@ -184,7 +191,7 @@ def _check_integrity(records: dict, fixture: dict, scenario) -> None:
 
 @pytest.mark.dotfiles
 @pytest.mark.characterization
-@pytest.mark.parametrize("scenario", scenarios.scenario_params())
+@pytest.mark.parametrize("scenario", scenarios.scenario_params(kind=scenarios.STATE))
 @pytest.mark.parametrize(
     "dotfiles_home",
     DOTFILES_CONFIGURATIONS,
@@ -237,6 +244,52 @@ def test_dotfiles_integrity_and_system_only_control(
     _check_integrity(control_records, control, scenario)
 
 
+@pytest.mark.dotfiles
+@pytest.mark.acceptance
+@pytest.mark.parametrize("scenario", scenarios.scenario_params(kind=scenarios.SYNTAX))
+@pytest.mark.parametrize("dotfiles_home", DOTFILES_CONFIGURATIONS, indirect=True)
+def test_noexec_script_matches_system_only_control(scenario, dotfiles_home: dict) -> None:
+    home = dotfiles_home["home"]
+    installed = {
+        path.relative_to(home): path.read_bytes() for path in home.rglob("*") if path.is_file()
+    }
+    fixtures = write_syntax_fixtures(dotfiles_home["root"] / "syntax fixtures")
+    candidate = observe_syntax_scenario(
+        scenario,
+        fixtures,
+        home,
+        dotfiles_home["environment"],
+        dotfiles_home["bash"],
+        dotfiles_home["root"] / "candidate-syntax",
+    )
+    check_syntax_observations(candidate)
+
+    control_root = dotfiles_home["root"] / "system-control-syntax"
+    control_home = control_root / home.name
+    control_home.mkdir(parents=True)
+    control = observe_syntax_scenario(
+        scenario,
+        fixtures,
+        control_home,
+        {
+            **dotfiles_home["environment"],
+            "HOME": str(control_home),
+            "HISTFILE": str(control_root / "history"),
+        },
+        dotfiles_home["bash"],
+        control_root / "probe",
+    )
+    check_syntax_observations(control)
+
+    for run in ("control", "valid", "invalid"):
+        for field in ("status", "stdout", "stderr"):
+            assert candidate[run][field] == control[run][field], (run, field)
+    assert {
+        path.relative_to(home): path.read_bytes() for path in home.rglob("*") if path.is_file()
+    } == installed
+    assert not list(control_home.iterdir())
+
+
 @pytest.fixture(scope="class")
 def acceptance_records(scenario, dotfiles_home):
     """Keep candidate and system-only artifacts for every acceptance assertion."""
@@ -284,7 +337,9 @@ def _managed_entries(fixture: dict) -> list[str]:
 
 @pytest.mark.dotfiles
 @pytest.mark.acceptance
-@pytest.mark.parametrize("scenario", scenarios.scenario_params(), scope="class")
+@pytest.mark.parametrize(
+    "scenario", scenarios.scenario_params(kind=scenarios.STATE), scope="class"
+)
 @pytest.mark.parametrize(
     "dotfiles_home", DOTFILES_CONFIGURATIONS, indirect=True, scope="class"
 )

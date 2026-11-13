@@ -9,7 +9,12 @@ from pathlib import Path
 import pytest
 
 import scenarios
-from probe import run_scenario
+from probe import (
+    check_syntax_observations,
+    observe_syntax_scenario,
+    run_scenario,
+    write_syntax_fixtures,
+)
 from scenarios import Shell
 
 
@@ -109,7 +114,7 @@ def _write_startup_files(home: Path, present: frozenset[str]) -> None:
 
 @pytest.mark.bash
 @pytest.mark.characterization
-@pytest.mark.parametrize("scenario", scenarios.scenario_params())
+@pytest.mark.parametrize("scenario", scenarios.scenario_params(kind=scenarios.STATE))
 @pytest.mark.parametrize(
     "present",
     PRESENT_CONFIGURATIONS,
@@ -134,7 +139,7 @@ def test_startup_files_read(scenario, present, bash_home):
 
 @pytest.mark.bash
 @pytest.mark.characterization
-@pytest.mark.parametrize("scenario", scenarios.scenario_params())
+@pytest.mark.parametrize("scenario", scenarios.scenario_params(kind=scenarios.STATE))
 @pytest.mark.parametrize(
     "present",
     PRESENT_CONFIGURATIONS,
@@ -166,6 +171,33 @@ def test_nonlogin_shell_keeps_launched_path(scenario, present, bash_home):
                 *launched_path,
             ]
         assert records[shell.name]["path"] == launched_path
+
+
+@pytest.mark.bash
+@pytest.mark.characterization
+@pytest.mark.parametrize("scenario", scenarios.scenario_params(kind=scenarios.SYNTAX))
+@pytest.mark.parametrize(
+    "present",
+    PRESENT_CONFIGURATIONS,
+    ids=lambda present: "+".join(sorted(present)) or "empty",
+)
+def test_noexec_script_is_parsed_not_executed(scenario, present, bash_home):
+    home = bash_home["home"]
+    _write_startup_files(home, present)
+    installed = {path.name: path.read_bytes() for path in home.iterdir()}
+    fixtures = write_syntax_fixtures(bash_home["root"] / "syntax fixtures")
+    observations = observe_syntax_scenario(
+        scenario,
+        fixtures,
+        home,
+        bash_home["environment"],
+        bash_home["bash"],
+        bash_home["root"] / "probe",
+    )
+
+    check_syntax_observations(observations)
+    # -n hides whether startup files were read; they are only shown unmodified.
+    assert {path.name: path.read_bytes() for path in home.iterdir()} == installed
 
 
 @pytest.mark.bash

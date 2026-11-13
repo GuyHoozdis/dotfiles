@@ -31,6 +31,22 @@ class Shell:
     def login(self) -> bool:
         return "-l" in self.options
 
+    @property
+    def noexec(self) -> bool:
+        return "-n" in self.options
+
+
+STATE = "state"
+SYNTAX = "syntax"
+OBSERVATION_KINDS = (STATE, SYNTAX)
+"""How a scenario is observed.
+
+``state`` scenarios run the shared ``-c`` probe in every shell and record its
+process state. ``syntax`` scenarios run ``bash -n <script>``; Bash reads but
+does not execute commands, so no probe can run and no process state exists.
+They record only exit status, raw output, and fixture side effects.
+"""
+
 
 @dataclass(frozen=True)
 class Scenario:
@@ -40,6 +56,30 @@ class Scenario:
     title: str
     shells: tuple[Shell, ...] = ()
     pending: str | None = None
+    observation_kind: str = STATE
+
+    def __post_init__(self) -> None:
+        if self.observation_kind not in OBSERVATION_KINDS:
+            raise ValueError(f"{self.id}: unknown observation kind {self.observation_kind!r}")
+        if self.observation_kind == STATE:
+            if any(shell.noexec for shell in self.shells):
+                raise ValueError(f"{self.id}: state probes cannot run under -n")
+            return
+        if self.pending is not None or len(self.shells) != 1:
+            raise ValueError(f"{self.id}: syntax scenarios need exactly one runnable shell")
+        (shell,) = self.shells
+        if (
+            not shell.noexec
+            or {"-c", "-i"} & set(shell.options)
+            or shell.launcher is not None
+            or shell.prepend_callers
+            or shell.source_bashrc
+            or shell.environment
+        ):
+            raise ValueError(
+                f"{self.id}: syntax scenarios run one top-level bash -n <script> "
+                "without -c, -i, launchers, or environment mutations"
+            )
 
 
 STEPS_PENDING = "expected behavior defined in scenarios.md; launch steps not defined yet"
@@ -153,6 +193,20 @@ Crontab ``bash -lc``, Docker ``SHELL ["/bin/bash", "-l", "-c"]``, or CI
 ``shell: bash -l {0}`` (from documentation).
 """
 
+S09_NOEXEC = Scenario(
+    "S09-noexec",
+    "Syntax-only script check",
+    (Shell("noexec", ("-n",)),),
+    observation_kind=SYNTAX,
+)
+"""Fresh non-interactive non-login ``bash -n script.sh``: an editor, linter, or
+pre-commit syntax check (from documentation).
+
+Bash reads the script file but does not execute its commands. Non-interactive
+shells otherwise consult only ``BASH_ENV``; under ``-n`` it is not sourced.
+https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
+"""
+
 SSH_LOGIN = Scenario("SSH-login", "SSH login", pending=SSH_PENDING)
 """Interactive login shell planned: ``ssh host`` (from documentation). Not yet measured."""
 
@@ -180,6 +234,7 @@ SCENARIOS = (
     S08_SOURCE_RC,
     S08_FRESH_C,
     S08_FRESH_LOGIN_C,
+    S09_NOEXEC,
     SSH_LOGIN,
     SSH_CMD,
     SSH_TTY,
@@ -187,8 +242,13 @@ SCENARIOS = (
 SCENARIO = {scenario.id: scenario for scenario in SCENARIOS}
 
 
-def scenario_params() -> tuple:
-    """Create parametrized scenarios, skipping only those without launch steps."""
+def scenario_params(*, kind: str) -> tuple:
+    """Parametrize scenarios of one observation kind, skipping only those without launch steps.
+
+    Every scenario has exactly one kind, so parametrizing each kind covers the registry.
+    """
+    if kind not in OBSERVATION_KINDS:
+        raise ValueError(f"unknown observation kind: {kind!r}")
     return tuple(
         pytest.param(
             scenario,
@@ -196,4 +256,5 @@ def scenario_params() -> tuple:
             marks=pytest.mark.skip(reason=scenario.pending) if scenario.pending is not None else (),
         )
         for scenario in SCENARIOS
+        if scenario.observation_kind == kind
     )
