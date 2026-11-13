@@ -9,6 +9,8 @@
 - [0007: Split per-shell startup into `.bashrc` behind a `.bash_profile` entrypoint](0007-split-bashrc-from-bash-profile.md)
 - [0008: Separate Bash and dotfiles suites over shared scenarios](0008-separate-bash-and-dotfiles-suites-over-shared-scenarios.md)
 - [0009: Snapshot-backed login PATH reconstruction](0009-snapshot-backed-path-reconstruction.md)
+- [0010: iTerm2-owned agent notifications and completion bells](0010-iterm-owned-agent-notifications.md)
+- [0011: Separate agent attention events from status coalescing](0011-separate-agent-attention-from-status-coalescing.md)
 
 Unresolved choices remain in the
 [investigation](../../investigations/2026-11-10-shell-initialization/open-questions.md).
