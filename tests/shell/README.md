@@ -20,6 +20,37 @@ scenario over their configuration axes; pending scenarios are reported as
 skips. System startup remains enabled on both pinned images: Homebrew is
 present on macOS and absent on Ubuntu.
 
+## Observation kinds
+
+Each registered scenario has exactly one `observation_kind`, and
+`scenario_params(kind=...)` selects one kind. Each suite parametrizes every kind
+over its full configuration axis, so no scenario is dropped; host tests verify
+this coverage.
+
+- `state` (all scenarios except S09): every shell runs the shared `-c` probe,
+  which records PATH, functions, aliases, shell options, and environment.
+- `syntax` (S09-noexec): a fresh, top-level `bash -n <script>`. Bash reads but
+  does not execute commands, so no probe runs and no process state is observed;
+  `run_scenario` rejects these scenarios rather than inventing a record. The
+  syntax runner records only exit status, raw stdout/stderr, argv, and
+  fixture-owned sentinel files.
+
+Each syntax observation uses fixture scripts whose paths contain spaces: a
+valid script and an invalid script (unterminated `if`), each appending to its
+own sentinel. `BASH_ENV` (the only startup file a non-interactive shell
+consults) names a third script with its own sentinel. An ordinary
+`bash <valid script>` positive control must create the script and `BASH_ENV`
+sentinels; only those sentinels are removed. Then `-n` on the valid script
+must exit 0 with no output, and on the invalid script must exit nonzero
+(Bash reports 2) with a syntax-error diagnostic naming the script. Neither may
+create any sentinel. This shows that `-n` does not execute the script or
+`BASH_ENV`; it does not show that `-n` detects runtime errors, which it does not.
+
+The Bash suite runs this under all 16 startup-file masks and checks the
+standard files are unmodified; `-n` cannot reveal whether they were read. The
+dotfiles suite runs it with each tracked home and compares status and output
+with a matched system-only control home, using the same script files.
+
 ## Running
 
 Host-safe driver tests:
@@ -75,7 +106,8 @@ Each run writes these files to its artifacts directory:
 - `results/pytest.xml`: JUnit XML.
 - `results/shell-pytest-*/`: per-scenario observations including PATH, functions,
   aliases, shell state and raw stdout/stderr. Dotfiles runs retain candidate
-  and matched system-only control artifacts.
+  and matched system-only control artifacts. Syntax scenarios instead retain
+  `syntax-observations.json` and `{control-valid,noexec-valid,noexec-invalid}.{stdout,stderr,status,argv.json}`.
 
 Symlinks created by pytest under `results/` are skipped, not followed. Any other
 special or unsafe archive member fails the run.

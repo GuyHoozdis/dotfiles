@@ -29,6 +29,7 @@ Apply the precedence requirements in decisions
 | S08-source-rc | Inherited non-interactive child explicitly sources `.bashrc` | No interactive initialization or unsolicited dotfiles output |
 | S08-fresh-c | Fresh non-interactive non-login shell | No interactive initialization or unsolicited dotfiles output |
 | S08-fresh-login-c | Fresh non-interactive login shell | Login environment loaded; no interactive initialization or unsolicited dotfiles output |
+| S09-noexec | Fresh syntax-only check (`bash -n script.sh`) | Valid script exits 0 without output; invalid script reports a syntax error; neither the script nor `BASH_ENV` executes |
 | SSH-login | Modeled interactive SSH login | Pending: no sshd transport |
 | SSH-cmd | Modeled SSH remote command | Shell mode and expectations pending; no sshd transport |
 | SSH-tty | Modeled SSH pseudo-terminal command | Shell mode and expectations pending; no sshd transport |
@@ -38,6 +39,14 @@ inherited and fresh non-interactive launches, login from non-login, and an
 explicit non-interactive source of `.bashrc`. Unsolicited dotfiles output is
 compared against a matched system-only control. Exact environment-loading
 expectations for remote commands remain open.
+
+S09 is the only syntax-only scenario. Every other scenario observes process
+state through the shared `-c` probe; under `-n` no command runs, so S09
+observes only exit status, raw output, and fixture sentinel files written by
+the script and by a `BASH_ENV` script. It does not claim any shell state. An
+ordinary run of the same valid script is the positive control proving both
+sentinels can be written. See the
+[harness README](../../../tests/shell/README.md#observation-kinds).
 
 Also cover repeated sourcing, paths containing spaces, and missing optional
 tools. Do not equate equivalent precedence with byte-for-byte identical PATHs.
