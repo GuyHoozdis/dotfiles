@@ -17,9 +17,9 @@ Verify native notification routing before building the feature.
 stdlib unittest, the iTerm2 Python API, Git, and native iTerm2 OSC 9/BEL output.
 No notification helper application or persistent daemon.
 
-**Status:** Task 1 probe implemented; live transport gate pending. The spec was
-approved on 2026-11-13. Tasks 2–6 have not started. Task 1 is a hard gate,
-including operator-observed click routing.
+**Status:** Task 1 passed with operator-confirmed tty output, persistent waiting
+presentation, exact-pane click routing, and bell-only completion. The spec was
+approved on 2026-11-13. Runtime Tasks 2–6 are next.
 
 ---
 
@@ -101,24 +101,25 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
   that retain this original GUID. A display-name match is insufficient.
   Check the installed library exposes these methods; do not assume remote
   master source exactly matches the installed version.
-- [ ] **Step 3: Test the source tty transport first.**
+- [x] **Step 3: Test the source tty transport first.**
   Resolve `await session.async_get_variable("tty")` and verify it is an
   existing character-device tty belonging to this user under `/dev/`.
   Write only `b"\x1b]9;Copilot test: waiting for input\x07"` or `b"\x07"`
   to that device as output. Never use `it2 session send`, `run`,
   `async_send_text`, keyboard scripting, inherited stdout, or an active-session
   proxy. Confirm no bytes land in shell/Copilot input.
-- [ ] **Step 4: If tty output fails, test Python output injection.**
+- [x] **Step 4: If tty output fails, test Python output injection.**
   Use `await session.async_inject(data)` with the same bytes. This API takes
   bytes and simulates program output. Record one chosen transport; do not
   silently switch to another transport on each delivery or send twice.
-- [ ] **Step 5: Record the unchanged notification baseline.**
+  Not needed: tty passed the live gate.
+- [x] **Step 5: Record the unchanged notification baseline.**
   On a disposable Copilot Agents session, read and record the effective
   profile key/value settings listed in Task 5 Step 3 without applying
   overrides yet. Leave macOS notification permission, presentation style,
   and Focus settings unchanged. The system may already be configured as
   desired; do not make selecting Alerts a prerequisite for the first test.
-- [ ] **Step 6: Trigger one baseline notification and ask the operator to assess it.**
+- [x] **Step 6: Trigger one baseline notification and ask the operator to assess it.**
   From this worktree, use the probe against the explicit source UUID:
 
   ```bash
@@ -153,7 +154,7 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
   the affected checks. Never change macOS settings automatically or alter
   Default/Naked. Restore disposable session overrides or close only the
   created session after testing.
-- [ ] **Step 7: Record the gate outcome and commit.**
+- [x] **Step 7: Record the gate outcome and commit.**
   Record iTerm2/API versions, selected transport, unchanged-baseline results,
   any operator-approved adjustments, permission state, and operator-confirmed
   routing/presentation in `verification.md`. Until confirmed, mark

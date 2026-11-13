@@ -1,11 +1,11 @@
 # Notification transport verification
 
-## Gate: PENDING
+## Gate: PASSED (2026-11-13)
 
-Probe prepared and the current source session inspected read-only. No live
-session was created or sent an alert. No notification, bell, presentation, or
-click-routing result has been observed. No transport is selected. Tasks 2–6
-remain blocked pending operator confirmation.
+The operator confirmed persistent waiting presentation, exact source click
+routing, unchanged shell input, and bell-only completion. Selected transport:
+**source tty output**. API fallback is unnecessary and was not tested.
+Runtime implementation and its acceptance matrix remain outstanding.
 
 Installed iTerm2: **3.7.7** (build 3.7.7). The locked Python `iterm2` package is
 **2.30**. Local inspection of that package confirmed `run_until_complete`,
@@ -102,9 +102,35 @@ transports fail, stop and request a revised design.
   Current inherited settings may suppress the audible done bell and convert
   BEL into a popup; observe unchanged behavior first rather than changing them
   preemptively. Inspect the eventual disposable source separately.
-- macOS permission, Focus, and presentation: **not observed; unchanged**.
-- tty waiting, visibility, persistence, click routing, input: **pending**.
-- tty done bell and absence of popup: **pending**.
+- Disposable source used for the successful gate:
+  `3F6B1E38-D27C-4E4D-9A75-76F993E539C3`, tab `25`,
+  tty `/dev/ttys014`, same window as above. Its original effective profile
+  GUID was the Copilot Agents GUID with no session-local GUID. All nine
+  baseline settings matched the table above.
+- Initial identifier `97ECA827-CB54-466C-A10F-2B747952C0E6` was rejected
+  because it was not Copilot Agents; no alert was sent.
+  An earlier disposable source `846AD4A1-67A4-4F96-A8D6-85EA6F37DEC0`
+  produced a visible, self-disappearing notification before the operator
+  selected the final source.
+- Unchanged baseline on the final source: waiting alert visibly appeared but
+  disappeared on its own. A separate click before disappearance focused the
+  exact source pane; the operator confirmed unchanged shell input. Baseline
+  completion produced both an audible bell and a system popup, despite the
+  effective `Silence Bell=1`; observations take precedence over assumptions
+  about that key.
+- After observing the baseline shortfall, the operator explicitly approved
+  testing session-local bell overrides and changed macOS iTerm2 presentation
+  to Alerts/Persistent themselves. Notification permission permits observed
+  delivery; the specific permission and Focus toggles were not inspected.
+- With persistent presentation, the operator left the waiting alert untouched
+  for at least 30 seconds and reported it stayed until clicked/dismissed and
+  met their needs. Clicking focused the exact source pane. Shell input stayed
+  unchanged. This is operator assessment, not proof of indefinite persistence.
+- With only `Silence Bell=false` and `Send Bell Alert=false` applied to the
+  disposable session, completion rang without a system popup and without
+  changing shell input. The API read back both overrides as `0`.
+- Both disposable-session settings were restored and read back as `1` after
+  testing. No saved profile, Default/Naked, hook, or installation symlink was
+  changed. The operator's app-wide macOS presentation choice was retained.
 - API fallback, if needed: **not tested**.
-- Approved adjustments: **none**.
-- Chosen transport: **pending operator confirmation**.
+- Chosen transport: **tty, operator-confirmed**.
