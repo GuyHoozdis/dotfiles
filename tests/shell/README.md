@@ -151,6 +151,26 @@ assertions applicable only to fresh launches or `tracked+local`. Per image,
 acceptance skips comprise 198 undefined-launch cases, 198 SSH cases, 27
 fresh-noninteractive-only cases, and 40 local-only cases.
 
+### Syntax-only scenario runs
+
+Unfiltered guest runs of revision `7713d98e58999475db72e5d25b6168e3a2ae520c`
+(`git_dirty: false`) added S09-noexec. All four completed with no harness or
+cleanup error and no run-owned clone remaining:
+
+| Suite | Image | Characterization: passed / failed / skipped | Acceptance: passed / failed / skipped | Unfiltered total: passed / failed / skipped |
+| --- | --- | --- | --- | --- |
+| Bash | Ubuntu | 337 / 0 / 192 | — | 337 / 0 / 192 |
+| Bash | macOS | 337 / 0 / 192 | — | 337 / 0 / 192 |
+| Dotfiles | Ubuntu | 30 / 0 / 18 | 591 / 24 / 463 | 621 / 24 / 481 |
+| Dotfiles | macOS | 30 / 0 / 18 | 591 / 24 / 463 | 621 / 24 / 481 |
+
+All 16 Bash and 3 dotfiles S09 cases passed on both images; invalid scripts
+exited 2 on Bash 3.2.57 and 5.2.21. The 24 dotfiles failures per image are all
+`test_prompt_command`: `PROMPT_COMMAND` is now
+`set_prompt; _iterm2_set_repo_label` (from `26eed0a`), not `set_prompt`. That
+predates this scenario and is not addressed here. Raw evidence is under
+`~/shell-artifacts/bash-noexec-{ubuntu,macos}-{bash,dotfiles}-20261113T1245`.
+
 ## Login PATH snapshot
 
 [Decision 0009](../../docs/design/decisions/0009-snapshot-backed-path-reconstruction.md)
