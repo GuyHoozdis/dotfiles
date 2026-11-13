@@ -68,6 +68,13 @@ deferred. Interactive command probes do not exercise prompt rendering, keyboard
 bindings, or terminal job control. See the [harness coverage limits and
 verification evidence](../../../tests/shell/README.md).
 
+Verified 2026-11-13 at committed implementation `05e0e74`: host 129 passed;
+each image's Bash suite 737 passed / 192 skipped, dotfiles suite 1452 passed /
+583 skipped, with zero failures or errors. All four unfiltered runs recorded
+clean source and successful cleanup. Artifact directory names, suite/marker
+breakdowns, TDD red results, and the repaired stale prompt baseline are listed
+in the [verified results](../../../tests/shell/README.md#verified-invocation-variation-results).
+
 Also cover repeated sourcing, paths containing spaces, and missing optional
 tools. Do not equate equivalent precedence with byte-for-byte identical PATHs.
 Check actual command resolution with colliding fixture executables as well as
