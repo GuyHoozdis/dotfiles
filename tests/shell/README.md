@@ -20,6 +20,40 @@ scenario over their configuration axes; pending scenarios are reported as
 skips. System startup remains enabled on both pinned images: Homebrew is
 present on macOS and absent on Ubuntu.
 
+## Invocation inputs
+
+The shared registry also covers actual Bash invocation controls, not IDE, SSH,
+or PTY sessions. S09–S12 extend decision 0008's fixtures with explicitly named
+invocation inputs: a silent `BASH_ENV` sentinel, an alternative `--rcfile`, and a
+probe script, all in fixture-owned paths containing spaces. These do not replace
+tracked modules, standard startup fixtures, or system files. Matched system-only
+controls receive the same scenario inputs; neither harness nor profile sources
+the sentinel on Bash's behalf.
+
+| IDs | Actual invocation (probe arguments omitted) | Expected selection |
+| --- | --- | --- |
+| S09-env-c | `BASH_ENV=file bash -c …` | Sentinel only |
+| S09-env-script | `BASH_ENV=file bash "probe script.bash" …` | Sentinel, then real script; no extra Bash runner |
+| S09-env-login-c | `BASH_ENV=file bash -l -c …` | Login files, then sentinel |
+| S09-env-interactive | `BASH_ENV=file bash -i -c …` | Normal rc; sentinel ignored |
+| S09-env-inherited-c | Login parent → `BASH_ENV=file bash -c …` | Inherited exports; sentinel in child, no user interactive modules |
+| S10-noprofile-i | `bash --noprofile -i -l -c …` | No automatic profile or user rc |
+| S10-noprofile-env | `BASH_ENV=file bash --noprofile -l -c …` | Sentinel despite suppressed profiles |
+| S11-norc-i | `bash --norc -i -c …` | No automatic rc or user interactive modules |
+| S11-norc-login | `bash --norc -i -l -c …` | Profile can still explicitly source `.bashrc` |
+| S12-rcfile-i | `bash --rcfile file -i -c …` | Alternative rc, not ordinary user rc |
+| S12-rcfile-login | `bash --rcfile file -i -l -c …` | Alternative ignored; profile can source ordinary rc |
+| S12-norc-rcfile | `bash --norc --rcfile file -i -c …` | Neither automatic rc runs |
+
+Every new scenario runs over all 16 Bash startup-file combinations and all
+three dotfiles configurations. Additional Bash cases explicitly source `.bashrc`
+from each selected synthetic login profile to distinguish automatic selection
+from profile dispatch. Sentinel records prove execution, login-before-sentinel
+ordering, and exported/local state at the time of sourcing. Dotfiles assertions
+distinguish actual interactive mode from whether tracked interactive modules
+were selected; suppressed profiles preserve the input PATH instead of asserting
+login initialization. Local overrides retain their existing module order.
+
 ## Running
 
 Host-safe driver tests:

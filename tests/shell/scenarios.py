@@ -22,6 +22,8 @@ class Shell:
     prepend_callers: bool = False
     source_bashrc: bool = False
     environment: tuple[tuple[str, str], ...] = ()
+    bash_env: bool = False
+    script: bool = False
 
     @property
     def interactive(self) -> bool:
@@ -30,6 +32,28 @@ class Shell:
     @property
     def login(self) -> bool:
         return "-l" in self.options
+
+    @property
+    def reads_profile(self) -> bool:
+        return self.login and "--noprofile" not in self.options
+
+    @property
+    def reads_rcfile(self) -> bool:
+        return (
+            self.interactive and not self.login
+            and "--norc" not in self.options and "--rcfile" in self.options
+        )
+
+    @property
+    def reads_bashrc(self) -> bool:
+        """Tracked profile explicitly sources bashrc, independently of --norc."""
+        return self.interactive and (
+            self.reads_profile
+            or (
+                not self.login and "--norc" not in self.options
+                and "--rcfile" not in self.options
+            )
+        )
 
 
 @dataclass(frozen=True)
@@ -166,6 +190,33 @@ SSH_TTY = Scenario("SSH-tty", "SSH pseudo-terminal", pending=SSH_PENDING)
 (from documentation). Not yet measured.
 """
 
+INVOCATION_SCENARIOS = (
+    Scenario("S09-env-c", "Fresh command with BASH_ENV",
+             (Shell("fresh", (), bash_env=True),)),
+    Scenario("S09-env-script", "Actual script with BASH_ENV",
+             (Shell("script", (), bash_env=True, script=True),)),
+    Scenario("S09-env-login-c", "Non-interactive login with BASH_ENV",
+             (Shell("fresh", ("-l",), bash_env=True),)),
+    Scenario("S09-env-interactive", "Interactive shell ignores BASH_ENV",
+             (Shell("fresh", ("-i",), bash_env=True),)),
+    Scenario("S09-env-inherited-c", "Inherited command with BASH_ENV",
+             (PARENT, Shell("child", (), launcher="parent", bash_env=True))),
+    Scenario("S10-noprofile-i", "Interactive login without profiles",
+             (Shell("fresh", ("--noprofile", "-i", "-l")),)),
+    Scenario("S10-noprofile-env", "Non-interactive login without profiles with BASH_ENV",
+             (Shell("fresh", ("--noprofile", "-l"), bash_env=True),)),
+    Scenario("S11-norc-i", "Interactive non-login without automatic rc",
+             (Shell("fresh", ("--norc", "-i")),)),
+    Scenario("S11-norc-login", "Login profile explicitly sources rc despite --norc",
+             (Shell("fresh", ("--norc", "-i", "-l")),)),
+    Scenario("S12-rcfile-i", "Interactive non-login alternative rc",
+             (Shell("fresh", ("--rcfile", "{rcfile}", "-i")),)),
+    Scenario("S12-rcfile-login", "Login ignores alternative rc",
+             (Shell("fresh", ("--rcfile", "{rcfile}", "-i", "-l")),)),
+    Scenario("S12-norc-rcfile", "--norc overrides alternative rc",
+             (Shell("fresh", ("--norc", "--rcfile", "{rcfile}", "-i")),)),
+)
+
 SCENARIOS = (
     S01,
     S02,
@@ -180,6 +231,7 @@ SCENARIOS = (
     S08_SOURCE_RC,
     S08_FRESH_C,
     S08_FRESH_LOGIN_C,
+    *INVOCATION_SCENARIOS,
     SSH_LOGIN,
     SSH_CMD,
     SSH_TTY,

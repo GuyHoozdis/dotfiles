@@ -29,6 +29,18 @@ Apply the precedence requirements in decisions
 | S08-source-rc | Inherited non-interactive child explicitly sources `.bashrc` | No interactive initialization or unsolicited dotfiles output |
 | S08-fresh-c | Fresh non-interactive non-login shell | No interactive initialization or unsolicited dotfiles output |
 | S08-fresh-login-c | Fresh non-interactive login shell | Login environment loaded; no interactive initialization or unsolicited dotfiles output |
+| S09-env-c | Fresh `BASH_ENV=file bash -c …` | Silent sentinel executes; no standard user startup |
+| S09-env-script | Fresh `BASH_ENV=file bash "probe script.bash" …` | Real script argv, sentinel executes once before the probe; no wrapper Bash |
+| S09-env-login-c | Fresh `BASH_ENV=file bash -l -c …` | Login files precede sentinel; sentinel captures sourced exports/local state |
+| S09-env-interactive | Fresh `BASH_ENV=file bash -i -c …` | Sentinel ignored; normal interactive rc |
+| S09-env-inherited-c | Login parent → `BASH_ENV=file bash -c …` | Child inherits exports, runs sentinel, does not inherit ordinary functions |
+| S10-noprofile-i | Fresh `bash --noprofile -i -l -c …` | No automatic profiles or ordinary user rc; no tracked interactive modules |
+| S10-noprofile-env | Fresh `BASH_ENV=file bash --noprofile -l -c …` | Sentinel still runs; no profile exports/PATH initialization |
+| S11-norc-i | Fresh `bash --norc -i -c …` | No ordinary user rc or tracked interactive modules |
+| S11-norc-login | Fresh `bash --norc -i -l -c …` | Login profile still explicitly sources `.bashrc`; tracked exports and interactive modules load |
+| S12-rcfile-i | Fresh `bash --rcfile file -i -c …` | Only alternative user rc selected; tracked interactive modules absent |
+| S12-rcfile-login | Fresh `bash --rcfile file -i -l -c …` | Alternative rc ignored; profile may explicitly source ordinary `.bashrc` |
+| S12-norc-rcfile | Fresh `bash --norc --rcfile file -i -c …` | `--norc` takes precedence; neither automatic user rc runs |
 | SSH-login | Modeled interactive SSH login | Pending: no sshd transport |
 | SSH-cmd | Modeled SSH remote command | Shell mode and expectations pending; no sshd transport |
 | SSH-tty | Modeled SSH pseudo-terminal command | Shell mode and expectations pending; no sshd transport |
@@ -38,6 +50,23 @@ inherited and fresh non-interactive launches, login from non-login, and an
 explicit non-interactive source of `.bashrc`. Unsolicited dotfiles output is
 compared against a matched system-only control. Exact environment-loading
 expectations for remote commands remain open.
+
+S09–S12 are invocation variations, not measured application or terminal sessions.
+They run across every existing configuration axis in both suites, extending the
+fixture inputs described by decision 0008 without revising that published ADR.
+The Bash suite retains standard startup-file markers; the dotfiles suite retains
+real tracked modules and system providers. Named BASH_ENV/rcfile inputs are
+silent, synthetic, fixture-owned files with spaces in their paths, not module
+or system-file replacements. Controls receive equivalent invocation inputs.
+Probe records retain sentinel markers and the state seen before its execution.
+Additional Bash cases prove explicit profile-to-rc dispatch under both `--norc`
+and login `--rcfile`; the 16 combinations determine whether a profile and rc
+are present. No syntax-only invocation is a scenario.
+
+S05–S07 PATH launch steps, SSH transport, and PTY-backed interaction remain
+deferred. Interactive command probes do not exercise prompt rendering, keyboard
+bindings, or terminal job control. See the [harness coverage limits and
+verification evidence](../../../tests/shell/README.md).
 
 Also cover repeated sourcing, paths containing spaces, and missing optional
 tools. Do not equate equivalent precedence with byte-for-byte identical PATHs.
