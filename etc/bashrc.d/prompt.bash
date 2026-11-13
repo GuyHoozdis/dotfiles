@@ -213,8 +213,36 @@
     # will have to think about this some more.
     #export PROMPT_COMMAND="history -a; history -c; history -r; set_prompt"
 
+    # Publish "repo" or "repo|worktree" as the iTerm2 user variable `repoLabel`;
+    # the "Copilot Agents" profile (etc/iterm/DynamicProfiles) uses it as the
+    # tab title.  Outside a repo the label is empty and iTerm2 uses its default.
+    function _iterm2_set_repo_label() {
+      local rc=$? label="" toplevel="" common="" main repo
+      if [[ ${TERM_PROGRAM-} != iTerm.app && ${LC_TERMINAL-} != iTerm2 ]] || [[ -n ${TMUX-} ]]; then
+        return $rc
+      fi
+      { read -r toplevel; read -r common; } < <(git rev-parse --show-toplevel --path-format=absolute --git-common-dir 2>/dev/null)
+      if [[ -n $toplevel && -n $common ]]; then
+        if [[ $common == */.git ]]; then
+          main="${common%/.git}"
+          repo="${main##*/}"
+        else
+          main="$common"
+          repo="${common##*/}"
+          repo="${repo%.git}"
+        fi
+        label="$repo"
+        [[ $toplevel != "$main" ]] && label="${repo}|${toplevel##*/}"
+      fi
+      if [[ $label != "${_ITERM2_REPO_LABEL-}" ]]; then
+        _ITERM2_REPO_LABEL="$label"
+        printf '\033]1337;SetUserVar=repoLabel=%s\007' "$(printf '%s' "$label" | base64 | tr -d '\n')"
+      fi
+      return $rc
+    }
+
     #
-    export PROMPT_COMMAND=set_prompt
+    export PROMPT_COMMAND="set_prompt; _iterm2_set_repo_label"
 
     unset RED
     unset GREEN
