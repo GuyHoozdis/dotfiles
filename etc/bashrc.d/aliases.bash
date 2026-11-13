@@ -1,17 +1,13 @@
-# The exports are sourced before this, so those values are available
-# to be used in this module.  In pseudo code; the load order goes
-# like this:
-#
-#   for filename in {exports,aliases,functions,app-config,prompt};
-#     load filename.local.bash if filename.local.bash exists;
-#     load filename.bash if filename.bash exists;
+# Login shells load exports; interactive shells load shell-options, aliases,
+# functions, app-config, and prompt, in that order. Each module's .local.bash
+# override is sourced before its tracked .bash file.
 #
 # -----------------------------------------------------------------------------
 
 # Use the GNU utilities, for these specific commands, if they are installed on
 # OSX.  Only do this to a select few commands.  Otherwise explicitly use g<cmd>.
 
-    if [ -f "$(brew --prefix 2>/dev/null)/bin/gls" ]; then
+    if command -v brew >/dev/null 2>&1 && [ -f "$(brew --prefix 2>/dev/null)/bin/gls" ]; then
       # This is Darwin with GNU coreutils installed
       CMD_LS="gls --color --group-directories-first"
       CMD_ENV=genv
@@ -29,7 +25,7 @@
     fi
 
     # Use GNU tar if installed on OSX.
-    [ -f "$(brew --prefix 2>/dev/null)/bin/gtar" ] && \
+    command -v brew >/dev/null 2>&1 && [ -f "$(brew --prefix 2>/dev/null)/bin/gtar" ] && \
       CMD_TAR="gtar" || \
       CMD_TAR="tar --disable-copyfile --no-xattrs"
     alias tar="${CMD_TAR}"

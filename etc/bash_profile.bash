@@ -1,7 +1,7 @@
 # Enable debugging by placing a file, with the .debug extension, next to the
 # file to be examined
 
-    DEBUG_FLAG=$HOME/.local/etc/bash_login.debug
+    DEBUG_FLAG=$HOME/.local/etc/bash_profile.debug
     if [[ -f $DEBUG_FLAG ]]; then
         set -x
     fi
@@ -52,16 +52,20 @@
 # ===================================================================================
 
 
-# Load all files from the bashrc.d directory
+# Load login-time environment modules from the bashrc.d directory, then hand off
+# to ~/.bashrc for the per-shell modules (see decision 0007).
 #
 # Files with the extension .local are not committed to the repo and will be sourced
 # immediately before the file of the same name without the .local extention.
 
     # !!!: Change this to be configurable.
-    BASH_CONFIG_DIR=~/.local/etc/bashrc.d
-    [[ ! -d $BASH_CONFIG_DIR ]] && return
-    for filename in {exports,aliases,functions,app-config,prompt}; do
-        BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${filename}
-        [[ -r ${BASH_CONFIG_FILE}.local.bash ]] && source ${BASH_CONFIG_FILE}.local.bash
-        [[ -r ${BASH_CONFIG_FILE}.bash ]] && source ${BASH_CONFIG_FILE}.bash
-    done
+    BASH_CONFIG_DIR="$HOME/.local/etc/bashrc.d"
+    if [[ -d $BASH_CONFIG_DIR ]]; then
+        for filename in exports; do
+            BASH_CONFIG_FILE=${BASH_CONFIG_DIR}/${filename}
+            [[ -r ${BASH_CONFIG_FILE}.local.bash ]] && source "${BASH_CONFIG_FILE}.local.bash"
+            [[ -r ${BASH_CONFIG_FILE}.bash ]] && source "${BASH_CONFIG_FILE}.bash"
+        done
+    fi
+
+    [[ -r $HOME/.bashrc ]] && source "$HOME/.bashrc"

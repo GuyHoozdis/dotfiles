@@ -1,0 +1,21 @@
+[project]
+name = "dotfiles-shell-tests"
+version = "0.1.0"
+requires-python = ">=3.12,<3.16"
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8.4,<10"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/shell"]
+strict_markers = true
+markers = [
+    "characterization: observe current shell startup behavior without asserting policy",
+    "acceptance: assert approved shell startup behavior",
+    "bash: Bash startup-file scenario suite",
+    "dotfiles: tests of the production dotfiles configuration",
+]
+
+[tool.uv]
+package = false

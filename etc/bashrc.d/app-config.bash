@@ -1,16 +1,14 @@
-# The exports are sourced before this, so those values are available
-# to be used in this module.  In pseudo code; the load order goes
-# like this:
-#
-#   for filename in {exports,aliases,functions,app-config,prompt};
-#     load filename.local.bash if filename.local.bash exists;
-#     load filename.bash if filename.bash exists;
+# Login shells load exports; interactive shells load shell-options, aliases,
+# functions, app-config, and prompt, in that order. Each module's .local.bash
+# override is sourced before its tracked .bash file.
 #
 # -----------------------------------------------------------------------------
 
 # Initialize all the completions
 
-    [ -f $(brew --prefix)/etc/bash_completion ] && . $(brew --prefix)/etc/bash_completion
+    command -v brew >/dev/null 2>&1 \
+      && [ -f "$(brew --prefix)/etc/profile.d/bash_completion.sh" ] \
+      && . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
 
 
 # ##############################################################################

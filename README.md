@@ -1,5 +1,7 @@
 # Another Dotfiles Repo
 
+[Documentation and investigations](docs/README.md)
+
 Work in-progress:
 - Implement [XDG Base Directory Specification][xdg-base-dir-spec].
 - Investigate using `stow` to [manage configuration][stow-dotfiles] files under `$HOME`.
