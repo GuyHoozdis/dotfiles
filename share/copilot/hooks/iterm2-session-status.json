@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" SessionStart", "timeoutSec": 5 }
+    ],
+    "UserPromptSubmit": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" UserPromptSubmit", "timeoutSec": 5 }
+    ],
+    "PreToolUse": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" PreToolUse", "timeoutSec": 5 }
+    ],
+    "PostToolUse": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" PostToolUse", "timeoutSec": 5 }
+    ],
+    "Notification": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" Notification", "matcher": "permission_prompt|elicitation_dialog", "timeoutSec": 5 }
+    ],
+    "Stop": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" Stop", "timeoutSec": 5 }
+    ],
+    "SessionEnd": [
+      { "type": "command", "bash": "\"$HOME/dotfiles/bin/copilot-iterm-status\" SessionEnd", "timeoutSec": 5 }
+    ]
+  }
+}

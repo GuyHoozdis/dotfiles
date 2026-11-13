@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+#
+# Copilot CLI hook that mirrors the agent's state into iTerm2's Session Status
+# (the colored dot and subtitle on the tab): working, waiting, done, idle.
+#
+# Usage (from a Copilot hook, see share/copilot/hooks/iterm2-session-status.json):
+#   copilot-iterm-status <SessionStart|UserPromptSubmit|PreToolUse|PostToolUse|Notification|Stop|SessionEnd>
+#
+# Hooks can fire concurrently and each `it2` call takes ~0.2s, so the hook only
+# records the newest state and returns.  A single background worker per iTerm
+# session forwards it, so a slow, older update can't overwrite a newer one.
+# ==============================================================================
+set -Euo pipefail
+
+IT2="${IT2:-/Applications/iTerm.app/Contents/Resources/utilities/it2}"
+event="${1-}"
+
+# The payload is unused (the event comes from argv) and can be large.
+cat >/dev/null 2>&1 || true
+
+[[ -n ${ITERM_SESSION_ID-} && -z ${TMUX-} && -x ${IT2} ]] || exit 0
+
+case "${event}" in
+  SessionStart) state=idle ;;
+  UserPromptSubmit | PreToolUse | PostToolUse) state=working ;;
+  Notification) state=waiting ;;
+  Stop) state=done ;;
+  SessionEnd) state=cleared ;;
+  *) exit 0 ;;
+esac
+
+session="${ITERM_SESSION_ID#*:}"
+state_dir="${TMPDIR:-/tmp}/copilot-iterm-status/${session}"
+lock="${state_dir}/lock"
+mkdir -p "${state_dir}" || exit 0
+
+# Each event gets a unique token so a repeated state is still re-sent; iTerm2
+# may have changed the status on its own in the meantime.
+tmp="${state_dir}/latest.$$"
+printf '%s %s\n' "$$-${RANDOM}${RANDOM}" "${state}" >"${tmp}" && mv -f "${tmp}" "${state_dir}/latest" || exit 0
+
+
+function _send() {
+  local payload
+  case "$1" in
+    idle) payload='{"hook_event_name":"SessionStart"}' ;;
+    working) payload='{"hook_event_name":"UserPromptSubmit"}' ;;
+    waiting) payload='{"hook_event_name":"Notification","notification_type":"permission_prompt"}' ;;
+    done) payload='{"hook_event_name":"Stop"}' ;;
+    cleared)
+      "${IT2}" session set-status -s "${session}" --status "" --dot-color "" --text-color ""
+      return
+      ;;
+    *) return 0 ;;
+  esac
+  printf '%s' "${payload}" | "${IT2}" handle-agent-hook
+}
+
+function _read() {
+  cat "${state_dir}/$1" 2>/dev/null || true
+}
+
+function _acquire() {
+  local pid
+  if mkdir "${lock}" 2>/dev/null; then
+    echo "${BASHPID}" >"${lock}/pid"
+    return 0
+  fi
+  # Reclaim the lock only when its owner has died.
+  pid="$(_read lock/pid)"
+  if [[ -n ${pid} ]] && ! kill -0 "${pid}" 2>/dev/null; then
+    rm -rf "${lock}"
+    if mkdir "${lock}" 2>/dev/null; then
+      echo "${BASHPID}" >"${lock}/pid"
+      return 0
+    fi
+  fi
+  return 1
+}
+
+function _drain() {
+  local latest
+  while latest="$(_read latest)"; [[ -n ${latest} && ${latest} != "$(_read sent)" ]]; do
+    # Record before sending so a failing it2 can't cause a retry loop.
+    printf '%s\n' "${latest}" >"${state_dir}/sent"
+    _send "${latest#* }" || true
+  done
+}
+
+(
+  while _acquire; do
+    _drain
+    rm -rf "${lock}"
+    # Re-check: an update may have landed after the last read but before release.
+    [[ "$(_read latest)" != "$(_read sent)" ]] || break
+  done
+) </dev/null >/dev/null 2>&1 &
+
+exit 0
