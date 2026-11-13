@@ -33,6 +33,9 @@ Task 1 is a hard gate, including operator-observed click routing.
 - The production `~/dotfiles` symlink points at the main checkout, not this
   worktree. Editing this branch will not automatically activate its hooks.
   Keep installation and live-test activation explicit.
+- Existing macOS notification settings may already satisfy the requirements.
+  Test them unchanged before recommending permission or presentation changes.
+  A successful baseline needs no macOS reconfiguration.
 - `bin/copilot-iterm-status` currently discards stdin, coalesces states into
   `latest`, and runs an asynchronous `it2` worker. Do not send notifications
   from that worker or refactor its locking as part of this feature.
@@ -108,18 +111,14 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
   Use `await session.async_inject(data)` with the same bytes. This API takes
   bytes and simulates program output. Record one chosen transport; do not
   silently switch to another transport on each delivery or send twice.
-- [ ] **Step 5: Resolve profile alert settings for the probe session only.**
-  On a disposable Copilot Agents session, apply exactly the profile key/value
-  overrides listed in Task 5 Step 3 through session-local API properties,
-  then read them back to establish the installed version honors those keys.
-  These enable terminal-generated notifications and audible bells, disable
-  bell notifications, and permit alerts even for the active pane while
-  testing explicit suppression later.
-  Do not alter Default/Naked, select another user's session, or change macOS
-  settings automatically. Ask the operator to allow notifications and select
-  persistent Alerts for iTerm2 before testing presentation.
-- [ ] **Step 6: Run the probe with explicit source UUID and observe it.**
-  From this worktree:
+- [ ] **Step 5: Record the unchanged notification baseline.**
+  On a disposable Copilot Agents session, read and record the effective
+  profile key/value settings listed in Task 5 Step 3 without applying
+  overrides yet. Leave macOS notification permission, presentation style,
+  and Focus settings unchanged. The system may already be configured as
+  desired; do not make selecting Alerts a prerequisite for the first test.
+- [ ] **Step 6: Trigger one baseline notification and ask the operator to assess it.**
+  From this worktree, use the probe against the explicit source UUID:
 
   ```bash
   uv lock --script tests/copilot/probe_notifications.py
@@ -129,12 +128,34 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
 
   Replace `SOURCE_UUID` with the disposable session's actual UUID. If needed,
   repeat with `--transport api`. Move focus to another pane/window/app before
-  submission. The operator clicks the alert and confirms the exact source
-  window/tab/pane is revealed. Also check a bell produces sound, not a popup.
-  Restore disposable session overrides or close only the created session.
+  submission. Label the notification clearly as a test. Ask the operator to
+  leave it untouched for at least 30 seconds, then confirm separately:
+
+  - Did a visible system notification appear?
+  - Did it remain displayed until deliberately clicked or dismissed, rather
+    than disappearing as a banner? Does that meet the desired persistence?
+  - After clicking it, was the exact source window/tab/pane revealed?
+
+  Thirty seconds is an observation interval, not proof of indefinite
+  persistence; record the operator's assessment rather than inferring it
+  from API success or an entry retained only in Notification Center.
+  Also run the done probe and ask whether it produced a bell without a popup.
+  If all desired behavior already exists, record the baseline as passing and
+  retain the current macOS settings.
+
+  If behavior differs, distinguish terminal delivery, iTerm profile filters,
+  and macOS permission/Focus/presentation issues before proposing changes.
+  A missing alert is not proof of a transport failure or of incorrect macOS
+  settings. With operator agreement, apply only necessary session-local
+  profile overrides from Task 5 Step 3 and read them back. Ask the operator
+  to adjust macOS settings only if the observations warrant it, then repeat
+  the affected checks. Never change macOS settings automatically or alter
+  Default/Naked. Restore disposable session overrides or close only the
+  created session after testing.
 - [ ] **Step 7: Record the gate outcome and commit.**
-  Record iTerm2/API versions, selected transport, permission state, and
-  operator-confirmed routing in `verification.md`. Until confirmed, mark
+  Record iTerm2/API versions, selected transport, unchanged-baseline results,
+  any operator-approved adjustments, permission state, and operator-confirmed
+  routing/presentation in `verification.md`. Until confirmed, mark
   the gate pending and **stop before Task 2**. If both transports fail,
   stop and request a revised design. Do not claim that successful submission
   proves visible delivery, persistence, or click routing.
@@ -435,6 +456,9 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Explain macOS notification permission, persistent Alerts, Focus limitations,
   audible-bell settings, foreground-turn semantics, focus suppression,
   best-effort ordering/crash semantics, and bounded local log location.
+  Lead with the unchanged-settings probe: macOS may already be configured
+  correctly. Treat permission/style changes as conditional troubleshooting,
+  not mandatory setup, and reuse a passing baseline unless behavior changes.
   Keep READMEs navigational. Explain `uv` dependency warm-up:
   `bin/copilot-iterm-notify.py --help` before starting new Copilot sessions.
   Do not enable Copilot's global beep/notifications settings; they would
@@ -479,7 +503,8 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Record test command/result, selected transport, actual hook discovery,
   operator-observed click routing, audible completion, and persistence.
   Persistence must remain pending until the operator confirms the alert
-  stays until clicked/dismissed after selecting macOS Alerts. Any failed
+  stays until clicked/dismissed, whether the existing configuration already
+  provides this or the operator chose to adjust macOS settings. Any failed
   source routing or visible behavior blocks completion; do not replace
   this with a submitted-notification proxy assertion.
 - [ ] **Step 5: Run final focused checks and commit documentation.**
