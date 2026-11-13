@@ -311,7 +311,9 @@ class TestExpectedState:
         candidate, _ = acceptance_records
         for shell in scenario.shells:
             if EXPECTED[_shell_kind(shell)]["interactive"]:
-                assert candidate[shell.name]["env"]["PROMPT_COMMAND"] == "set_prompt", shell.name
+                assert candidate[shell.name]["env"]["PROMPT_COMMAND"] == (
+                    "set_prompt; _iterm2_set_repo_label"
+                ), shell.name
 
     def test_gopath(self, scenario, dotfiles_home, acceptance_records):
         candidate, _ = acceptance_records
