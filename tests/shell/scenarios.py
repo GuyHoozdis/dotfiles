@@ -203,7 +203,8 @@ S09_NOEXEC = Scenario(
 pre-commit syntax check (from documentation).
 
 Bash reads the script file but does not execute its commands. Non-interactive
-shells otherwise consult only ``BASH_ENV``; under ``-n`` it is not sourced.
+shells consult only ``BASH_ENV``; under ``-n`` Bash may still read it, but
+does not execute its commands.
 https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html
 """
 
