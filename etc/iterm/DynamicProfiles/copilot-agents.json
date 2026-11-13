@@ -1,0 +1,12 @@
+{
+  "Profiles": [
+    {
+      "Name": "Copilot Agents",
+      "Guid": "870214EA-844A-4654-A241-B7EB0B766076",
+      "Dynamic Profile Parent Name": "Default",
+      "Tags": ["copilot"],
+      "Use Custom Tab Title": true,
+      "Custom Tab Title": "\\(currentSession.user.repoLabel)"
+    }
+  ]
+}
