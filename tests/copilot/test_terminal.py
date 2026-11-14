@@ -12,8 +12,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "share" / "copilot"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "share" / "copilot"))
 
 from iterm_notifications import terminal, terminal_api
 from iterm_notifications.context import HookEvent
@@ -21,6 +20,7 @@ from iterm_notifications.diagnostics import diagnostic_line
 from iterm_notifications.worker import DeliveryError
 
 
+ROOT = Path(__file__).resolve().parents[2]
 SOURCE_ID = "12345678-1234-1234-1234-123456789abc"
 OTHER_ID = "87654321-4321-4321-4321-cba987654321"
 PROFILE_ID = "870214EA-844A-4654-A241-B7EB0B766076"
@@ -154,14 +154,21 @@ class TerminalAdapterTests(unittest.TestCase):
         exceptions.WebSocketException = FakeWebSocketException
         notifications = types.ModuleType("iterm2.notifications")
         notifications.SubscriptionException = FakeSubscriptionException
-        self.module_patch = patch.dict(sys.modules, {
-            "iterm2": self.iterm, "iterm2.rpc": rpc, "iterm2.notifications": notifications,
-            "websockets": websockets, "websockets.exceptions": exceptions,
-        })
+        self.module_patch = patch.dict(
+            sys.modules,
+            {
+                "iterm2": self.iterm,
+                "iterm2.rpc": rpc,
+                "iterm2.notifications": notifications,
+                "websockets": websockets,
+                "websockets.exceptions": exceptions,
+            },
+        )
         self.module_patch.start()
         self.addCleanup(self.module_patch.stop)
         self.writer_patch = patch.object(
-            terminal, "write_tty",
+            terminal,
+            "write_tty",
             side_effect=lambda tty, data: self.output.append((tty, data)),
         )
         self.writer_patch.start()
@@ -509,9 +516,20 @@ class TtyTransportTests(unittest.TestCase):
         self.assertEqual(os.read(master, 128), b"\x1b]9;source\x07")
 
     def test_symlink_tty_is_rejected_before_open(self):
-        link_stat = os.stat_result((
-            stat.S_IFLNK | 0o777, 1, 0, 1, os.getuid(), os.getgid(), 0, 0, 0, 0,
-        ))
+        link_stat = os.stat_result(
+            (
+                stat.S_IFLNK | 0o777,
+                1,
+                0,
+                1,
+                os.getuid(),
+                os.getgid(),
+                0,
+                0,
+                0,
+                0,
+            )
+        )
         with patch("iterm_notifications.tty.os.lstat", return_value=link_stat):
             with patch("iterm_notifications.tty.os.open") as open_file:
                 with self.assertRaises(DeliveryError) as raised:

@@ -9,15 +9,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = ROOT / "share" / "copilot"
-sys.path.insert(0, str(PACKAGE))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "share" / "copilot"))
 
 from iterm_notifications import ipc, isolation
 from iterm_notifications.context import HookEvent
 from iterm_notifications.worker import DeliveryError
 
 
+ROOT = Path(__file__).resolve().parents[2]
+PACKAGE = ROOT / "share" / "copilot"
 SOURCE_ID = "12345678-1234-1234-1234-123456789abc"
 DEEP_JSON = b"[" * 100000
 CORRUPT_REPLIES = {
@@ -29,7 +29,7 @@ CORRUPT_REPLIES = {
 }
 # Holds an inherited probe write end open until killed; the test sees EOF on death.
 GRANDCHILD = "import threading; threading.Event().wait()"
-FAKE_HELPER = r'''
+FAKE_HELPER = r"""
 import json, os, subprocess, sys, threading
 mode, probe = sys.argv[1], int(sys.argv[2])
 corrupt = {name: bytes.fromhex(value) for name, value in json.loads(sys.argv[3]).items()}
@@ -64,8 +64,8 @@ while line := sys.stdin.buffer.readline():
     send(type="done")
 if mode == "close_hang":
     hang()
-'''
-WATCHDOG_HELPER = r'''
+"""
+WATCHDOG_HELPER = r"""
 import os, subprocess, sys, threading
 sys.path.insert(0, sys.argv[1])
 from iterm_notifications import helper
@@ -77,7 +77,7 @@ subprocess.Popen(
 os.close(probe)
 os.write(1, b"ready\n")
 threading.Event().wait()
-'''
+"""
 
 
 def kill_unreaped_group(process):
@@ -122,11 +122,15 @@ class IsolatedSinkTests(unittest.TestCase):
         self.addCleanup(popen.stop)
 
     def open(self, mode):
-        corrupt = "{" + ",".join(
-            f'"{name}": "{value.hex()}"' for name, value in CORRUPT_REPLIES.items()
-        ) + "}"
+        corrupt = "{" + ",".join(f'"{name}": "{value.hex()}"' for name, value in CORRUPT_REPLIES.items()) + "}"
         command = [
-            sys.executable, "-c", FAKE_HELPER, mode, str(self.probe_write), corrupt, GRANDCHILD,
+            sys.executable,
+            "-c",
+            FAKE_HELPER,
+            mode,
+            str(self.probe_write),
+            corrupt,
+            GRANDCHILD,
         ]
         return isolation.open_sink(report=self.diagnostics.append, command=command)
 
@@ -220,7 +224,9 @@ class ProtocolDecodeTests(unittest.TestCase):
     def test_malformed_requests_are_protocol_errors(self):
         event = '{"event": "Stop", "cwd": null, "notification_type": null, "source_uuid": "x"}'
         for line in (
-            b"[]", DEEP_JSON, b'{"v": 1, "action": [], "event": ' + event.encode() + b"}",
+            b"[]",
+            DEEP_JSON,
+            b'{"v": 1, "action": [], "event": ' + event.encode() + b"}",
             b'{"v": 1, "action": {}, "event": ' + event.encode() + b"}",
             b'{"v": 1, "action": "done", "event": []}',
         ):
@@ -237,11 +243,19 @@ class LifelineTests(unittest.TestCase):
         self.addCleanup(os.close, probe_read)
         process = subprocess.Popen(
             [
-                sys.executable, "-c", WATCHDOG_HELPER, str(PACKAGE), str(probe_write),
-                str(lifeline_read), GRANDCHILD,
+                sys.executable,
+                "-c",
+                WATCHDOG_HELPER,
+                str(PACKAGE),
+                str(probe_write),
+                str(lifeline_read),
+                GRANDCHILD,
             ],
-            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-            start_new_session=True, pass_fds=(lifeline_read, probe_write),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            pass_fds=(lifeline_read, probe_write),
         )
         self.addCleanup(kill_unreaped_group, process)
         self.addCleanup(process.stdout.close)

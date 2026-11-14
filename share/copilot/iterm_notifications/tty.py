@@ -25,12 +25,14 @@ def write_tty(tty: str, data: bytes) -> None:
         if before.st_uid != os.getuid():
             raise DeliveryError("tty_unsafe")
         descriptor = os.open(
-            path, os.O_WRONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC,
+            path,
+            os.O_WRONLY | os.O_NONBLOCK | os.O_NOFOLLOW | os.O_CLOEXEC,
         )
         opened = os.fstat(descriptor)
         after = os.lstat(path)
         if (
-            not stat.S_ISCHR(opened.st_mode) or opened.st_uid != os.getuid()
+            not stat.S_ISCHR(opened.st_mode)
+            or opened.st_uid != os.getuid()
             or not os.isatty(descriptor)
             or (before.st_dev, before.st_ino) != (opened.st_dev, opened.st_ino)
             or (opened.st_dev, opened.st_ino) != (after.st_dev, after.st_ino)

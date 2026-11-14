@@ -12,8 +12,13 @@ ROOT = Path(__file__).resolve().parents[2]
 HOOKS = ROOT / "share/copilot/hooks/iterm2-session-status.json"
 PROFILE = ROOT / "etc/iterm/DynamicProfiles/copilot-agents.json"
 EVENTS = (
-    "SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse",
-    "Notification", "Stop", "SessionEnd",
+    "SessionStart",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "Notification",
+    "Stop",
+    "SessionEnd",
 )
 RECORDER = (
     f"#!{sys.executable}\n"
@@ -43,11 +48,19 @@ class HookRegistrationTests(unittest.TestCase):
         self.hooks = self.registration["hooks"]
 
     def run_command(
-        self, command: str, payload: bytes, *, extra: dict[str, str] | None = None,
+        self,
+        command: str,
+        payload: bytes,
+        *,
+        extra: dict[str, str] | None = None,
     ) -> subprocess.CompletedProcess[bytes]:
         return subprocess.run(
-            ["/bin/bash", "-c", command], input=payload, capture_output=True,
-            env=self.env | (extra or {}), timeout=10, check=False,
+            ["/bin/bash", "-c", command],
+            input=payload,
+            capture_output=True,
+            env=self.env | (extra or {}),
+            timeout=10,
+            check=False,
         )
 
     def recorded(self, name: str) -> dict[str, object]:
@@ -70,18 +83,26 @@ class HookRegistrationTests(unittest.TestCase):
                 self.assertEqual(entries[0], expected_status)
                 self.assertEqual(
                     entries[1],
-                    expected_status | {
+                    expected_status
+                    | {
                         "bash": f'"$HOME/dotfiles/bin/copilot-iterm-notify.py" {event}',
                     },
                 )
-                payload = json.dumps({
-                    "event": event, "cwd": "/repo with spaces",
-                    "notification_type": "permission_prompt",
-                }).encode() + b"\n"
+                payload = (
+                    json.dumps(
+                        {
+                            "event": event,
+                            "cwd": "/repo with spaces",
+                            "notification_type": "permission_prompt",
+                        }
+                    ).encode()
+                    + b"\n"
+                )
                 for entry in entries:
                     result = self.run_command(entry["bash"], payload)
                     self.assertEqual(
-                        (result.returncode, result.stdout, result.stderr), (0, b"", b""),
+                        (result.returncode, result.stdout, result.stderr),
+                        (0, b"", b""),
                     )
                 expected = {"argv": [event], "stdin": payload.hex()}
                 self.assertEqual(self.recorded("copilot-iterm-status"), expected)
@@ -98,7 +119,8 @@ class HookRegistrationTests(unittest.TestCase):
                     for kind in ("permission_prompt", "elicitation_dialog", "other", ""):
                         matched = re.fullmatch(entry["matcher"], kind) is not None
                         self.assertEqual(
-                            matched, kind in ("permission_prompt", "elicitation_dialog"),
+                            matched,
+                            kind in ("permission_prompt", "elicitation_dialog"),
                         )
 
     def test_attention_launch_or_worker_failure_does_not_consume_status_input(self) -> None:
@@ -113,7 +135,9 @@ class HookRegistrationTests(unittest.TestCase):
                         self.assertEqual(len(entries), 2)
                         payload = json.dumps({"event": event}).encode() + b"\n"
                         failed = self.run_command(
-                            entries[1]["bash"], payload, extra={"ATTENTION_EXIT": "1"},
+                            entries[1]["bash"],
+                            payload,
+                            extra={"ATTENTION_EXIT": "1"},
                         )
                         self.assertNotEqual(failed.returncode, 0)
                         self.assertEqual(failed.stdout, b"")
@@ -124,7 +148,8 @@ class HookRegistrationTests(unittest.TestCase):
                             )
                         result = self.run_command(entries[0]["bash"], payload)
                         self.assertEqual(
-                            (result.returncode, result.stdout, result.stderr), (0, b"", b""),
+                            (result.returncode, result.stdout, result.stderr),
+                            (0, b"", b""),
                         )
                         self.assertEqual(
                             self.recorded("copilot-iterm-status"),
@@ -166,7 +191,8 @@ class ProfileAlertPolicyTests(unittest.TestCase):
                 for companion in (False, True):
                     with self.subTest(source=source, active=active, companion=companion):
                         permitted = (
-                            settings["BM Growl"] and settings[setting]
+                            settings["BM Growl"]
+                            and settings[setting]
                             and not (active and settings["Suppress Alerts in Active Session"])
                             and (not companion or settings["Send Alerts To Companion"])
                         )

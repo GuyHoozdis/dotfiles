@@ -39,10 +39,17 @@ def encode_message(kind: MessageKind, error: DiagnosticError | None = None) -> b
 
 
 def encode_request(action: Action, event: HookEvent) -> bytes:
-    return _line({"action": action, "event": {
-        "event": event.event, "cwd": event.cwd,
-        "notification_type": event.notification_type, "source_uuid": event.source_uuid,
-    }})
+    return _line(
+        {
+            "action": action,
+            "event": {
+                "event": event.event,
+                "cwd": event.cwd,
+                "notification_type": event.notification_type,
+                "source_uuid": event.source_uuid,
+            },
+        }
+    )
 
 
 def _object(line: bytes) -> dict[str, object]:
@@ -82,8 +89,10 @@ def decode_request(line: bytes) -> tuple[Action, HookEvent]:
         raise DeliveryError("terminal_helper_protocol")
     fields = [event.get(name) for name in ("event", "cwd", "notification_type", "source_uuid")]
     name, cwd, kind, source = fields
-    if not isinstance(name, str) or not isinstance(source, str) or not all(
-        value is None or isinstance(value, str) for value in (cwd, kind)
+    if (
+        not isinstance(name, str)
+        or not isinstance(source, str)
+        or not all(value is None or isinstance(value, str) for value in (cwd, kind))
     ):
         raise DeliveryError("terminal_helper_protocol")
     event_value = HookEvent(name, cast(str | None, cwd), cast(str | None, kind), source)
@@ -105,7 +114,7 @@ class LineReader:
                 raise DeliveryError("terminal_helper_reply_too_large")
             if newline >= 0:
                 line = bytes(self._buffer[:newline])
-                del self._buffer[:newline + 1]
+                del self._buffer[: newline + 1]
                 return line
             remaining = deadline - time.monotonic()
             if remaining <= 0:
@@ -132,7 +141,7 @@ def write_all(fd: int, data: bytes, deadline: float) -> None:
         if not select.select([], [fd], [], remaining)[1]:
             continue
         try:
-            view = view[os.write(fd, view):]
+            view = view[os.write(fd, view) :]
         except BlockingIOError:
             continue
         except BrokenPipeError as error:

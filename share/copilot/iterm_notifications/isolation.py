@@ -40,9 +40,13 @@ class _Helper:
         lifeline, self._lifeline = os.pipe()
         try:
             self._process = subprocess.Popen(
-                [*command, str(lifeline)], bufsize=0, stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
-                start_new_session=True, pass_fds=(lifeline,),
+                [*command, str(lifeline)],
+                bufsize=0,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
+                pass_fds=(lifeline,),
             )
         except (OSError, subprocess.SubprocessError) as error:
             os.close(self._lifeline)
@@ -138,7 +142,9 @@ class _IsolatedSink(AbstractContextManager[FeedbackSink]):
             raise
 
     def __exit__(
-        self, _kind: type[BaseException] | None, _value: BaseException | None,
+        self,
+        _kind: type[BaseException] | None,
+        _value: BaseException | None,
         _traceback: TracebackType | None,
     ) -> None:
         helper, self._helper = self._helper, None

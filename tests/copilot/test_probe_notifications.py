@@ -65,33 +65,36 @@ class ProbeTests(unittest.TestCase):
 
     def test_tty_validated_descriptor_gets_one_exact_write(self):
         device = os.stat_result((stat.S_IFCHR | 0o600, 1, 2, 1, os.getuid(), 0, 0, 0, 0, 0))
-        with mock.patch.object(probe.os.path, "realpath", autospec=True, return_value="/dev/test"), \
-             mock.patch.object(probe.os, "lstat", autospec=True, return_value=device), \
-             mock.patch.object(probe.os, "open", autospec=True, return_value=4) as open_device, \
-             mock.patch.object(probe.os, "fstat", autospec=True, return_value=device), \
-             mock.patch.object(probe.os, "isatty", autospec=True, return_value=True), \
-             mock.patch.object(probe.os, "close", autospec=True) as close, \
-             mock.patch.object(probe.os, "write", autospec=True, return_value=1) as write:
+        with (
+            mock.patch.object(probe.os.path, "realpath", autospec=True, return_value="/dev/test"),
+            mock.patch.object(probe.os, "lstat", autospec=True, return_value=device),
+            mock.patch.object(probe.os, "open", autospec=True, return_value=4) as open_device,
+            mock.patch.object(probe.os, "fstat", autospec=True, return_value=device),
+            mock.patch.object(probe.os, "isatty", autospec=True, return_value=True),
+            mock.patch.object(probe.os, "close", autospec=True) as close,
+            mock.patch.object(probe.os, "write", autospec=True, return_value=1) as write,
+        ):
             probe.write_tty("/dev/test", probe.PAYLOADS["done"])
-            open_device.assert_called_once_with(
-                "/dev/test", os.O_WRONLY | os.O_NONBLOCK | os.O_NOCTTY | os.O_NOFOLLOW
-            )
+            open_device.assert_called_once_with("/dev/test", os.O_WRONLY | os.O_NONBLOCK | os.O_NOCTTY | os.O_NOFOLLOW)
             write.assert_called_once_with(4, b"\x07")
             close.assert_called_once_with(4)
 
     def test_tty_rejects_descriptor_swap_before_write(self):
         original = os.stat_result((stat.S_IFCHR | 0o600, 1, 2, 1, os.getuid(), 0, 0, 0, 0, 0))
         swapped = os.stat_result((stat.S_IFCHR | 0o600, 3, 2, 1, os.getuid(), 0, 0, 0, 0, 0))
-        with mock.patch.object(probe.os.path, "realpath", autospec=True, return_value="/dev/test"), \
-             mock.patch.object(probe.os, "lstat", autospec=True, return_value=original), \
-             mock.patch.object(probe.os, "open", autospec=True, return_value=4), \
-             mock.patch.object(probe.os, "fstat", autospec=True, return_value=swapped), \
-             mock.patch.object(probe.os, "close", autospec=True) as close, \
-             mock.patch.object(probe.os, "write", autospec=True) as write:
+        with (
+            mock.patch.object(probe.os.path, "realpath", autospec=True, return_value="/dev/test"),
+            mock.patch.object(probe.os, "lstat", autospec=True, return_value=original),
+            mock.patch.object(probe.os, "open", autospec=True, return_value=4),
+            mock.patch.object(probe.os, "fstat", autospec=True, return_value=swapped),
+            mock.patch.object(probe.os, "close", autospec=True) as close,
+            mock.patch.object(probe.os, "write", autospec=True) as write,
+        ):
             with self.assertRaises(probe.ProbeError):
                 probe.write_tty("/dev/test", probe.PAYLOADS["done"])
             write.assert_not_called()
             close.assert_called_once_with(4)
+
 
 class AsyncProbeTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
@@ -132,8 +135,10 @@ class AsyncProbeTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_failed_tty_does_not_fall_back_to_injection(self):
         self.args.transport = "tty"
-        with mock.patch.object(probe, "version", autospec=True, return_value="test"), \
-             mock.patch.object(probe, "write_tty", autospec=True, side_effect=probe.ProbeError("failed")):
+        with (
+            mock.patch.object(probe, "version", autospec=True, return_value="test"),
+            mock.patch.object(probe, "write_tty", autospec=True, side_effect=probe.ProbeError("failed")),
+        ):
             with self.assertRaises(probe.ProbeError):
                 await probe.probe(object(), self.args, self.api)
         self.session.async_inject.assert_not_awaited()

@@ -32,7 +32,9 @@ class _UnavailableSink(AbstractContextManager[FeedbackSink]):
         raise DeliveryError("terminal_adapter_unavailable")
 
     def __exit__(
-        self, kind: type[BaseException] | None, value: BaseException | None,
+        self,
+        kind: type[BaseException] | None,
+        value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
         return None
@@ -52,7 +54,10 @@ def _load(spool: Spool, report: Reporter) -> SessionState:
 
 
 def _drain_locked(
-    spool: Spool, open_sink: SinkFactory, report: Reporter, sinks: contextlib.ExitStack,
+    spool: Spool,
+    open_sink: SinkFactory,
+    report: Reporter,
+    sinks: contextlib.ExitStack,
 ) -> None:
     sink: FeedbackSink | None = None
     state = _load(spool, report)

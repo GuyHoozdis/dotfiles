@@ -14,14 +14,19 @@ from typing import BinaryIO
 
 
 MAX_INPUT_BYTES = 10 * 1024 * 1024
-EVENT_NAMES = frozenset({
-    "SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse",
-    "Notification", "Stop", "SessionEnd",
-})
-WAITING_TYPES = frozenset({"permission_prompt", "elicitation_dialog"})
-_SESSION_ID = re.compile(
-    r"(?:w[^:\s]+:)?([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})"
+EVENT_NAMES = frozenset(
+    {
+        "SessionStart",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
+        "Notification",
+        "Stop",
+        "SessionEnd",
+    }
 )
+WAITING_TYPES = frozenset({"permission_prompt", "elicitation_dialog"})
+_SESSION_ID = re.compile(r"(?:w[^:\s]+:)?([0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})")
 
 
 class ContextError(Exception):
@@ -101,13 +106,17 @@ def parse_event(event: str, stream: BinaryIO, environ: Mapping[str, str]) -> Hoo
 
 
 def _git(
-    cwd: str, args: list[str], deadline: float, allowed: tuple[int, ...] = (),
+    cwd: str,
+    args: list[str],
+    deadline: float,
+    allowed: tuple[int, ...] = (),
 ) -> subprocess.CompletedProcess[str]:
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise ContextError("git_timeout")
     env = {
-        key: value for key, value in os.environ.items()
+        key: value
+        for key, value in os.environ.items()
         if not key.startswith("GIT_") or key == "GIT_CEILING_DIRECTORIES"
     }
     env["LC_ALL"] = "C"
@@ -115,8 +124,13 @@ def _git(
     error: str | None = None
     try:
         result = subprocess.run(
-            ["git", "-C", cwd, *args], capture_output=True, text=True,
-            encoding="utf-8", errors="surrogateescape", timeout=remaining, env=env,
+            ["git", "-C", cwd, *args],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="surrogateescape",
+            timeout=remaining,
+            env=env,
             check=False,
         )
     except subprocess.TimeoutExpired:
@@ -150,10 +164,7 @@ def resolve_context(event: HookEvent, repo_label: str | None = None) -> SourceCo
         error = "cwd_unavailable"
     if error:
         raise ContextError(error)
-    if (
-        status is None or not stat.S_ISDIR(status.st_mode)
-        or not os.access(event.cwd, os.R_OK | os.X_OK)
-    ):
+    if status is None or not stat.S_ISDIR(status.st_mode) or not os.access(event.cwd, os.R_OK | os.X_OK):
         return SourceContext(label, None)
     deadline = time.monotonic() + 15
     top = _git(event.cwd, ["rev-parse", "--show-toplevel"], deadline, (128,))
@@ -163,12 +174,27 @@ def resolve_context(event: HookEvent, repo_label: str | None = None) -> SourceCo
         raise ContextError("git_failed")
     toplevel = Path(top.stdout.removesuffix("\n"))
     if label is None:
-        common = Path(_git(event.cwd, [
-            "rev-parse", "--path-format=absolute", "--git-common-dir",
-        ], deadline).stdout.removesuffix("\n"))
-        git_dir = Path(_git(event.cwd, [
-            "rev-parse", "--absolute-git-dir",
-        ], deadline).stdout.removesuffix("\n"))
+        common = Path(
+            _git(
+                event.cwd,
+                [
+                    "rev-parse",
+                    "--path-format=absolute",
+                    "--git-common-dir",
+                ],
+                deadline,
+            ).stdout.removesuffix("\n")
+        )
+        git_dir = Path(
+            _git(
+                event.cwd,
+                [
+                    "rev-parse",
+                    "--absolute-git-dir",
+                ],
+                deadline,
+            ).stdout.removesuffix("\n")
+        )
         label = f"{common.parent.name}|{toplevel.name}" if common != git_dir else toplevel.name
     symbolic = _git(event.cwd, ["symbolic-ref", "--quiet", "--short", "HEAD"], deadline, (1,))
     branch = symbolic.stdout.removesuffix("\n")

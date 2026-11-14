@@ -17,11 +17,16 @@ class FeedbackState:
 
 
 def reduce_event(
-    state: FeedbackState, event: HookEvent,
+    state: FeedbackState,
+    event: HookEvent,
 ) -> tuple[FeedbackState, FeedbackAction]:
     """Deduplicate feedback until lifecycle activity resets both flags."""
     if event.event in {
-        "SessionStart", "SessionEnd", "UserPromptSubmit", "PreToolUse", "PostToolUse",
+        "SessionStart",
+        "SessionEnd",
+        "UserPromptSubmit",
+        "PreToolUse",
+        "PostToolUse",
     }:
         return FeedbackState(), None
     if event.event == "Notification" and event.notification_type in WAITING_TYPES:
@@ -39,7 +44,9 @@ class SessionState:
 
 
 def apply_record(
-    state: SessionState, seq: int, event: HookEvent,
+    state: SessionState,
+    seq: int,
+    event: HookEvent,
 ) -> tuple[SessionState, FeedbackAction]:
     """Ignore replayed sequences so a crash before queue removal never repeats."""
     if seq <= state.last_seq:
@@ -52,12 +59,18 @@ _STATE_KEYS = frozenset({"version", "last_seq", "waiting_seen", "done_seen"})
 
 
 def encode_state(state: SessionState) -> bytes:
-    return json.dumps({
-        "version": 1,
-        "last_seq": state.last_seq,
-        "waiting_seen": state.feedback.waiting_seen,
-        "done_seen": state.feedback.done_seen,
-    }, sort_keys=True).encode() + b"\n"
+    return (
+        json.dumps(
+            {
+                "version": 1,
+                "last_seq": state.last_seq,
+                "waiting_seen": state.feedback.waiting_seen,
+                "done_seen": state.feedback.done_seen,
+            },
+            sort_keys=True,
+        ).encode()
+        + b"\n"
+    )
 
 
 def decode_state(raw: bytes) -> SessionState:

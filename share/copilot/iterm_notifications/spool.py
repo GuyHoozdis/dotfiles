@@ -17,7 +17,14 @@ from typing import Self
 from .context import EVENT_NAMES, HookEvent
 from .diagnostics import DiagnosticError, diagnostic_line
 from .safefs import (
-    CorruptError, SpoolError, fs_code, open_checked, open_dir, open_file, read_small, write_atomic,
+    CorruptError,
+    SpoolError,
+    fs_code,
+    open_checked,
+    open_dir,
+    open_file,
+    read_small,
+    write_atomic,
 )
 from .state import SessionState, decode_state, encode_state
 
@@ -45,10 +52,20 @@ def session_name(source_uuid: str) -> str:
 
 
 def _encode_record(seq: int, event: HookEvent) -> bytes:
-    record = json.dumps({
-        "version": 1, "seq": seq, "event": event.event, "cwd": event.cwd,
-        "notification_type": event.notification_type, "source_uuid": event.source_uuid,
-    }, sort_keys=True).encode() + b"\n"
+    record = (
+        json.dumps(
+            {
+                "version": 1,
+                "seq": seq,
+                "event": event.event,
+                "cwd": event.cwd,
+                "notification_type": event.notification_type,
+                "source_uuid": event.source_uuid,
+            },
+            sort_keys=True,
+        ).encode()
+        + b"\n"
+    )
     if len(record) > RECORD_LIMIT:
         raise SpoolError("record_too_large")
     return record
@@ -167,11 +184,13 @@ class Spool:
                 raise ValueError("record_keys")
             optional = (payload["cwd"], payload["notification_type"])
             if (
-                type(payload["version"]) is not int or type(payload["seq"]) is not int
+                type(payload["version"]) is not int
+                or type(payload["seq"]) is not int
                 or not isinstance(payload["event"], str)
                 or not isinstance(payload["source_uuid"], str)
                 or not all(value is None or isinstance(value, str) for value in optional)
-                or payload["version"] != 1 or payload["seq"] != seq
+                or payload["version"] != 1
+                or payload["seq"] != seq
                 or payload["event"] not in EVENT_NAMES
                 or payload["source_uuid"] != self.source_uuid
             ):
@@ -240,7 +259,7 @@ class Spool:
             data = existing + line
             if len(data) > LOG_LIMIT:
                 data = data[-LOG_LIMIT:]
-                data = data[data.find(b"\n") + 1:]
+                data = data[data.find(b"\n") + 1 :]
             write_atomic(LOG, session, data)
         except OSError as error:
             raise SpoolError(fs_code(error, "log_write_failed")) from error

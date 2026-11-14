@@ -13,9 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[2]
-PACKAGE = ROOT / "share" / "copilot"
-sys.path.insert(0, str(PACKAGE))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "share" / "copilot"))
 
 from iterm_notifications import cli, spool
 from iterm_notifications.context import HookEvent
@@ -23,6 +21,8 @@ from iterm_notifications.diagnostics import DiagnosticError
 from iterm_notifications.worker import DeliveryError
 
 
+ROOT = Path(__file__).resolve().parents[2]
+PACKAGE = ROOT / "share" / "copilot"
 ENTRY = ROOT / "bin" / "copilot-iterm-notify.py"
 STATUS = ROOT / "bin" / "copilot-iterm-status"
 SESSION_ID = "12345678-1234-1234-1234-123456789abc"
@@ -63,15 +63,23 @@ class HookTestCase(unittest.TestCase):
 
     def run_entry(self, *args, data=b"{}", env=None):
         return subprocess.run(
-            [sys.executable, str(ENTRY), *args], input=data, capture_output=True,
-            env=self.env if env is None else env, timeout=30, check=False,
+            [sys.executable, str(ENTRY), *args],
+            input=data,
+            capture_output=True,
+            env=self.env if env is None else env,
+            timeout=30,
+            check=False,
         )
 
     def run_driver(self, event, python, entry, data=b"{}", extra=None):
         env = self.env | {"ITERM_SESSION_ID": ITERM_ID} | (extra or {})
         return subprocess.run(
             [sys.executable, "-c", DRIVER, str(PACKAGE), event, python, str(entry)],
-            input=data, capture_output=True, env=env, timeout=30, check=False,
+            input=data,
+            capture_output=True,
+            env=env,
+            timeout=30,
+            check=False,
         )
 
     def codes(self, stderr):
@@ -119,8 +127,7 @@ class EntrypointTests(HookTestCase):
             ("Notification", b"[]", ITERM_ID, {}, "invalid_payload"),
             ("Notification", b"{}", "w0:not-a-uuid " + secret.decode(), {}, "invalid_source_uuid"),
             ("Bogus", b"{}", ITERM_ID, {}, "invalid_event"),
-            ("Stop", b'{"cwd": "' + secret + b'"}', ITERM_ID, {"TMPDIR": str(file_root)},
-             "spool_unavailable"),
+            ("Stop", b'{"cwd": "' + secret + b'"}', ITERM_ID, {"TMPDIR": str(file_root)}, "spool_unavailable"),
         ]
         for event, data, session, extra, code in cases:
             with self.subTest(code=code):
@@ -161,7 +168,9 @@ class LaunchTests(HookTestCase):
         server.listen(1)
         server.settimeout(30)
         result = self.run_driver(
-            "Notification", sys.executable, fake,
+            "Notification",
+            sys.executable,
+            fake,
             data=b'{"notification_type": "permission_prompt", "prompt": "private"}',
             extra={"FAKE_WORKER_SOCKET": address},
         )
@@ -189,8 +198,12 @@ class WorkerProcessTests(HookTestCase):
 
     def worker(self, **kwargs):
         return subprocess.Popen(
-            [sys.executable, str(ENTRY), "--worker", SESSION_ID], stdin=subprocess.DEVNULL,
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env, **kwargs,
+            [sys.executable, str(ENTRY), "--worker", SESSION_ID],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            env=self.env,
+            **kwargs,
         )
 
     def test_terminal_api_unavailable_is_logged_without_stdout(self):
@@ -212,7 +225,9 @@ class WorkerProcessTests(HookTestCase):
 
         with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
             result = cli.run_worker(
-                SESSION_ID, self.env, lambda: contextlib.nullcontext(fail),
+                SESSION_ID,
+                self.env,
+                lambda: contextlib.nullcontext(fail),
             )
 
         self.assertEqual((result, stdout.getvalue()), (0, ""))
@@ -257,7 +272,9 @@ class WorkerProcessTests(HookTestCase):
         )
         holder = subprocess.Popen(
             [sys.executable, "-c", holder_code, str(PACKAGE), SESSION_ID],
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, env=self.env,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            env=self.env,
         )
         self.addCleanup(holder.stdin.close)
         self.addCleanup(holder.stdout.close)
@@ -293,8 +310,11 @@ class StatusCoexistenceTests(HookTestCase):
                 read_end, write_end = os.pipe()
                 self.addCleanup(os.close, read_end)
                 process = subprocess.Popen(
-                    [str(STATUS), "SessionEnd"], stdin=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, pass_fds=(write_end,),
+                    [str(STATUS), "SessionEnd"],
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    pass_fds=(write_end,),
                     env=self.env | {"ITERM_SESSION_ID": ITERM_ID, "IT2": str(fake_it2)},
                 )
                 os.close(write_end)

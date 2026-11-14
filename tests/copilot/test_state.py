@@ -18,7 +18,12 @@ from iterm_notifications.context import HookEvent
 from iterm_notifications import safefs, spool, worker
 from iterm_notifications.diagnostics import DiagnosticError
 from iterm_notifications.state import (
-    FeedbackState, SessionState, apply_record, decode_state, encode_state, reduce_event,
+    FeedbackState,
+    SessionState,
+    apply_record,
+    decode_state,
+    encode_state,
+    reduce_event,
 )
 
 
@@ -41,18 +46,14 @@ class FeedbackStateTests(unittest.TestCase):
                     ("PreToolUse", None, FeedbackState(), None),
                     ("PostToolUse", None, FeedbackState(), None),
                     ("Stop", None, FeedbackState(waiting, True), None if done else "done"),
-                    ("Notification", "permission_prompt", FeedbackState(True, done),
-                     None if waiting else "waiting"),
-                    ("Notification", "elicitation_dialog", FeedbackState(True, done),
-                     None if waiting else "waiting"),
+                    ("Notification", "permission_prompt", FeedbackState(True, done), None if waiting else "waiting"),
+                    ("Notification", "elicitation_dialog", FeedbackState(True, done), None if waiting else "waiting"),
                     ("Notification", "other", original, None),
                     ("Notification", None, original, None),
                 ]
                 for name, kind, expected, action in cases:
                     with self.subTest(waiting=waiting, done=done, name=name, kind=kind):
-                        self.assertEqual(
-                            reduce_event(original, self.event(name, kind)), (expected, action)
-                        )
+                        self.assertEqual(reduce_event(original, self.event(name, kind)), (expected, action))
                         self.assertEqual(original, FeedbackState(waiting, done))
 
     def test_interleavings_deduplicate_until_activity(self):
@@ -60,8 +61,7 @@ class FeedbackStateTests(unittest.TestCase):
             (["Notification", "Stop", "Notification"], ["waiting", "done", None]),
             (["Notification", "PreToolUse", "Notification"], ["waiting", None, "waiting"]),
             (["Stop", "Stop", "UserPromptSubmit", "Stop"], ["done", None, None, "done"]),
-            (["Notification", "SessionEnd", "SessionStart", "Notification"],
-             ["waiting", None, None, "waiting"]),
+            (["Notification", "SessionEnd", "SessionStart", "Notification"], ["waiting", None, None, "waiting"]),
         ]
         for names, expected in cases:
             with self.subTest(names=names):
@@ -85,9 +85,7 @@ class SessionStateTests(unittest.TestCase):
     def test_replayed_sequences_are_ignored(self):
         state = SessionState(FeedbackState(True, False), 5)
         self.assertEqual(apply_record(state, 5, self.event("SessionStart")), (state, None))
-        self.assertEqual(
-            apply_record(state, 4, self.event("Notification", "permission_prompt")), (state, None)
-        )
+        self.assertEqual(apply_record(state, 4, self.event("Notification", "permission_prompt")), (state, None))
 
     def test_new_sequence_advances_watermark(self):
         self.assertEqual(
@@ -107,7 +105,10 @@ class SessionStateTests(unittest.TestCase):
                 self.assertEqual(decode_state(encode_state(state)), state)
         valid = {"version": 1, "last_seq": 1, "waiting_seen": False, "done_seen": False}
         for bad in (
-            b"", b"[]", b"\xff", json.dumps({"version": 1}).encode(),
+            b"",
+            b"[]",
+            b"\xff",
+            json.dumps({"version": 1}).encode(),
             json.dumps(valid | {"last_seq": -1}).encode(),
             json.dumps(valid | {"last_seq": True}).encode(),
             json.dumps(valid | {"done_seen": 1}).encode(),
@@ -186,17 +187,18 @@ class QueueTests(SpoolTestCase):
         opened = self.open()
         self.enqueue(opened, "Notification", "permission_prompt")
         self.drain(opened)
-        for name in ("copilot-iterm-status", f"copilot-iterm-status/{SESSION_ID.upper()}",
-                     f"copilot-iterm-status/{SESSION_ID.upper()}/notification-queue"):
+        for name in (
+            "copilot-iterm-status",
+            f"copilot-iterm-status/{SESSION_ID.upper()}",
+            f"copilot-iterm-status/{SESSION_ID.upper()}/notification-queue",
+        ):
             self.assertEqual(stat.S_IMODE((self.root / name).stat().st_mode), 0o700)
         for name in ("notification-state.json", "notification.lock"):
             self.assertEqual(stat.S_IMODE((session / name).stat().st_mode), 0o600)
         self.assertEqual((session / "latest").read_text(), "1 waiting\n")
         self.assertEqual((session / "sent").read_text(), "0 idle\n")
         self.assertEqual((session / "lock/pid").read_text(), "1\n")
-        self.assertEqual(
-            before, {name: (session / name).stat().st_ino for name in ("latest", "sent", "lock/pid")}
-        )
+        self.assertEqual(before, {name: (session / name).stat().st_ino for name in ("latest", "sent", "lock/pid")})
 
     def test_sessions_are_independent(self):
         first, second = self.open(), self.open(OTHER_ID)
@@ -210,14 +212,15 @@ class QueueTests(SpoolTestCase):
     def test_repeated_events_deduplicate_until_activity(self):
         opened = self.open()
         for name, kind in (
-            ("Notification", "permission_prompt"), ("Notification", "permission_prompt"),
-            ("Stop", None), ("Stop", None), ("PreToolUse", None),
+            ("Notification", "permission_prompt"),
+            ("Notification", "permission_prompt"),
+            ("Stop", None),
+            ("Stop", None),
+            ("PreToolUse", None),
             ("Notification", "elicitation_dialog"),
         ):
             self.enqueue(opened, name, kind)
-        self.assertEqual(
-            [action for action, _ in self.drain(opened)[0]], ["waiting", "done", "waiting"]
-        )
+        self.assertEqual([action for action, _ in self.drain(opened)[0]], ["waiting", "done", "waiting"])
 
     def test_sequence_survives_full_drains_and_session_end(self):
         opened = self.open()
@@ -296,11 +299,24 @@ class QueueTests(SpoolTestCase):
         self.assertEqual(opened.load_state().last_seq, 2)
 
     def test_wrongly_typed_record_fields_are_discarded_and_draining_continues(self):
-        valid = {"version": 1, "seq": 1, "event": "Stop", "cwd": None,
-                 "notification_type": None, "source_uuid": SESSION_ID}
+        valid = {
+            "version": 1,
+            "seq": 1,
+            "event": "Stop",
+            "cwd": None,
+            "notification_type": None,
+            "source_uuid": SESSION_ID,
+        }
         for field, value in (
-            ("event", []), ("event", {}), ("event", 1), ("version", []), ("seq", "1"),
-            ("seq", True), ("cwd", []), ("notification_type", {}), ("source_uuid", []),
+            ("event", []),
+            ("event", {}),
+            ("event", 1),
+            ("version", []),
+            ("seq", "1"),
+            ("seq", True),
+            ("cwd", []),
+            ("notification_type", {}),
+            ("source_uuid", []),
             ("source_uuid", {}),
         ):
             with self.subTest(field=field, value=value):
@@ -310,9 +326,7 @@ class QueueTests(SpoolTestCase):
                     queue = Path(directory) / "copilot-iterm-status" / SESSION_ID.upper() / "notification-queue"
                     (queue / "00000000000000000001.event").write_text(json.dumps(valid | {field: value}))
                     self.enqueue(opened, "Notification", "permission_prompt")
-                    self.assertEqual(
-                        self.drain(opened), ([("waiting", SESSION_ID)], ["record_corrupt"])
-                    )
+                    self.assertEqual(self.drain(opened), ([("waiting", SESSION_ID)], ["record_corrupt"]))
                     self.assertEqual(os.listdir(queue), [])
 
     def test_event_for_another_session_is_rejected(self):
@@ -430,9 +444,7 @@ class LockingTests(SpoolTestCase):
             self.assertTrue(empty_seen.wait(timeout=10))
             producer = self.open()
             self.enqueue(producer, "Notification", "permission_prompt")
-            contender = threading.Thread(
-                target=worker.drain, args=(producer, contender_sink.open, list().append)
-            )
+            contender = threading.Thread(target=worker.drain, args=(producer, contender_sink.open, list().append))
             contender.start()
             self.assertEqual(self.queue_names(), ["00000000000000000001.event"])
             release.set()
@@ -499,18 +511,27 @@ class SafetyTests(SpoolTestCase):
             calls.append(("fsync", fd))
             return real_fsync(fd)
 
-        with mock.patch.object(safefs.os, "replace", side_effect=record_replace), \
-                mock.patch.object(safefs.os, "fsync", side_effect=record_fsync):
+        with (
+            mock.patch.object(safefs.os, "replace", side_effect=record_replace),
+            mock.patch.object(safefs.os, "fsync", side_effect=record_fsync),
+        ):
             self.enqueue(opened, "Stop")
         renames = [index for index, call in enumerate(calls) if call[0] == "replace"]
-        self.assertEqual([calls[index][1] for index in renames],
-                         ["notification-sequence", "00000000000000000001.event"])
+        self.assertEqual(
+            [calls[index][1] for index in renames], ["notification-sequence", "00000000000000000001.event"]
+        )
         for index in renames:
             self.assertEqual(calls[index + 1], ("fsync", calls[index][2]))
 
     def test_invalid_uuid_is_rejected_before_any_path_is_created(self):
-        for bad in ("", "../" + SESSION_ID, SESSION_ID + "/..", "w0:" + SESSION_ID,
-                    SESSION_ID.replace("-", ""), SESSION_ID + "\n"):
+        for bad in (
+            "",
+            "../" + SESSION_ID,
+            SESSION_ID + "/..",
+            "w0:" + SESSION_ID,
+            SESSION_ID.replace("-", ""),
+            SESSION_ID + "\n",
+        ):
             with self.subTest(bad=bad):
                 with self.assertRaises(spool.SpoolError) as raised:
                     spool.Spool.open(bad, self.environ)
@@ -519,10 +540,13 @@ class SafetyTests(SpoolTestCase):
 
     def test_symlinked_state_paths_are_rejected(self):
         upper = SESSION_ID.upper()
-        for relative in ("copilot-iterm-status", f"copilot-iterm-status/{upper}",
-                         f"copilot-iterm-status/{upper}/notification-queue",
-                         f"copilot-iterm-status/{upper}/notification.lock",
-                         f"copilot-iterm-status/{upper}/notification-enqueue.lock"):
+        for relative in (
+            "copilot-iterm-status",
+            f"copilot-iterm-status/{upper}",
+            f"copilot-iterm-status/{upper}/notification-queue",
+            f"copilot-iterm-status/{upper}/notification.lock",
+            f"copilot-iterm-status/{upper}/notification-enqueue.lock",
+        ):
             with self.subTest(relative=relative), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 target = root / "target"

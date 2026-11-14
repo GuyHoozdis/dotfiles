@@ -9,12 +9,12 @@ from pathlib import Path
 from unittest import mock
 
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "share" / "copilot"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "share" / "copilot"))
 
 from iterm_notifications import context
 
 
+ROOT = Path(__file__).resolve().parents[2]
 SESSION_ID = "12345678-1234-1234-1234-123456789abc"
 
 
@@ -23,33 +23,45 @@ class EventTests(unittest.TestCase):
         body = {"cwd": "/source", "notification_type": "permission_prompt"}
         if payload is not None:
             body = payload
-        return context.parse_event(
-            event, io.BytesIO(json.dumps(body).encode()), {"ITERM_SESSION_ID": session}
-        )
+        return context.parse_event(event, io.BytesIO(json.dumps(body).encode()), {"ITERM_SESSION_ID": session})
 
     def test_known_events_retain_only_safe_fields(self):
         for name in (
-            "SessionStart", "UserPromptSubmit", "PreToolUse", "PostToolUse",
-            "Notification", "Stop", "SessionEnd",
+            "SessionStart",
+            "UserPromptSubmit",
+            "PreToolUse",
+            "PostToolUse",
+            "Notification",
+            "Stop",
+            "SessionEnd",
         ):
             with self.subTest(name=name):
-                event = self.parse(name, {
-                    "cwd": "/source", "notification_type": "permission_prompt",
-                    "prompt": "private", "tool_input": {"secret": "private"},
-                })
+                event = self.parse(
+                    name,
+                    {
+                        "cwd": "/source",
+                        "notification_type": "permission_prompt",
+                        "prompt": "private",
+                        "tool_input": {"secret": "private"},
+                    },
+                )
                 self.assertEqual(event.event, name)
                 self.assertEqual(event.cwd, "/source")
                 self.assertEqual(event.notification_type, "permission_prompt")
                 self.assertEqual(event.source_uuid, SESSION_ID)
                 self.assertNotIn("private", repr(event))
-                self.assertEqual(set(event.__dataclass_fields__), {
-                    "event", "cwd", "notification_type", "source_uuid",
-                })
+                self.assertEqual(
+                    set(event.__dataclass_fields__),
+                    {
+                        "event",
+                        "cwd",
+                        "notification_type",
+                        "source_uuid",
+                    },
+                )
 
     def test_source_uuid_accepts_iterm_prefix_and_normalizes_case(self):
-        self.assertEqual(
-            self.parse(session=f"w0t1p2:{SESSION_ID.upper()}").source_uuid, SESSION_ID
-        )
+        self.assertEqual(self.parse(session=f"w0t1p2:{SESSION_ID.upper()}").source_uuid, SESSION_ID)
 
     def test_rejects_bad_event_uuid_and_field_types(self):
         cases = [
@@ -139,12 +151,26 @@ class SourceContextTests(unittest.TestCase):
     def git(self, *args, cwd=None):
         return subprocess.run(
             ["git", "-C", str(cwd or self.repo), *args],
-            check=True, capture_output=True, text=True, timeout=15,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=15,
         ).stdout.rstrip("\n")
 
     def commit(self):
-        self.git("-c", "user.name=Test", "-c", "user.email=test@example.invalid",
-                 "-c", "commit.gpgsign=false", "commit", "--quiet", "--allow-empty", "-m", "fixture")
+        self.git(
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.invalid",
+            "-c",
+            "commit.gpgsign=false",
+            "commit",
+            "--quiet",
+            "--allow-empty",
+            "-m",
+            "fixture",
+        )
 
     def event(self, cwd=None):
         return context.HookEvent("Notification", str(cwd or self.repo), "permission_prompt", SESSION_ID)
@@ -167,9 +193,12 @@ class SourceContextTests(unittest.TestCase):
 
     def test_linked_worktree_uses_common_repository_inside_or_outside_dotworktrees(self):
         self.commit()
-        for index, target in enumerate((
-            self.base / "outside ü", self.repo / ".worktrees" / "inside ü",
-        )):
+        for index, target in enumerate(
+            (
+                self.base / "outside ü",
+                self.repo / ".worktrees" / "inside ü",
+            )
+        ):
             self.git("worktree", "add", "--quiet", "-b", f"topic/{index}", str(target))
             self.assertEqual(
                 self.message(self.event(target)),
@@ -222,18 +251,22 @@ class SourceContextTests(unittest.TestCase):
             self.repo.chmod(0o700)
 
     def test_inherited_git_path_overrides_cannot_select_another_source(self):
-        with mock.patch.dict(os.environ, {
-            "GIT_DIR": str(self.base / "other"), "GIT_WORK_TREE": str(self.base),
-            "GIT_COMMON_DIR": str(self.base / "other"),
-        }):
-            self.assertEqual(
-                self.message(), "Copilot needs your attention: répo with spaces [feature/slash]"
-            )
+        with mock.patch.dict(
+            os.environ,
+            {
+                "GIT_DIR": str(self.base / "other"),
+                "GIT_WORK_TREE": str(self.base),
+                "GIT_COMMON_DIR": str(self.base / "other"),
+            },
+        ):
+            self.assertEqual(self.message(), "Copilot needs your attention: répo with spaces [feature/slash]")
 
     def test_git_calls_share_one_fifteen_second_budget(self):
         result = subprocess.CompletedProcess(["git"], 0, str(self.repo) + "\n", "")
-        with mock.patch.object(context.time, "monotonic", autospec=True, side_effect=[0, 1, 16]), \
-             mock.patch.object(context.subprocess, "run", autospec=True, return_value=result) as run:
+        with (
+            mock.patch.object(context.time, "monotonic", autospec=True, side_effect=[0, 1, 16]),
+            mock.patch.object(context.subprocess, "run", autospec=True, return_value=result) as run,
+        ):
             with self.assertRaises(context.ContextError) as raised:
                 context.resolve_context(self.event())
         self.assertEqual(raised.exception.code, "git_timeout")
@@ -258,9 +291,10 @@ class SourceContextTests(unittest.TestCase):
             (subprocess.TimeoutExpired(["git"], 15), "git_timeout"),
         ]
         for failure, code in failures:
-            with self.subTest(code=code), mock.patch.object(
-                context.subprocess, "run", autospec=True, side_effect=failure
-            ) as run:
+            with (
+                self.subTest(code=code),
+                mock.patch.object(context.subprocess, "run", autospec=True, side_effect=failure) as run,
+            ):
                 with self.assertRaises(context.ContextError) as raised:
                     context.resolve_context(self.event())
                 self.assertEqual(raised.exception.code, code)
@@ -270,8 +304,9 @@ class SourceContextTests(unittest.TestCase):
     def test_unexpected_git_exit_is_not_non_git_absence(self):
         for code, error in ((128, "fatal: corrupt repository"), (1, "unexpected failure")):
             result = subprocess.CompletedProcess(["git"], code, "", error)
-            with self.subTest(code=code), mock.patch.object(
-                context.subprocess, "run", autospec=True, return_value=result
+            with (
+                self.subTest(code=code),
+                mock.patch.object(context.subprocess, "run", autospec=True, return_value=result),
             ):
                 with self.assertRaises(context.ContextError) as raised:
                     context.resolve_context(self.event())

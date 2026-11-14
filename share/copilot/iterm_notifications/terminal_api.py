@@ -11,8 +11,15 @@ from typing import TypeVar, cast
 
 from .api_guard import guarded_call
 from .api_types import (
-    ApiApp, ApiConnection, ApiNotificationErrors, ApiRPCModule, ApiWebsocketErrors, ItermAPI,
-    Profile, Reporter, Session,
+    ApiApp,
+    ApiConnection,
+    ApiNotificationErrors,
+    ApiRPCModule,
+    ApiWebsocketErrors,
+    ItermAPI,
+    Profile,
+    Reporter,
+    Session,
 )
 from .diagnostics import DiagnosticError
 from .worker import DeliveryError
@@ -33,17 +40,23 @@ async def _bounded(awaitable: Awaitable[_Result]) -> _Result:
 def _load_known_errors() -> tuple[type[BaseException], ...]:
     rpc = cast(ApiRPCModule, importlib.import_module("iterm2.rpc"))
     notifications = cast(
-        ApiNotificationErrors, importlib.import_module("iterm2.notifications"),
+        ApiNotificationErrors,
+        importlib.import_module("iterm2.notifications"),
     )
     websocket = cast(ApiWebsocketErrors, importlib.import_module("websockets.exceptions"))
     return (
-        OSError, TimeoutError, rpc.RPCException, notifications.SubscriptionException,
+        OSError,
+        TimeoutError,
+        rpc.RPCException,
+        notifications.SubscriptionException,
         websocket.WebSocketException,
     )
 
 
 def _diagnose(
-    reporter: Reporter | None, code: str, error: BaseException | None = None,
+    reporter: Reporter | None,
+    code: str,
+    error: BaseException | None = None,
 ) -> None:
     diagnostic = DiagnosticError(code)
     if error is not None:
@@ -125,7 +138,9 @@ class ItermBridge:
             self._runner = None
 
     def __exit__(
-        self, _exc_type: type[BaseException] | None, _exc_value: BaseException | None,
+        self,
+        _exc_type: type[BaseException] | None,
+        _exc_value: BaseException | None,
         _traceback: TracebackType | None,
     ) -> None:
         try:

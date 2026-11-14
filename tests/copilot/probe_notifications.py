@@ -146,8 +146,7 @@ async def probe(connection: object, args: argparse.Namespace, iterm2: object) ->
     if args.inspect:
         properties = profile.all_properties
         result["baseline"] = {
-            key: properties[key] if type(properties.get(key)) in (bool, int) else None
-            for key in PROFILE_KEYS
+            key: properties[key] if type(properties.get(key)) in (bool, int) else None for key in PROFILE_KEYS
         }
         result["baseline_unavailable"] = [key for key, value in result["baseline"].items() if value is None]
         result["status"] = "inspection_only"

@@ -37,15 +37,19 @@ class ApiApp(Protocol):
     async def async_refresh(self) -> None: ...
 
     def get_session_by_id(
-        self, session_id: str, include_buried: bool = True,
+        self,
+        session_id: str,
+        include_buried: bool = True,
     ) -> Session | None: ...
 
     def get_window_and_tab_for_session(
-        self, session: Session,
+        self,
+        session: Session,
     ) -> tuple[ApiWindow, ApiTab] | tuple[None, None]: ...
 
     def get_tab_and_window_for_session(
-        self, session: Session,
+        self,
+        session: Session,
     ) -> tuple[ApiWindow, ApiTab] | tuple[None, None]: ...
 
 

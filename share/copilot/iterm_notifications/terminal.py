@@ -12,7 +12,9 @@ from .worker import Action, DeliveryError, FeedbackSink
 
 class _TerminalContext(AbstractContextManager[FeedbackSink]):
     def __init__(
-        self, writer: Callable[[str, bytes], None], report: Reporter | None,
+        self,
+        writer: Callable[[str, bytes], None],
+        report: Reporter | None,
     ) -> None:
         self._writer = writer
         self._reporter = report
@@ -25,7 +27,9 @@ class _TerminalContext(AbstractContextManager[FeedbackSink]):
         return self._deliver
 
     def __exit__(
-        self, exc_type: type[BaseException] | None, exc_value: BaseException | None,
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
         if self._bridge is not None:

@@ -6,6 +6,7 @@ import subprocess
 import sys
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from typing import BinaryIO
 
@@ -27,8 +28,11 @@ class WorkerLauncher:
         """Start a detached worker without inheriting hook pipes or waiting on it."""
         subprocess.Popen(
             [self.python, str(self.entry), "--worker", source_uuid],
-            stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            start_new_session=True, close_fds=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+            close_fds=True,
         )
 
 
@@ -50,7 +54,9 @@ def _discard(stream: BinaryIO) -> None:
 
 
 def run_hook(
-    event: str, stream: BinaryIO, environ: Mapping[str, str],
+    event: str,
+    stream: BinaryIO,
+    environ: Mapping[str, str],
     launcher: WorkerLauncher = DEFAULT_LAUNCHER,
 ) -> int:
     """Publish one sanitized event; every handled failure still returns 0."""
@@ -76,7 +82,8 @@ def run_hook(
 
 
 def run_worker(
-    source_uuid: str, environ: Mapping[str, str],
+    source_uuid: str,
+    environ: Mapping[str, str],
     open_sink: SinkFactory | None = None,
 ) -> int:
     try:
@@ -85,6 +92,7 @@ def run_worker(
         _stderr(error.code, error)
         return 1
     with spool:
+
         def report(error: DiagnosticError) -> None:
             _stderr(error.code, error)
             try:
@@ -98,7 +106,7 @@ def run_worker(
                 from .isolation import open_sink as isolated_open_sink
 
                 command = [sys.executable, str(ENTRY), "--terminal-worker"]
-                sink_factory = lambda: isolated_open_sink(report=report, command=command)
+                sink_factory = partial(isolated_open_sink, report=report, command=command)
             return 0 if drain(spool, sink_factory, report) else 1
         except SpoolError as error:
             _stderr(error.code, error)
