@@ -12,7 +12,7 @@ from typing import BinaryIO
 from .context import MAX_INPUT_BYTES, ContextError, parse_event
 from .diagnostics import DiagnosticError, diagnostic_line
 from .spool import Spool, SpoolError
-from .worker import SinkFactory, drain, open_unavailable_sink
+from .worker import SinkFactory, drain
 
 
 ENTRY = Path(__file__).resolve().parents[3] / "bin" / "copilot-iterm-notify.py"
@@ -77,7 +77,7 @@ def run_hook(
 
 def run_worker(
     source_uuid: str, environ: Mapping[str, str],
-    open_sink: SinkFactory = open_unavailable_sink,
+    open_sink: SinkFactory | None = None,
 ) -> int:
     try:
         spool = Spool.open(source_uuid, environ)
@@ -93,7 +93,12 @@ def run_worker(
                 _stderr(log_error.code, log_error)
 
         try:
-            return 0 if drain(spool, open_sink, report) else 1
+            sink_factory = open_sink
+            if sink_factory is None:
+                from .terminal import open_sink as terminal_open_sink
+
+                sink_factory = lambda: terminal_open_sink(report=report)
+            return 0 if drain(spool, sink_factory, report) else 1
         except SpoolError as error:
             _stderr(error.code, error)
             return 1

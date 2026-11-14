@@ -1,3 +1,5 @@
+import contextlib
+import io
 import json
 import os
 import select
@@ -8,6 +10,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +19,8 @@ sys.path.insert(0, str(PACKAGE))
 
 from iterm_notifications import cli, spool
 from iterm_notifications.context import HookEvent
+from iterm_notifications.diagnostics import DiagnosticError
+from iterm_notifications.worker import DeliveryError
 
 
 ENTRY = ROOT / "bin" / "copilot-iterm-notify.py"
@@ -188,14 +193,51 @@ class WorkerProcessTests(HookTestCase):
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=self.env, **kwargs,
         )
 
-    def test_terminal_failure_seam_is_logged_without_stdout(self):
+    def test_terminal_api_unavailable_is_logged_without_stdout(self):
         self.enqueue("Notification", "permission_prompt")
         process = self.worker()
         stdout, stderr = process.communicate(timeout=30)
         self.assertEqual((process.returncode, stdout), (0, b""))
-        self.assertEqual(self.codes(stderr), ["terminal_adapter_unavailable"])
+        self.assertEqual(self.codes(stderr), ["terminal_api_unavailable"])
         log = (self.session_dir() / "notification-errors.log").read_bytes()
-        self.assertEqual(self.codes(log), ["terminal_adapter_unavailable"])
+        self.assertEqual(self.codes(log), ["terminal_api_unavailable"])
+        self.assertEqual(self.queue_names(), [])
+
+    def test_injected_delivery_failure_is_logged_without_raw_error_or_stdout(self):
+        self.enqueue("Notification", "permission_prompt")
+        stdout, stderr = io.StringIO(), io.StringIO()
+
+        def fail(_action, _event):
+            raise DeliveryError("tty_write_failed") from OSError("private tty path")
+
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            result = cli.run_worker(
+                SESSION_ID, self.env, lambda: contextlib.nullcontext(fail),
+            )
+
+        self.assertEqual((result, stdout.getvalue()), (0, ""))
+        self.assertEqual(self.codes(stderr.getvalue().encode()), ["tty_write_failed"])
+        self.assertNotIn("private tty path", stderr.getvalue())
+        self.assertEqual(self.queue_names(), [])
+
+    def test_default_sink_focus_diagnostic_is_logged_under_worker_lock(self):
+        self.enqueue("Notification", "permission_prompt")
+        stdout, stderr = io.StringIO(), io.StringIO()
+
+        def fake_open_sink(*, report):
+            def sink(_action, _event):
+                report(DiagnosticError("focus_unknown"))
+
+            return contextlib.nullcontext(sink)
+
+        with patch("iterm_notifications.terminal.open_sink", side_effect=fake_open_sink):
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                result = cli.run_worker(SESSION_ID, self.env)
+
+        self.assertEqual((result, stdout.getvalue()), (0, ""))
+        self.assertEqual(self.codes(stderr.getvalue().encode()), ["focus_unknown"])
+        log = (self.session_dir() / "notification-errors.log").read_bytes()
+        self.assertEqual(self.codes(log), ["focus_unknown"])
         self.assertEqual(self.queue_names(), [])
 
     def test_killed_owner_releases_lock_and_aged_metadata_never_steals_live_lock(self):
@@ -228,7 +270,7 @@ class WorkerProcessTests(HookTestCase):
         holder.wait(timeout=30)
         stdout, stderr = contender.communicate(timeout=30)
         self.assertEqual((contender.returncode, stdout), (0, b""))
-        self.assertEqual(self.codes(stderr), ["terminal_adapter_unavailable"])
+        self.assertEqual(self.codes(stderr), ["terminal_api_unavailable"])
         self.assertEqual(self.queue_names(), [])
         self.assertEqual(lock.stat().st_ino, inode)
 
