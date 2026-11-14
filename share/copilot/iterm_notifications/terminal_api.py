@@ -11,7 +11,8 @@ from typing import TypeVar, cast
 
 from .api_guard import guarded_call
 from .api_types import (
-    Profile, Reporter, Session, ApiApp, ApiConnection, ItermAPI, ApiRPCModule, ApiWebsocketErrors,
+    ApiApp, ApiConnection, ApiNotificationErrors, ApiRPCModule, ApiWebsocketErrors, ItermAPI,
+    Profile, Reporter, Session,
 )
 from .diagnostics import DiagnosticError
 from .worker import DeliveryError
@@ -31,8 +32,14 @@ async def _bounded(awaitable: Awaitable[_Result]) -> _Result:
 
 def _load_known_errors() -> tuple[type[BaseException], ...]:
     rpc = cast(ApiRPCModule, importlib.import_module("iterm2.rpc"))
+    notifications = cast(
+        ApiNotificationErrors, importlib.import_module("iterm2.notifications"),
+    )
     websocket = cast(ApiWebsocketErrors, importlib.import_module("websockets.exceptions"))
-    return (OSError, TimeoutError, rpc.RPCException, websocket.WebSocketException)
+    return (
+        OSError, TimeoutError, rpc.RPCException, notifications.SubscriptionException,
+        websocket.WebSocketException,
+    )
 
 
 def _diagnose(

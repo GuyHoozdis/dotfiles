@@ -72,6 +72,10 @@ class ApiRPCModule(Protocol):
     RPCException: type[Exception]
 
 
+class ApiNotificationErrors(Protocol):
+    SubscriptionException: type[Exception]
+
+
 class ApiWebsocketErrors(Protocol):
     WebSocketException: type[Exception]
 

@@ -134,6 +134,10 @@ class FakeConnectionClosed(FakeWebSocketException):
     pass
 
 
+class FakeSubscriptionException(Exception):
+    pass
+
+
 class TerminalAdapterTests(unittest.TestCase):
     def setUp(self):
         self.profile = FakeProfile()
@@ -148,8 +152,10 @@ class TerminalAdapterTests(unittest.TestCase):
         websockets = types.ModuleType("websockets")
         exceptions = types.ModuleType("websockets.exceptions")
         exceptions.WebSocketException = FakeWebSocketException
+        notifications = types.ModuleType("iterm2.notifications")
+        notifications.SubscriptionException = FakeSubscriptionException
         self.module_patch = patch.dict(sys.modules, {
-            "iterm2": self.iterm, "iterm2.rpc": rpc,
+            "iterm2": self.iterm, "iterm2.rpc": rpc, "iterm2.notifications": notifications,
             "websockets": websockets, "websockets.exceptions": exceptions,
         })
         self.module_patch.start()
@@ -195,6 +201,18 @@ class TerminalAdapterTests(unittest.TestCase):
     def test_websocket_failure_during_focus_logs_then_delivers(self):
         async def fail_refresh():
             raise FakeConnectionClosed("private focus payload")
+
+        self.app.app_active = True
+        self.app.async_refresh = fail_refresh
+
+        self.deliver()
+
+        self.assertEqual(self.diagnostics[0].code, "focus_unknown")
+        self.assertEqual(len(self.output), 1)
+
+    def test_subscription_failure_during_focus_logs_then_delivers(self):
+        async def fail_refresh():
+            raise FakeSubscriptionException("private subscription payload")
 
         self.app.app_active = True
         self.app.async_refresh = fail_refresh
