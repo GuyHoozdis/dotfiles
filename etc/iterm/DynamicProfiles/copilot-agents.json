@@ -6,7 +6,16 @@
       "Dynamic Profile Parent Name": "Default",
       "Tags": ["copilot"],
       "Use Custom Tab Title": true,
-      "Custom Tab Title": "\\(currentSession.user.repoLabel)"
+      "Custom Tab Title": "\\(currentSession.user.repoLabel)",
+      "BM Growl": true,
+      "Send Terminal Generated Alerts": true,
+      "Send Bell Alert": false,
+      "Send Idle Alert": false,
+      "Send New Output Alert": false,
+      "Send Session Ended Alert": false,
+      "Suppress Alerts in Active Session": false,
+      "Send Alerts To Companion": false,
+      "Silence Bell": false
     }
   ]
 }

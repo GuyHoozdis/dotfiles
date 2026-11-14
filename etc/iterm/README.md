@@ -27,6 +27,11 @@ ln -sfn ~/dotfiles/share/copilot/hooks/iterm2-session-status.json ~/.copilot/hoo
 Then open tabs with the **Copilot Agents** profile. New Copilot sessions pick up
 the hooks.
 
+For waiting alerts and completion bells, see the
+[attention feedback runbook](../../docs/plans/2026-11-13-copilot-iterm-notifications/usage.md)
+and [verification evidence](../../docs/plans/2026-11-13-copilot-iterm-notifications/verification.md).
+Test existing macOS settings before changing notification presentation.
+
 ## Nerdr
 
 This was my first attempt at reworkig my iTerm2 profiles so that they would be better 
