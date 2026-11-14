@@ -53,8 +53,45 @@ ln -sfn "$HOME/dotfiles/share/copilot/hooks/iterm2-session-status.json" \
 **Worktree caution:** `~/dotfiles` currently resolves to the main checkout.
 These commands do not activate unmerged worktree changes. For an explicitly
 approved temporary worktree test, first record both existing symlink targets
-with `readlink`, then substitute the worktree's absolute paths. Restore those
-recorded targets after testing unless deliberately keeping that checkout active.
+with `readlink`. **Linking the worktree's hook JSON alone is insufficient**:
+its commands deliberately use `"$HOME/dotfiles/bin/..."` for normal installation.
+Generate a temporary copy with explicit worktree executable paths instead:
+
+```bash
+# Run from this worktree, only after approving temporary live activation.
+worktree="$(pwd -P)"
+hook_config="$(mktemp "${TMPDIR:-/tmp}/copilot-iterm-hooks.XXXXXX")"
+python3 - "$worktree" "$hook_config" <<'PY'
+import json
+import os
+import shlex
+import sys
+from pathlib import Path
+
+root, output = map(Path, sys.argv[1:])
+config = json.loads((root / "share/copilot/hooks/iterm2-session-status.json").read_text())
+for event, entries in config["hooks"].items():
+    for entry, name in zip(
+        entries, ("copilot-iterm-status", "copilot-iterm-notify.py"), strict=True
+    ):
+        executable = root / "bin" / name
+        if not executable.is_file() or not os.access(executable, os.X_OK):
+            raise SystemExit("Missing executable; do not activate")
+        entry["bash"] = f"{shlex.quote(str(executable))} {event}"
+output.write_text(json.dumps(config, indent=2) + "\n")
+PY
+# Inspect the generated commands before changing either live link.
+cat "$hook_config"
+ln -sfn "$worktree/etc/iterm/DynamicProfiles/copilot-agents.json" \
+  "$HOME/Library/Application Support/iTerm2/DynamicProfiles/copilot-agents.json"
+ln -sfn "$hook_config" "$HOME/.copilot/hooks/iterm2-session-status.json"
+```
+
+Keep the recorded rollback targets and temporary config path. Restore both
+original targets after testing, then remove only that temporary config file;
+never delete a config while its live symlink still points to it. Do not overwrite
+an existing regular file with these commands: the installation above assumes
+both live paths are symlinks, as recorded in [verification](verification.md).
 Do not edit `~/.copilot/settings.json` or enable Copilot's global notification
 or beep settings; those could duplicate feedback or bypass profile scoping.
 
