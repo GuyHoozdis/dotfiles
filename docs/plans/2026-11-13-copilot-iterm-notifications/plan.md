@@ -11,15 +11,19 @@ panes and bell-only feedback when the foreground agent finishes a turn.
 independent attention hook. That hook queues sanitized lifecycle events for a
 short-lived per-session worker; separate context, state, and terminal-output
 components resolve identity, deduplicate feedback, and target the correct pane.
-Verify native notification routing before building the feature.
+An owned, ephemeral Python API helper bounds library authentication and cleanup
+without holding the worker lock indefinitely. Verify native notification
+routing before building the feature.
 
 **Tech Stack:** Bash hook configuration; Python 3.12+, uv script metadata/locks,
 stdlib unittest, the iTerm2 Python API, Git, and native iTerm2 OSC 9/BEL output.
 No notification helper application or persistent daemon.
 
-**Status:** Task 1 passed with operator-confirmed tty output, persistent waiting
-presentation, exact-pane click routing, and bell-only completion. The spec was
-approved on 2026-11-13. Runtime Tasks 2–6 are next.
+**Status:** Tasks 1–3 complete. Task 4 is in final review; Tasks 5–6 follow.
+The operator confirmed the transport gate and approved remaining implementation
+in autopilot, without further operator feedback. Runtime visible acceptance
+remains separate from the passing transport gate. The spec was approved on
+2026-11-13.
 
 ---
 
@@ -58,14 +62,26 @@ approved on 2026-11-13. Runtime Tasks 2–6 are next.
 | `tests/copilot/probe_notifications.py.lock` | uv script dependency lock for the probe |
 | `share/copilot/iterm_notifications/__init__.py` | Package marker; no import-time effects |
 | `share/copilot/iterm_notifications/context.py` | Safe hook-event parsing and repo/worktree/branch message context |
-| `share/copilot/iterm_notifications/state.py` | Pure feedback reducer and per-session queue/state/log synchronization |
+| `share/copilot/iterm_notifications/state.py` | Pure feedback reducer, state encoding, and replay watermark |
+| `share/copilot/iterm_notifications/safefs.py` | Owner-only, no-follow descriptors and atomic publication |
+| `share/copilot/iterm_notifications/spool.py` | Ordered queue, permanent locks, persisted state, and bounded log |
+| `share/copilot/iterm_notifications/worker.py` | Serialized drain and lazy delivery seam |
+| `share/copilot/iterm_notifications/diagnostics.py` | Payload-free diagnostic codes and JSON lines |
 | `share/copilot/iterm_notifications/terminal.py` | Source profile/focus lookup and verified terminal-output transport |
+| `share/copilot/iterm_notifications/terminal_api.py` | Bounded iTerm2 connection, source identity, and focus lookup |
+| `share/copilot/iterm_notifications/api_types.py` | Typed public API interfaces without eager GUI dependencies |
+| `share/copilot/iterm_notifications/api_guard.py` | Per-call library output isolation and wall-clock guard |
+| `share/copilot/iterm_notifications/tty.py` | Source-owned tty descriptor checks and bounded output |
+| `share/copilot/iterm_notifications/isolation.py` | Owned helper lifetime, deadline, and process-group cleanup |
+| `share/copilot/iterm_notifications/ipc.py` | Versioned, bounded, nonblocking helper protocol |
+| `share/copilot/iterm_notifications/helper.py` | One API connection and parent-lifeline watchdog per helper |
 | `share/copilot/iterm_notifications/cli.py` | Enqueue/worker orchestration and bounded integration errors |
 | `bin/copilot-iterm-notify.py` | Thin executable uv entrypoint importing the package relative to its resolved path |
 | `bin/copilot-iterm-notify.py.lock` | uv script dependency lock for runtime |
 | `tests/copilot/test_context.py` | Synthetic hook and temporary Git repository cases |
 | `tests/copilot/test_state.py` | State transitions, ordered queue, locking/crash and bounded diagnostics cases |
 | `tests/copilot/test_terminal.py` | Fake API/session, output-byte and focus cases |
+| `tests/copilot/test_isolation.py` | Real owned-subprocess timeout, protocol, and orphan-cleanup cases |
 | `tests/copilot/test_hooks.py` | Fake-worker subprocess/hook integration and failure isolation |
 | `tests/copilot/README.md` | Navigation and focused test/probe commands |
 | `share/copilot/hooks/iterm2-session-status.json` | Add attention hook entries without changing existing status commands |
@@ -78,6 +94,13 @@ Keep the modules focused and ordinarily below 250 lines each. Split only if
 necessary to preserve the boundaries above; do not introduce a plugin framework.
 Tests add `share/copilot` to their import path using their resolved repository
 root. Runtime entrypoints do the same, independent of the hook's cwd.
+
+Implementation review established that `asyncio.wait_for` alone cannot bound
+synchronous AppleScript authentication or `asyncio.Runner.close()` waiting for a
+resolver thread. The terminal boundary therefore uses an owned, ephemeral
+Python subprocess with bounded IPC and process-group cleanup. This strengthens
+the existing timeout/failure contract; it does not add a notification helper
+application, persistent service, or new output transport.
 
 ## Chunk 1: Verify, implement, and activate attention delivery
 
@@ -236,14 +259,14 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
 **Files:** Extend `state.py`; create `cli.py`, `bin/copilot-iterm-notify.py`,
 and its script lock; extend `test_state.py`; create `test_hooks.py`.
 
-- [ ] **Step 1: Write failing queue and worker tests before implementation.**
+- [x] **Step 1: Write failing queue and worker tests before implementation.**
   With an isolated `TemporaryDirectory`, enqueue waiting then working before
   draining; assert the waiting action remains in the drained history. Test
   two UUIDs, repeated events, concurrent producers, interrupted writes,
   a producer arriving during worker shutdown, and stale worker metadata.
   Use pipes/events/barriers and `subprocess.wait(timeout=...)`, not arbitrary
   sleeps to infer completion.
-- [ ] **Step 2: Implement the sanitized spool and owner-liveness locking.**
+- [x] **Step 2: Implement the sanitized spool and owner-liveness locking.**
   Reuse `${TMPDIR:-/tmp}/copilot-iterm-status/<UUID>/`, but use separate
   `notification-queue/`, `notification-state.json`, `notification.lock`,
   and `notification-errors.log`. Validate the UUID before path construction.
@@ -257,7 +280,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Under a short `fcntl.flock` enqueue lock, allocate a monotonic per-session
   sequence and atomically rename each sanitized event record into the queue.
   Allocate sequence and publish together; timestamps alone do not order events.
-- [ ] **Step 3: Implement ephemeral worker startup and serialized draining.**
+- [x] **Step 3: Implement ephemeral worker startup and serialized draining.**
   The hook entrypoint reads/validates input, publishes the record, starts
   a worker via `subprocess.Popen` with `start_new_session=True`,
   `close_fds=True`, and disconnected stdin/stdout, and returns. Route
@@ -274,7 +297,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Record the owning PID as diagnostic metadata. The kernel releases `flock`
   on process death; this is the PID-liveness mechanism, with no age-based
   lock eviction or racing directory deletion.
-- [ ] **Step 4: Bound failure handling and feedback state writes.**
+- [x] **Step 4: Bound failure handling and feedback state writes.**
   For each event, persist the reducer's observed state atomically, then
   attempt its one action and remove that queue record. There is no automatic
   delivery retry after a notification error; activity rearms future events.
@@ -284,7 +307,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   A focused-pane suppression also counts as observing the waiting state.
   `SessionEnd` clears lifecycle state, not the queue containing newer events.
   Do not delete an in-use worker lockfile.
-- [ ] **Step 5: Add bounded, payload-free structured diagnostics.**
+- [x] **Step 5: Add bounded, payload-free structured diagnostics.**
   Catch specific JSON, filesystem, subprocess timeout, and API errors at
   their boundaries. Record an event code and exception class, not raw
   exceptions/commands/payloads. Keep only the newest 64 KiB of the per-session
@@ -299,7 +322,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   `--help` returns 0; explicit CLI argument misuse and the opt-in diagnostic
   probe may use nonzero exit codes. Do not add a blanket exception catch
   that disguises programming bugs.
-- [ ] **Step 6: Provide the executable uv entrypoint and script lock.**
+- [x] **Step 6: Provide the executable uv entrypoint and script lock.**
 
   ```python
   #!/usr/bin/env -S uv run --script
@@ -322,11 +345,11 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   run `uv lock --script bin/copilot-iterm-notify.py`. Missing iTerm context,
   tmux, and unsupported profiles are intentional no-ops; configuration/API
   failures are diagnostic errors, not successful delivery.
-- [ ] **Step 7: Run the focused unittest command from Task 2.**
+- [x] **Step 7: Run the focused unittest command from Task 2.**
   Expect all pure/queue/subprocess cases to pass using injected fake actions.
   Add a worker death/restart case and prove a live lock is never stolen,
   regardless of metadata age.
-- [ ] **Step 8: Commit.**
+- [x] **Step 8: Commit.**
   `feat(copilot): queue per-session attention events independently`.
 
 ### Task 4: Implement terminal identity, focus, and the verified output adapter
@@ -454,7 +477,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
 **Files:** Create plan-local `usage.md`; update `verification.md`,
 `tests/copilot/README.md`, `etc/iterm/README.md`, and `docs/plans/README.md`.
 
-- [ ] **Step 1: Write the setup/rollback runbook.**
+- [x] **Step 1: Write the setup/rollback runbook.**
   Explain macOS notification permission, persistent Alerts, Focus limitations,
   audible-bell settings, foreground-turn semantics, focus suppression,
   best-effort ordering/crash semantics, and bounded local log location.

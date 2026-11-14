@@ -154,3 +154,23 @@ have not been changed. No permanent worktree activation, merge, or push is
 authorized. The new runtime's real Copilot permission/question/completion
 exercise and full visible acceptance matrix remain **pending operator
 availability**, distinct from the already passed transport gate.
+
+## Automated runtime evidence
+
+- Read-only live API smoke check with the runtime's `ItermBridge` and installed
+  `iterm2==2.30`: a lowercase source UUID resolved the actual uppercase iTerm2
+  session, the original GUID matched Copilot Agents, `user.repoLabel` was
+  nonempty, and tty was `/dev/ttys036`. Connection cleanup completed without
+  diagnostics. This check emitted no OSC or BEL and does not prove runtime
+  notification presentation.
+- Warm activity-hook latency: 25 actual executable invocations using
+  `uv run --locked --script bin/copilot-iterm-notify.py PreToolUse`, each with
+  synthetic input, a random source UUID, and one isolated temporary state
+  directory. Median **57.97 ms**, p95 **62.08 ms**, maximum **88.09 ms**.
+  Every producer returned zero with empty stdout/stderr, before the five-second
+  timeout. A foreground drain and worker-exit observation confirmed all 25
+  records processed before removing the temporary directory. No notifications
+  were sent; activity events do not open the terminal sink.
+- Separate unit/integration cases hold a fake delivery worker blocked while
+  proving producer return and closure of inherited pipes. The latency sample
+  above is the real executable, not an extrapolation from those fakes.

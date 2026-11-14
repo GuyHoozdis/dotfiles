@@ -2,7 +2,7 @@
 
 Date: 2026-11-13
 
-Status: accepted; implementation pending.
+Status: accepted; independent queue implemented and automatically verified.
 
 ## Context
 
@@ -45,6 +45,10 @@ Conversely, repeating every state report as an alert would create noise.
   [decision 0010](0010-iterm-owned-agent-notifications.md).
 - Avoiding coalescing loss does not promise exactly-once delivery across crashes
   or correct producer ordering for simultaneous events.
+- Terminal API work uses an owned, short-lived Python helper, not a notification
+  application or daemon. Review reproduced blocking authentication children and
+  executor shutdown beyond async deadlines; process isolation allows bounded
+  cleanup without stranding the queue lock.
 
 ## Source and approval
 

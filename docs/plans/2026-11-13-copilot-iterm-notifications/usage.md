@@ -35,6 +35,11 @@ uv run --locked --script bin/copilot-iterm-notify.py --help
 
 Cold dependency setup may exceed Copilot's five-second hook timeout. The
 detached worker does not resolve a second uv environment.
+API work runs in an owned, short-lived Python helper within that worker's
+delivery path. This is not a separately installed notification app or daemon.
+It isolates blocking authentication and asynchronous-client cleanup so a
+timeout can terminate the helper and its authentication children without
+stranding the session's queue lock.
 
 For the normal `~/dotfiles` installation:
 

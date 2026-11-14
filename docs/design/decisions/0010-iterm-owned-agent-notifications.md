@@ -2,7 +2,7 @@
 
 Date: 2026-11-13
 
-Status: accepted; implementation pending transport verification.
+Status: accepted; transport verified; runtime acceptance pending.
 
 ## Context
 
@@ -47,6 +47,10 @@ under the same application identity.
 - Persistence and click behavior require operator-visible verification; a
   successful notification submission alone is insufficient.
 - No remote/tmux forwarding or multiple agents in one pane is introduced.
+- The source-tty gate passed with operator-confirmed persistent presentation,
+  exact-pane click routing, and bell-only completion; see
+  [verification evidence](../../plans/2026-11-13-copilot-iterm-notifications/verification.md).
+  Runtime acceptance is tracked separately.
 
 ## Source and approval
 

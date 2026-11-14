@@ -5,6 +5,8 @@
 - `probe_notifications.py`: explicit opt-in inspection and transport probe;
   never run by test discovery.
 - `test_probe_notifications.py`: host-safe, mocked unit tests.
+- Other `test_*.py` modules: source context, lifecycle state, queue/worker
+  concurrency, fake terminal API, and owned-helper failure isolation.
 - `test_context.py`: hook parsing and source Git context.
 - `test_state.py`: feedback reducer, per-session spool, locking, and
   crash-replay cases with an injected fake sink.
