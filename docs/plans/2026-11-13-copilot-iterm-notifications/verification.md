@@ -151,7 +151,8 @@ profile link selected this worktree's profile and the hook link selected a
 session-local generated manifest with all 14 commands targeting absolute
 worktree executable paths. **Both original links have now been restored** at
 the operator's request; the unlinked temporary manifest was removed. Rollback
-metadata is retained outside the repository. No merge or push was performed.
+metadata is retained outside the repository. The live test did not merge or
+publish this branch.
 Running test Copilot sessions may retain cached hooks until restarted.
 
 ### Supervised runtime observations
@@ -238,7 +239,8 @@ visible content, persistence, click routing, and unchanged input before adoption
 - Separate unit/integration cases hold a fake delivery worker blocked while
   proving producer return and closure of inherited pipes. The latency sample
   above is the real executable, not an extrapolation from those fakes.
-- Final host-safe suite: **133 tests passed** with
+- After merging `origin/main` at `366c763` without rewriting history, the
+  host-safe suite again reported **133 tests passed** with
   `uv run --no-project --python 3.12 python -m unittest discover -s tests/copilot -p 'test_*.py' -q`.
   Cases include source context, reducer/rearming, concurrent queue/crash replay,
   status-worker independence, exact profile/focus rules, output bytes, real
