@@ -65,15 +65,19 @@ uv run --locked pytest tests/shell/test_tart_driver.py
 One guest suite (`--image macos|ubuntu`, `--suite bash|dotfiles`):
 
 ```bash
+artifacts_dir=$(mktemp -d "${TMPDIR:-/tmp}/shell-startup.XXXXXXXX")
+echo "Artifacts: $artifacts_dir"
 uv run tests/shell/run_tart.py --image ubuntu \
-  --suite dotfiles --marker characterization --artifacts "$HOME/shell-artifacts/dotfiles-ubuntu-characterization"
+  --suite dotfiles --marker characterization --artifacts "$artifacts_dir/ubuntu-dotfiles"
 ```
 
 The optional `--marker` filters by `characterization` or `acceptance`; omit it
-to run the entire suite. The artifacts directory must be new or empty. The exit
-code is pytest's; other driver errors indicate infrastructure failure. Keep
-artifacts outside the worktree, or the run records `git_dirty: true`. The
-driver passes `-rs` to pytest to report skip reasons in guest output.
+to run the entire suite. The artifacts directory must be new or empty. Temporary
+artifacts may be removed by the system; copy them elsewhere if they need to be
+retained. The exit code is pytest's; other driver errors indicate infrastructure
+failure. Keep artifacts outside the worktree, or the run records
+`git_dirty: true`. The driver passes `-rs` to pytest to report skip reasons in
+guest output.
 
 ## Safety boundary
 
