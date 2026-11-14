@@ -20,6 +20,40 @@ scenario over their configuration axes; pending scenarios are reported as
 skips. System startup remains enabled on both pinned images: Homebrew is
 present on macOS and absent on Ubuntu.
 
+## Invocation inputs
+
+The shared registry also covers actual Bash invocation controls, not IDE, SSH,
+or PTY sessions. S09–S12 extend decision 0008's fixtures with explicitly named
+invocation inputs: a silent `BASH_ENV` sentinel, an alternative `--rcfile`, and a
+probe script, all in fixture-owned paths containing spaces. These do not replace
+tracked modules, standard startup fixtures, or system files. Matched system-only
+controls receive the same scenario inputs; neither harness nor profile sources
+the sentinel on Bash's behalf.
+
+| IDs | Actual invocation (probe arguments omitted) | Expected selection |
+| --- | --- | --- |
+| S09-env-c | `BASH_ENV=file bash -c …` | Sentinel only |
+| S09-env-script | `BASH_ENV=file bash "probe script.bash" …` | Sentinel, then real script; no extra Bash runner |
+| S09-env-login-c | `BASH_ENV=file bash -l -c …` | Login files, then sentinel |
+| S09-env-interactive | `BASH_ENV=file bash -i -c …` | Normal rc; sentinel ignored |
+| S09-env-inherited-c | Login parent → `BASH_ENV=file bash -c …` | Inherited exports; sentinel in child, no user interactive modules |
+| S10-noprofile-i | `bash --noprofile -i -l -c …` | No automatic profile or user rc |
+| S10-noprofile-env | `BASH_ENV=file bash --noprofile -l -c …` | Sentinel despite suppressed profiles |
+| S11-norc-i | `bash --norc -i -c …` | No automatic rc or user interactive modules |
+| S11-norc-login | `bash --norc -i -l -c …` | Profile can still explicitly source `.bashrc` |
+| S12-rcfile-i | `bash --rcfile file -i -c …` | Alternative rc, not ordinary user rc |
+| S12-rcfile-login | `bash --rcfile file -i -l -c …` | Alternative ignored; profile can source ordinary rc |
+| S12-norc-rcfile | `bash --norc --rcfile file -i -c …` | Neither automatic rc runs |
+
+Every new scenario runs over all 16 Bash startup-file combinations and all
+three dotfiles configurations. Additional Bash cases explicitly source `.bashrc`
+from each selected synthetic login profile to distinguish automatic selection
+from profile dispatch. Sentinel records prove execution, login-before-sentinel
+ordering, and exported/local state at the time of sourcing. Dotfiles assertions
+distinguish actual interactive mode from whether tracked interactive modules
+were selected; suppressed profiles preserve the input PATH instead of asserting
+login initialization. Local overrides retain their existing module order.
+
 ## Running
 
 Host-safe driver tests:
@@ -31,15 +65,19 @@ uv run --locked pytest tests/shell/test_tart_driver.py
 One guest suite (`--image macos|ubuntu`, `--suite bash|dotfiles`):
 
 ```bash
+artifacts_dir=$(mktemp -d "${TMPDIR:-/tmp}/shell-startup.XXXXXXXX")
+echo "Artifacts: $artifacts_dir"
 uv run tests/shell/run_tart.py --image ubuntu \
-  --suite dotfiles --marker characterization --artifacts "$HOME/shell-artifacts/dotfiles-ubuntu-characterization"
+  --suite dotfiles --marker characterization --artifacts "$artifacts_dir/ubuntu-dotfiles"
 ```
 
 The optional `--marker` filters by `characterization` or `acceptance`; omit it
-to run the entire suite. The artifacts directory must be new or empty. The exit
-code is pytest's; other driver errors indicate infrastructure failure. Keep
-artifacts outside the worktree, or the run records `git_dirty: true`. The
-driver passes `-rs` to pytest to report skip reasons in guest output.
+to run the entire suite. The artifacts directory must be new or empty. Temporary
+artifacts may be removed by the system; copy them elsewhere if they need to be
+retained. The exit code is pytest's; other driver errors indicate infrastructure
+failure. Keep artifacts outside the worktree, or the run records
+`git_dirty: true`. The driver passes `-rs` to pytest to report skip reasons in
+guest output.
 
 ## Safety boundary
 
@@ -80,7 +118,53 @@ Each run writes these files to its artifacts directory:
 Symlinks created by pytest under `results/` are skipped, not followed. Any other
 special or unsafe archive member fails the run.
 
-## Baselines and current results
+## Verified invocation-variation results
+
+Unfiltered runs on 2026-11-13 tested committed implementation
+`05e0e74d77f9a5b3b287cd9a82eab138878e8ec1`, with `git_dirty: false` and
+`marker: null` in all four `run.json` files. Every run exited 0; JUnit failure
+and error lists are empty, harness/cleanup errors are null, and all four
+run-owned clones were confirmed absent afterward. Transient guest-agent
+readiness retries recovered normally.
+
+| Suite | Image | Characterization: passed / failed / skipped | Acceptance: passed / failed / skipped | Total: passed / failed / skipped |
+| --- | --- | --- | --- | --- |
+| Bash | Ubuntu (`/bin/bash` 5.2.21) | 737 / 0 / 192 | — | 737 / 0 / 192 |
+| Bash | macOS (Apple `/bin/bash` 3.2.57) | 737 / 0 / 192 | — | 737 / 0 / 192 |
+| Dotfiles | Ubuntu | 66 / 0 / 18 | 1386 / 0 / 565 | 1452 / 0 / 583 |
+| Dotfiles | macOS | 66 / 0 / 18 | 1386 / 0 / 565 | 1452 / 0 / 583 |
+
+Evidence directories under `~/shell-artifacts/`:
+
+- `bash-variations-ubuntu-bash-20261113T145300`
+- `bash-variations-macos-bash-20261113T145300`
+- `bash-variations-ubuntu-dotfiles-20261113T145400`
+- `bash-variations-macos-dotfiles-20261113T145400`
+
+Each contains `run.json`, `results/pytest.xml`, logs, and per-shell records.
+Actual-script artifacts confirm non-interactive mode, `SHLVL=1`, and the
+sentinel marker. Login sentinel snapshots include `exports.local;` and the
+initialized GOPATH when local modules are selected. All 36 new dotfiles
+scenario/configuration pairs pass invocation assertions on each image.
+
+The supplied main-baseline XML files in
+`~/shell-artifacts/bash-noexec-base-{ubuntu,macos}-20261113` each contain 24
+failures, all `test_prompt_command`. The separate correction now requires
+exactly `set_prompt; _iterm2_set_repo_label`; host negative tests reject missing
+or extra hooks. No baseline failures remain.
+
+Host TDD first observed 12 failures for missing invocation scenarios, then nine
+failures for invocation-unaware suite expectations. Final committed host checks:
+129 passed with `uv run --locked pytest tests/shell/test_scenarios.py
+tests/shell/test_tart_driver.py -q`; Ruff, generated Bash-input syntax checks,
+and `git diff --check` passed. No tracked startup production code changed.
+
+Pending reasons are unchanged. Bash skips remain 96 undefined-launch cases and
+96 SSH cases per image. Dotfiles characterization skips remain nine of each;
+acceptance skips are 207 undefined-launch, 207 SSH, 63 fresh-only, and 88
+local-only cases. Adding assertions increases pending-case counts, not scope.
+
+## Earlier PATH-policy evidence
 
 Final PATH-policy guest runs tested revision
 `53031888ef4a759b3b5b709f50dbf6621988a9da` without a marker, using fresh artifact

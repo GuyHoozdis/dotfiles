@@ -103,6 +103,12 @@ loading. Renaming a file is not required merely to correct PATH.
 - `--rcfile file` replaces the automatic interactive non-login rc file; it does
   not replace a login profile. Combining it with `--login` does not cause Bash
   to use that file as its login entrypoint.
+- Put long invocation options before short options, for example
+  `bash --rcfile "custom rc.bash" -i -c 'command'`. `--norc` suppresses an
+  alternative automatic rcfile too. Interactive Bash ignores `BASH_ENV`;
+  non-interactive login Bash processes it after login files, even when
+  `--noprofile` suppresses those files. These controls are exercised across the
+  [shared scenario matrix](../../tests/shell/README.md#invocation-inputs).
 - [Non-interactive Bash started by a remote shell daemon](https://www.gnu.org/software/bash/manual/html_node/Bash-Startup-Files.html#Invoked-by-remote-shell-daemon)
   may read `.bashrc`.
   This is why interactive-only commands must be guarded and remote startup must
