@@ -146,12 +146,13 @@ activating this worktree:
 - User hook:
   `/Users/ssulliva/dotfiles/share/copilot/hooks/iterm2-session-status.json`
 
-`~/dotfiles` resolves to the main checkout, not this worktree. The profile link
-now temporarily selects this worktree's profile. The hook link selects a
+`~/dotfiles` resolves to the main checkout, not this worktree. During testing the
+profile link selected this worktree's profile and the hook link selected a
 session-local generated manifest with all 14 commands targeting absolute
-worktree executable paths. Rollback metadata is retained outside the repository.
-Restore both original links after testing unless the operator explicitly retains
-activation. No permanent activation, merge, or push is authorized.
+worktree executable paths. **Both original links have now been restored** at
+the operator's request; the unlinked temporary manifest was removed. Rollback
+metadata is retained outside the repository. No merge or push was performed.
+Running test Copilot sessions may retain cached hooks until restarted.
 
 ### Supervised runtime observations
 
@@ -185,8 +186,8 @@ activation. No permanent activation, merge, or push is authorized.
   restored their prior profile values.
 - A source-local `Title Components=32` (profile name only) experiment read back
   `name=Copilot Agents` while retaining the correct repo/worktree tab title.
-  The saved Copilot Agents profile now uses that policy. Corrected visible
-  notification presentation still requires operator confirmation.
+  That apparent fix was committed as `13a1683` for visible testing, then
+  rejected by the fresh-session observation below. It is not retained.
 - Overlapping completion sounds could not be counted separately. The operator
   liked the unobtrusive result, but this is not evidence of cross-source
   debouncing; the implementation still deduplicates independently per source.
@@ -195,6 +196,28 @@ activation. No permanent activation, merge, or push is authorized.
   The saved Copilot Agents policy read back as `Title Components=32`.
   Both operator-provided test sources were subsequently found closed; no user
   panes were closed by the implementation or test scripts.
+- Fresh regression source: `F13F4117-2F35-47A1-AA6C-580E6D64AEFA`, tab `42`,
+  tty `/dev/ttys019`, window `pty-9A3E47B0-C053-4E9B-BADA-DDDB8C13D7A1`.
+  The operator confirmed the correct repo/worktree tab, exact-pane click
+  routing, and completion bell without popup, but still saw conversation text
+  in the alert. Read-only inspection found `Title Components=2080` (profile name
+  plus temporary session name), not the saved `32`; `name`, `autoName`, and
+  terminal title variables were no longer the profile name. No conversation
+  text was recorded in diagnostics. The ineffective override was removed.
+- The operator proposed retaining the mostly working feedback and addressing
+  notification text independently. Delivery success does not waive the open
+  no-conversation-content requirement; use this version only where such system
+  notification exposure is acceptable.
+
+### Notification-content follow-up
+
+Investigate the native prefix independently of the already verified queue,
+source routing, focus predicate, and completion behavior. The installed release's
+public source (tag `v3.7.7`) implements `OSC 1337;Notification=` with
+base64-encoded `title`/`message` fields, using the same source window/tab/pane
+routing without the OSC 9 session-name decoration. This is a candidate, not an
+approved or live-verified replacement. A revised opt-in gate must establish
+visible content, persistence, click routing, and unchanged input before adoption.
 
 ## Automated runtime evidence
 
@@ -240,17 +263,18 @@ activation. No permanent activation, merge, or push is authorized.
 | Requirement | Automated evidence | Live runtime observation |
 | --- | --- | --- |
 | Permission prompt/question waiting types | Parser, reducer, actual hook matcher/command cases | Real question passed; permission prompt not separately exercised |
-| Persistent waiting and exact-pane click | Source-only adapter and output-byte cases | Real runtime passed; corrected title prefix awaiting confirmation |
+| Persistent waiting and exact-pane click | Source-only adapter and output-byte cases | Real runtime passed; conversation-title prefix remains a separate defect |
 | Focused source suppression | Frontmost app/window/tab/pane fake API cases | Operator confirmed |
 | Selected source in background window | Fake API predicate cases | Operator confirmed |
 | iTerm2 behind another app | Fake API inactive-app case | Operator confirmed |
-| Worktree/branch/detached context | Temporary Git repository/worktree cases | Worktree variable/tab verified; corrected alert and detached context not yet confirmed |
+| Worktree/branch/detached context | Temporary Git repository/worktree cases | Worktree tab verified; alert presentation defective; detached context not separately exercised |
 | Done bell, no popup | Exact BEL bytes and effective profile filter cases | Operator confirmed; overlapping sources not counted separately |
 | Duplicates and activity rearming | Reducer and queued-event interleavings | Real activity rearmed; duplicate injection not separately exercised |
 | Two independent source panes | Separate queues and exact UUID/tty selection | Both sources processed events; separate click routing not yet confirmed |
 | Default/Naked unaffected | Nonmatching GUID cases and unchanged exports | Saved fingerprints unchanged at activation; no separate live session exercise |
 | Integration failure isolation | Subprocess exit/stdout/log/lock/helper-death cases | Automated requirement passed |
 
-**Handoff:** temporarily active for supervised acceptance, with rollback still
-required. Real Copilot hook discovery is verified, but the native notification
-title-prefix correction and remaining matrix cases are not claimed as passing.
+**Handoff:** working feedback retained on the worktree branch; original live
+installation links restored. Real Copilot hook discovery, routing, focus rules,
+persistence, and bell-only completion are verified. Notification text remains
+an explicit follow-up, and unexercised matrix cases are not claimed as passing.

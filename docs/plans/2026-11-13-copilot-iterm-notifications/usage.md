@@ -26,12 +26,15 @@ The saved dynamic profile enables terminal-generated alerts and audible bells,
 but disables bell-to-popup conversion and unrelated alert categories. It
 inherits its other settings from Default without editing Default.
 
-Its session title shows only the profile name. This matters because iTerm2
-prepends the session title to native notifications: inheriting Default's title
-components would expose Copilot conversation/intent text even though the hook
-never includes it. Repo/worktree tab titles still use the separate `repoLabel`
-expression; outside Git the tab falls back to **Copilot Agents**. Existing panes
-can retain local title overrides; use a new pane when checking this policy.
+**Known notification-content limitation:** iTerm2 prepends its session name to
+OSC 9 alerts. Copilot conversation/intent text can therefore appear in a system
+notification even though the hook body never includes it. A profile-only title
+override did not resolve this and was removed. Use this version only where that
+exposure is acceptable; content correction is separate from the working
+delivery, routing, focus handling, and completion bell.
+
+Repo/worktree tabs still use the separate `repoLabel` expression. Outside Git,
+the label is empty and the tab can fall back to Copilot's conversation title.
 
 To check the profile from inside a pane, rather than relying on its title:
 
