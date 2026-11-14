@@ -134,3 +134,23 @@ transports fail, stop and request a revised design.
   changed. The operator's app-wide macOS presentation choice was retained.
 - API fallback, if needed: **not tested**.
 - Chosen transport: **tty, operator-confirmed**.
+
+## Runtime activation and remaining acceptance
+
+After the transport gate, the operator approved the rest of the implementation
+in autopilot and stated that no further operator feedback would be available.
+Automated tests can proceed; this does not establish visible acceptance of the
+new runtime adapter or actual Copilot hook discovery.
+
+Recorded live installation targets before any activation:
+
+- Dynamic profile:
+  `/Users/ssulliva/dotfiles/etc/iterm/DynamicProfiles/copilot-agents.json`
+- User hook:
+  `/Users/ssulliva/dotfiles/share/copilot/hooks/iterm2-session-status.json`
+
+`~/dotfiles` resolves to the main checkout, not this worktree. These symlinks
+have not been changed. No permanent worktree activation, merge, or push is
+authorized. The new runtime's real Copilot permission/question/completion
+exercise and full visible acceptance matrix remain **pending operator
+availability**, distinct from the already passed transport gate.

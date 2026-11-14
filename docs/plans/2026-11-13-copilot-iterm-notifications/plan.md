@@ -169,14 +169,14 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
 **Files:** Create the package marker, `context.py`, reducer portion of `state.py`,
 `tests/copilot/test_context.py`, and `tests/copilot/test_state.py`.
 
-- [ ] **Step 1: Write failing context tests.**
+- [x] **Step 1: Write failing context tests.**
   Accept only the known event names and waiting notification types. Parse the
   hook JSON object, retaining only event, `cwd`, and `notification_type` plus
   the validated UUID from the environment; never retain other payload fields.
   Limit input to 10 MiB plus one overflow byte and reject malformed, oversized,
   and non-object input with a bounded diagnostic. Invalid events must not
   create notifications; never dump the rejected input.
-- [ ] **Step 2: Cover source context with temporary Git fixtures.**
+- [x] **Step 2: Cover source context with temporary Git fixtures.**
   Test a regular repo, linked worktree outside and inside `.worktrees/`,
   branch names containing `/`, detached HEAD, unborn branch, non-Git cwd,
   missing/unreadable cwd, spaces and non-ASCII names. Prefer the source
@@ -185,7 +185,7 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
   Use `git -C cwd symbolic-ref --quiet --short HEAD`, then
   `git -C cwd rev-parse --short HEAD` for detached HEAD. Treat expected
   non-Git results as context absence; surface unexpected execution failures.
-- [ ] **Step 3: Specify payload formatting and test control-character removal.**
+- [x] **Step 3: Specify payload formatting and test control-character removal.**
   Waiting notification body format is:
 
   ```text
@@ -200,7 +200,7 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
   or add another terminal control sequence. Keep the constant message prefix
   first so a repository name beginning `4;` cannot select OSC 9's progress
   subcommand.
-- [ ] **Step 4: Write failing table-driven reducer tests.**
+- [x] **Step 4: Write failing table-driven reducer tests.**
   Define `FeedbackState(waiting_seen=False, done_seen=False)` and the pure
   `reduce_event(state, event) -> (new_state, action)` contract:
 
@@ -217,7 +217,7 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
 
   Test interleavings, including `waiting, done, waiting` without activity
   (one waiting alert), and `waiting, activity, waiting` (two).
-- [ ] **Step 5: Run tests red, implement the pure behavior, then run green.**
+- [x] **Step 5: Run tests red, implement the pure behavior, then run green.**
 
   ```bash
   uv run --no-project --python 3.12 python -m unittest discover \
@@ -228,7 +228,7 @@ root. Runtime entrypoints do the same, independent of the hook's cwd.
   expect all context and reducer cases to pass without contacting iTerm2.
   Keep API imports lazy or in the terminal adapter so pure tests need no
   installed `iterm2` package.
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
   `feat(copilot): model attention events and source context`.
 
 ### Task 3: Add a lossless-within-process queue and crash-safe worker boundary
