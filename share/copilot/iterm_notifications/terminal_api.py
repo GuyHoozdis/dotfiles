@@ -7,8 +7,12 @@ import importlib
 import logging
 from collections.abc import Awaitable
 from types import TracebackType
-from typing import Protocol, TypeVar, cast
+from typing import TypeVar, cast
 
+from .api_guard import guarded_call
+from .api_types import (
+    Profile, Reporter, Session, ApiApp, ApiConnection, ItermAPI, ApiRPCModule, ApiWebsocketErrors,
+)
 from .diagnostics import DiagnosticError
 from .worker import DeliveryError
 
@@ -18,73 +22,6 @@ PROFILE_GUID = "870214EA-844A-4654-A241-B7EB0B766076"
 LOGGER = logging.getLogger(__name__)
 
 
-class Profile(Protocol):
-    guid: str
-    original_guid: str | None
-
-
-class Session(Protocol):
-    session_id: str
-
-    async def async_get_profile(self) -> Profile: ...
-
-    async def async_get_variable(self, name: str) -> str | None: ...
-
-
-class _Tab(Protocol):
-    tab_id: str
-    current_session: Session | None
-
-
-class _Window(Protocol):
-    window_id: str
-    current_tab: _Tab | None
-
-
-class _App(Protocol):
-    app_active: bool | None
-    current_window: _Window | None
-
-    async def async_refresh(self) -> None: ...
-
-    def get_session_by_id(self, session_id: str) -> Session | None: ...
-
-    def get_window_and_tab_for_session(
-        self, session: Session,
-    ) -> tuple[_Window, _Tab] | tuple[None, None]: ...
-
-    def get_tab_and_window_for_session(
-        self, session: Session,
-    ) -> tuple[_Window, _Tab] | tuple[None, None]: ...
-
-
-class _Websocket(Protocol):
-    async def close(self) -> None: ...
-
-
-class _Connection(Protocol):
-    websocket: _Websocket
-
-
-class _ConnectionFactory(Protocol):
-    @staticmethod
-    async def async_create() -> _Connection: ...
-
-
-class _ItermAPI(Protocol):
-    Connection: type[_ConnectionFactory]
-
-    async def async_get_app(self, connection: _Connection) -> _App | None: ...
-
-
-class _RPCModule(Protocol):
-    RPCException: type[Exception]
-
-
-class Reporter(Protocol):
-    def __call__(self, error: DiagnosticError) -> None: ...
-
-
 _Result = TypeVar("_Result")
 
 
@@ -92,8 +29,10 @@ async def _bounded(awaitable: Awaitable[_Result]) -> _Result:
     return await asyncio.wait_for(awaitable, OPERATION_TIMEOUT)
 
 
-def _known_errors(rpc: _RPCModule) -> tuple[type[BaseException], ...]:
-    return (OSError, TimeoutError, rpc.RPCException)
+def _load_known_errors() -> tuple[type[BaseException], ...]:
+    rpc = cast(ApiRPCModule, importlib.import_module("iterm2.rpc"))
+    websocket = cast(ApiWebsocketErrors, importlib.import_module("websockets.exceptions"))
+    return (OSError, TimeoutError, rpc.RPCException, websocket.WebSocketException)
 
 
 def _diagnose(
@@ -129,22 +68,23 @@ class ItermBridge:
     def __init__(self, report: Reporter | None) -> None:
         self._reporter = report
         self._runner: asyncio.Runner | None = None
-        self._rpc: _RPCModule | None = None
-        self._connection: _Connection | None = None
-        self._app: _App | None = None
+        self._errors: tuple[type[BaseException], ...] | None = None
+        self._connection: ApiConnection | None = None
+        self._app: ApiApp | None = None
 
     def _run(self, awaitable: Awaitable[_Result]) -> _Result:
         if self._runner is None:
             raise RuntimeError("iTerm2 bridge is not open")
-        return self._runner.run(_bounded(awaitable))
+        with guarded_call(OPERATION_TIMEOUT):
+            return self._runner.run(_bounded(awaitable))
 
     def __enter__(self) -> ItermBridge:
         try:
-            api = cast(_ItermAPI, importlib.import_module("iterm2"))
-            rpc = cast(_RPCModule, importlib.import_module("iterm2.rpc"))
+            api = cast(ItermAPI, importlib.import_module("iterm2"))
+            errors = _load_known_errors()
         except ModuleNotFoundError as error:
             raise DeliveryError("terminal_api_unavailable") from error
-        self._rpc = rpc
+        self._errors = errors
         self._runner = asyncio.Runner()
         try:
             try:
@@ -153,8 +93,11 @@ class ItermBridge:
                 if app is None:
                     raise DeliveryError("iterm_app_unavailable")
                 self._app = app
-            except _known_errors(rpc) as error:
+            except errors as error:
                 raise DeliveryError("iterm_connection_failed") from error
+            except SystemExit as error:
+                # iterm2 exits the process when the server rejects its protocol version.
+                raise DeliveryError("iterm_api_incompatible") from error
         finally:
             if self._app is None:
                 self._close_connection()
@@ -162,11 +105,11 @@ class ItermBridge:
         return self
 
     def _close_connection(self) -> None:
-        if self._connection is None or self._rpc is None or self._runner is None:
+        if self._connection is None or self._errors is None or self._runner is None:
             return
         try:
             self._run(self._connection.websocket.close())
-        except _known_errors(self._rpc) as error:
+        except self._errors as error:
             _diagnose(self._reporter, "iterm_disconnect_failed", error)
 
     def _close_runner(self) -> None:
@@ -184,11 +127,16 @@ class ItermBridge:
             self._close_runner()
 
     def session(self, source_uuid: str) -> Session | None:
-        if self._app is None or self._rpc is None:
+        if self._app is None or self._errors is None:
             raise RuntimeError("iTerm2 bridge is not open")
+        session: Session | None = None
         try:
-            session = self._app.get_session_by_id(source_uuid)
-        except _known_errors(self._rpc) as error:
+            # Live iTerm2 IDs are uppercase and its lookup is case-sensitive.
+            for candidate in dict.fromkeys((source_uuid.upper(), source_uuid)):
+                session = self._app.get_session_by_id(candidate, include_buried=False)
+                if session is not None:
+                    break
+        except self._errors as error:
             _diagnose(self._reporter, "source_lookup_failed", error)
             return None
         if session is None or not isinstance(session.session_id, str):
@@ -203,12 +151,12 @@ class ItermBridge:
         _diagnose(self._reporter, code, error)
 
     def profile_allowed(self, session: Session) -> bool:
-        if self._rpc is None:
+        if self._errors is None:
             raise RuntimeError("iTerm2 bridge is not open")
         try:
             profile = cast(Profile, self._run(session.async_get_profile()))
             return _profile_matches(profile)
-        except _known_errors(self._rpc) as error:
+        except self._errors as error:
             _diagnose(self._reporter, "source_profile_unknown", error)
             return False
         except (AttributeError, TypeError):
@@ -216,11 +164,11 @@ class ItermBridge:
             return False
 
     def variable(self, session: Session, name: str) -> str | None:
-        if self._rpc is None:
+        if self._errors is None:
             raise RuntimeError("iTerm2 bridge is not open")
         try:
             value = self._run(session.async_get_variable(name))
-        except _known_errors(self._rpc) as error:
+        except self._errors as error:
             if name == "tty":
                 raise DeliveryError("tty_unavailable") from error
             _diagnose(self._reporter, "source_context_unavailable", error)
@@ -228,7 +176,7 @@ class ItermBridge:
         return value if isinstance(value, str) else None
 
     def focused(self, session: Session) -> bool:
-        if self._app is None or self._rpc is None:
+        if self._app is None or self._errors is None:
             raise RuntimeError("iTerm2 bridge is not open")
         try:
             self._run(self._app.async_refresh())
@@ -261,6 +209,6 @@ class ItermBridge:
                 and source_tab.tab_id == current_tab.tab_id
                 and _session_id(current_session) == _session_id(source)
             )
-        except (*_known_errors(self._rpc), LookupError, AttributeError) as error:
+        except (*self._errors, LookupError, AttributeError) as error:
             _diagnose(self._reporter, "focus_unknown", error)
             return False

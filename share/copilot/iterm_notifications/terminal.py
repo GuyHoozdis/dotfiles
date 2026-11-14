@@ -41,7 +41,7 @@ class _TerminalContext(AbstractContextManager[FeedbackSink]):
         original_tty = self._bridge.variable(source, "tty")
         if not original_tty:
             raise DeliveryError("tty_unavailable")
-        label = self._bridge.variable(source, "repoLabel")
+        label = self._bridge.variable(source, "user.repoLabel")
         try:
             context = resolve_context(event, label)
         except ContextError as error:

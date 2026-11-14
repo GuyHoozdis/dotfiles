@@ -1,5 +1,9 @@
+import contextlib
+import io
 import os
 import pty
+import signal
+import time
 import stat
 import sys
 import types
@@ -11,7 +15,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "share" / "copilot"))
 
-from iterm_notifications import terminal
+from iterm_notifications import terminal, terminal_api
 from iterm_notifications.context import HookEvent
 from iterm_notifications.diagnostics import diagnostic_line
 from iterm_notifications.worker import DeliveryError
@@ -33,7 +37,7 @@ class FakeSession:
     def __init__(self, session_id, *, profile=None, tty="/dev/ttys001", repo_label="repo|worktree"):
         self.session_id = session_id
         self.profile = profile
-        self.variables = {"tty": tty, "repoLabel": repo_label}
+        self.variables = {"tty": tty, "user.repoLabel": repo_label}
         self.keyboard_calls = 0
 
     async def async_get_profile(self):
@@ -70,7 +74,7 @@ class FakeApp:
         self.lookups = []
         self.refreshes = 0
 
-    def get_session_by_id(self, session_id):
+    def get_session_by_id(self, session_id, include_buried=True):
         self.lookups.append(session_id)
         return self.sessions.get(session_id)
 
@@ -122,10 +126,18 @@ class FakeIterm(types.ModuleType):
         self.Connection = Connection
 
 
+class FakeWebSocketException(Exception):
+    pass
+
+
+class FakeConnectionClosed(FakeWebSocketException):
+    pass
+
+
 class TerminalAdapterTests(unittest.TestCase):
     def setUp(self):
         self.profile = FakeProfile()
-        self.source = FakeSession(SOURCE_ID, profile=self.profile)
+        self.source = FakeSession(SOURCE_ID.upper(), profile=self.profile)
         self.app = FakeApp([self.source], self.source)
         self.iterm = FakeIterm(self.app)
         self.iterm.bind_connection()
@@ -133,7 +145,13 @@ class TerminalAdapterTests(unittest.TestCase):
         self.diagnostics = []
         rpc = types.ModuleType("iterm2.rpc")
         rpc.RPCException = self.iterm.RPCException
-        self.module_patch = patch.dict(sys.modules, {"iterm2": self.iterm, "iterm2.rpc": rpc})
+        websockets = types.ModuleType("websockets")
+        exceptions = types.ModuleType("websockets.exceptions")
+        exceptions.WebSocketException = FakeWebSocketException
+        self.module_patch = patch.dict(sys.modules, {
+            "iterm2": self.iterm, "iterm2.rpc": rpc,
+            "websockets": websockets, "websockets.exceptions": exceptions,
+        })
         self.module_patch.start()
         self.addCleanup(self.module_patch.stop)
         self.writer_patch = patch.object(
@@ -149,14 +167,115 @@ class TerminalAdapterTests(unittest.TestCase):
         with terminal.open_sink(report=self.diagnostics.append) as sink:
             sink(action, event)
 
+    def test_lowercase_event_uuid_finds_uppercase_live_session(self):
+        self.deliver()
+
+        self.assertEqual(self.app.lookups[0], SOURCE_ID.upper())
+        self.assertEqual(len(self.output), 1)
+
+    def test_legacy_unscoped_repo_label_is_not_used(self):
+        self.source.variables = {"tty": "/dev/ttys001", "repoLabel": "legacy"}
+
+        self.deliver()
+
+        self.assertEqual(self.output[0][1], b"\x1b]9;Copilot needs your attention: repo\x07")
+
+    def test_websocket_failure_during_connect_is_sanitized(self):
+        async def fail_create():
+            raise FakeConnectionClosed("private socket payload")
+
+        self.iterm.Connection.async_create = staticmethod(fail_create)
+
+        with self.assertRaises(DeliveryError) as raised:
+            self.deliver()
+
+        self.assertEqual(raised.exception.code, "iterm_connection_failed")
+        self.assertNotIn("private", diagnostic_line(raised.exception.code, raised.exception))
+
+    def test_websocket_failure_during_focus_logs_then_delivers(self):
+        async def fail_refresh():
+            raise FakeConnectionClosed("private focus payload")
+
+        self.app.app_active = True
+        self.app.async_refresh = fail_refresh
+
+        self.deliver()
+
+        self.assertEqual(self.diagnostics[0].code, "focus_unknown")
+        self.assertEqual(len(self.output), 1)
+
+    def test_websocket_failure_reading_label_falls_back_to_source_context(self):
+        original = self.source.async_get_variable
+
+        async def fail_label(name):
+            if name == "user.repoLabel":
+                raise FakeConnectionClosed("private variable payload")
+            return await original(name)
+
+        self.source.async_get_variable = fail_label
+
+        self.deliver()
+
+        self.assertEqual(self.diagnostics[0].code, "source_context_unavailable")
+        self.assertEqual(self.output[0][1], b"\x1b]9;Copilot needs your attention: repo\x07")
+
+    def test_blocking_connection_setup_is_hard_bounded_and_restores_alarm(self):
+        def previous_handler(_signum, _frame):
+            raise AssertionError("previous alarm handler must not fire")
+
+        async def blocking_create():
+            time.sleep(5)
+            raise AssertionError("blocking authentication should be interrupted")
+
+        self.iterm.Connection.async_create = staticmethod(blocking_create)
+        original = signal.signal(signal.SIGALRM, previous_handler)
+        self.addCleanup(signal.signal, signal.SIGALRM, original)
+        started = time.monotonic()
+
+        with patch.object(terminal_api, "OPERATION_TIMEOUT", 0.05):
+            with self.assertRaises(DeliveryError) as raised:
+                self.deliver()
+
+        self.assertLess(time.monotonic() - started, 2)
+        self.assertEqual(raised.exception.code, "iterm_connection_failed")
+        self.assertIs(signal.getsignal(signal.SIGALRM), previous_handler)
+        self.assertEqual(signal.getitimer(signal.ITIMER_REAL), (0.0, 0.0))
+
+    def test_library_output_is_silenced_while_diagnostics_still_report(self):
+        async def noisy_refresh():
+            print("private library stdout")
+            print("private library stderr", file=sys.stderr)
+            raise FakeConnectionClosed("private focus payload")
+
+        self.app.app_active = True
+        self.app.async_refresh = noisy_refresh
+        stdout, stderr = io.StringIO(), io.StringIO()
+
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            self.deliver()
+
+        self.assertEqual((stdout.getvalue(), stderr.getvalue()), ("", ""))
+        self.assertEqual(self.diagnostics[0].code, "focus_unknown")
+
+    def test_library_exit_during_connect_is_delivery_failure(self):
+        async def exit_create():
+            raise SystemExit(1)
+
+        self.iterm.Connection.async_create = staticmethod(exit_create)
+
+        with self.assertRaises(DeliveryError) as raised:
+            self.deliver()
+
+        self.assertEqual(raised.exception.code, "iterm_api_incompatible")
+
     def test_explicit_source_lookup_never_falls_back_to_active_session(self):
-        active = FakeSession(OTHER_ID, profile=self.profile)
+        active = FakeSession(OTHER_ID.upper(), profile=self.profile)
         self.app.sessions = {active.session_id: active}
         self.app.active_session = active
 
         self.deliver()
 
-        self.assertEqual(self.app.lookups, [SOURCE_ID])
+        self.assertEqual(self.app.lookups, [SOURCE_ID.upper(), SOURCE_ID])
         self.assertEqual(self.output, [])
         self.assertEqual(active.keyboard_calls, 0)
 
@@ -197,8 +316,8 @@ class TerminalAdapterTests(unittest.TestCase):
         self.assertEqual(self.output, [])
 
     def test_returned_session_with_different_uuid_is_skipped(self):
-        mismatched = FakeSession(OTHER_ID, profile=self.profile)
-        self.app.sessions = {SOURCE_ID: mismatched}
+        mismatched = FakeSession(OTHER_ID.upper(), profile=self.profile)
+        self.app.sessions = {SOURCE_ID.upper(): mismatched}
 
         self.deliver()
 
@@ -216,7 +335,7 @@ class TerminalAdapterTests(unittest.TestCase):
         )
 
     def test_waiting_message_preserves_utf8_source_label(self):
-        self.source.variables["repoLabel"] = "répo"
+        self.source.variables["user.repoLabel"] = "répo"
 
         self.deliver()
 
@@ -226,20 +345,20 @@ class TerminalAdapterTests(unittest.TestCase):
         )
 
     def test_non_string_repo_label_falls_back_to_safe_source_context(self):
-        self.source.variables["repoLabel"] = 42
+        self.source.variables["user.repoLabel"] = 42
 
         self.deliver()
 
         self.assertEqual(self.output[0][1], b"\x1b]9;Copilot needs your attention: repo\x07")
 
     def test_independent_source_uuid_selects_its_own_tty_and_label(self):
-        second = FakeSession(OTHER_ID, profile=self.profile, tty="/dev/ttys002", repo_label="other")
+        second = FakeSession(OTHER_ID.upper(), profile=self.profile, tty="/dev/ttys002", repo_label="other")
         self.app.sessions[second.session_id] = second
-        event = HookEvent("Notification", "/other", "permission_prompt", OTHER_ID)
+        event = HookEvent("Notification", "/elsewhere/cwd-name", "permission_prompt", OTHER_ID)
 
         self.deliver(event=event)
 
-        self.assertEqual(self.app.lookups, [OTHER_ID, OTHER_ID, OTHER_ID])
+        self.assertEqual(self.app.lookups, [OTHER_ID.upper()] * 3)
         self.assertEqual(
             self.output,
             [("/dev/ttys002", b"\x1b]9;Copilot needs your attention: other\x07")],
