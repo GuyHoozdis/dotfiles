@@ -167,10 +167,13 @@ class Spool:
                 raise ValueError("record_keys")
             optional = (payload["cwd"], payload["notification_type"])
             if (
-                payload["version"] != 1 or type(payload["seq"]) is not int
-                or payload["seq"] != seq or payload["event"] not in EVENT_NAMES
-                or payload["source_uuid"] != self.source_uuid
+                type(payload["version"]) is not int or type(payload["seq"]) is not int
+                or not isinstance(payload["event"], str)
+                or not isinstance(payload["source_uuid"], str)
                 or not all(value is None or isinstance(value, str) for value in optional)
+                or payload["version"] != 1 or payload["seq"] != seq
+                or payload["event"] not in EVENT_NAMES
+                or payload["source_uuid"] != self.source_uuid
             ):
                 raise ValueError("record_fields")
         except (ValueError, RecursionError) as error:

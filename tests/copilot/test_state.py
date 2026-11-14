@@ -15,7 +15,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "share" / "copilot"))
 
 from iterm_notifications.context import HookEvent
-from iterm_notifications import spool, worker
+from iterm_notifications import safefs, spool, worker
 from iterm_notifications.diagnostics import DiagnosticError
 from iterm_notifications.state import (
     FeedbackState, SessionState, apply_record, decode_state, encode_state, reduce_event,
@@ -295,6 +295,26 @@ class QueueTests(SpoolTestCase):
         self.assertEqual(self.queue_names(), [])
         self.assertEqual(opened.load_state().last_seq, 2)
 
+    def test_wrongly_typed_record_fields_are_discarded_and_draining_continues(self):
+        valid = {"version": 1, "seq": 1, "event": "Stop", "cwd": None,
+                 "notification_type": None, "source_uuid": SESSION_ID}
+        for field, value in (
+            ("event", []), ("event", {}), ("event", 1), ("version", []), ("seq", "1"),
+            ("seq", True), ("cwd", []), ("notification_type", {}), ("source_uuid", []),
+            ("source_uuid", {}),
+        ):
+            with self.subTest(field=field, value=value):
+                with tempfile.TemporaryDirectory() as directory:
+                    opened = spool.Spool.open(SESSION_ID, {"TMPDIR": directory})
+                    self.addCleanup(opened.close)
+                    queue = Path(directory) / "copilot-iterm-status" / SESSION_ID.upper() / "notification-queue"
+                    (queue / "00000000000000000001.event").write_text(json.dumps(valid | {field: value}))
+                    self.enqueue(opened, "Notification", "permission_prompt")
+                    self.assertEqual(
+                        self.drain(opened), ([("waiting", SESSION_ID)], ["record_corrupt"])
+                    )
+                    self.assertEqual(os.listdir(queue), [])
+
     def test_event_for_another_session_is_rejected(self):
         opened = self.open()
         with self.assertRaises(spool.SpoolError) as raised:
@@ -388,20 +408,42 @@ class QueueTests(SpoolTestCase):
 
 
 class LockingTests(SpoolTestCase):
-    def test_producer_arriving_during_worker_shutdown_is_drained(self):
+    def test_producer_arriving_after_empty_check_before_release_is_drained(self):
         holder = self.open()
-        sink = RecordingSink()
-        with holder.worker_lock():
-            opened = self.open()
-            self.enqueue(opened, "Notification", "permission_prompt")
-            contender = threading.Thread(target=worker.drain, args=(opened, sink.open, list().append))
+        empty_seen = threading.Event()
+        release = threading.Event()
+        real_pending = holder.pending
+
+        def pause_when_empty():
+            seqs = real_pending()
+            if not seqs:
+                empty_seen.set()
+                self.assertTrue(release.wait(timeout=10))
+            return seqs
+
+        holder_sink, contender_sink = RecordingSink(), RecordingSink()
+        lock = self.session_dir() / "notification.lock"
+        inode = lock.stat().st_ino
+        with mock.patch.object(holder, "pending", side_effect=pause_when_empty):
+            first = threading.Thread(target=worker.drain, args=(holder, holder_sink.open, list().append))
+            first.start()
+            self.assertTrue(empty_seen.wait(timeout=10))
+            producer = self.open()
+            self.enqueue(producer, "Notification", "permission_prompt")
+            contender = threading.Thread(
+                target=worker.drain, args=(producer, contender_sink.open, list().append)
+            )
             contender.start()
-            contender.join(timeout=0.2)
-            self.assertTrue(contender.is_alive())
-            self.assertEqual(sink.actions, [])
-        contender.join(timeout=10)
+            self.assertEqual(self.queue_names(), ["00000000000000000001.event"])
+            release.set()
+            first.join(timeout=10)
+            contender.join(timeout=10)
+        self.assertFalse(first.is_alive())
         self.assertFalse(contender.is_alive())
-        self.assertEqual(sink.actions, [("waiting", SESSION_ID)])
+        self.assertEqual(holder_sink.actions, [])
+        self.assertEqual(contender_sink.actions, [("waiting", SESSION_ID)])
+        self.assertEqual(self.queue_names(), [])
+        self.assertEqual(lock.stat().st_ino, inode)
 
     def test_stale_worker_metadata_does_not_block_and_lock_inode_is_kept(self):
         opened = self.open()
@@ -444,6 +486,28 @@ class LockingTests(SpoolTestCase):
 
 
 class SafetyTests(SpoolTestCase):
+    def test_atomic_publication_syncs_directory_after_rename(self):
+        opened = self.open()
+        calls = []
+        real_replace, real_fsync = os.replace, os.fsync
+
+        def record_replace(source, target, **kwargs):
+            calls.append(("replace", target, kwargs["dst_dir_fd"]))
+            return real_replace(source, target, **kwargs)
+
+        def record_fsync(fd):
+            calls.append(("fsync", fd))
+            return real_fsync(fd)
+
+        with mock.patch.object(safefs.os, "replace", side_effect=record_replace), \
+                mock.patch.object(safefs.os, "fsync", side_effect=record_fsync):
+            self.enqueue(opened, "Stop")
+        renames = [index for index, call in enumerate(calls) if call[0] == "replace"]
+        self.assertEqual([calls[index][1] for index in renames],
+                         ["notification-sequence", "00000000000000000001.event"])
+        for index in renames:
+            self.assertEqual(calls[index + 1], ("fsync", calls[index][2]))
+
     def test_invalid_uuid_is_rejected_before_any_path_is_created(self):
         for bad in ("", "../" + SESSION_ID, SESSION_ID + "/..", "w0:" + SESSION_ID,
                     SESSION_ID.replace("-", ""), SESSION_ID + "\n"):

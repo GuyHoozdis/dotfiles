@@ -78,6 +78,7 @@ def write_atomic(name: str, dir_fd: int, data: bytes) -> None:
             os.fsync(file.fileno())
         os.replace(temp, name, src_dir_fd=dir_fd, dst_dir_fd=dir_fd)
         published = True
+        os.fsync(dir_fd)
     finally:
         if not published:
             with contextlib.suppress(FileNotFoundError):
