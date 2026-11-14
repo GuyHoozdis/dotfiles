@@ -5,4 +5,6 @@
 - [Shell PATH policy repair](2026-11-12-shell-path-policy/plan.md)
 - [Copilot Agents notifications](2026-11-13-copilot-iterm-notifications/spec.md):
   waiting alerts and completion bells
-  ([implementation plan](2026-11-13-copilot-iterm-notifications/plan.md)).
+  ([implementation plan](2026-11-13-copilot-iterm-notifications/plan.md),
+  [operation](2026-11-13-copilot-iterm-notifications/usage.md),
+  [verification](2026-11-13-copilot-iterm-notifications/verification.md)).
