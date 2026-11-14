@@ -224,13 +224,17 @@ class WorkerProcessTests(HookTestCase):
         self.enqueue("Notification", "permission_prompt")
         stdout, stderr = io.StringIO(), io.StringIO()
 
-        def fake_open_sink(*, report):
+        commands = []
+
+        def fake_open_sink(*, report, command):
+            commands.append(command)
+
             def sink(_action, _event):
                 report(DiagnosticError("focus_unknown"))
 
             return contextlib.nullcontext(sink)
 
-        with patch("iterm_notifications.terminal.open_sink", side_effect=fake_open_sink):
+        with patch("iterm_notifications.isolation.open_sink", side_effect=fake_open_sink):
             with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
                 result = cli.run_worker(SESSION_ID, self.env)
 
@@ -239,6 +243,7 @@ class WorkerProcessTests(HookTestCase):
         log = (self.session_dir() / "notification-errors.log").read_bytes()
         self.assertEqual(self.codes(log), ["focus_unknown"])
         self.assertEqual(self.queue_names(), [])
+        self.assertEqual(commands, [[sys.executable, str(ENTRY), "--terminal-worker"]])
 
     def test_killed_owner_releases_lock_and_aged_metadata_never_steals_live_lock(self):
         holder_code = (

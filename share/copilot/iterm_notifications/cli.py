@@ -95,9 +95,10 @@ def run_worker(
         try:
             sink_factory = open_sink
             if sink_factory is None:
-                from .terminal import open_sink as terminal_open_sink
+                from .isolation import open_sink as isolated_open_sink
 
-                sink_factory = lambda: terminal_open_sink(report=report)
+                command = [sys.executable, str(ENTRY), "--terminal-worker"]
+                sink_factory = lambda: isolated_open_sink(report=report, command=command)
             return 0 if drain(spool, sink_factory, report) else 1
         except SpoolError as error:
             _stderr(error.code, error)
@@ -111,7 +112,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("event", nargs="?", help="Copilot hook lifecycle event name")
     parser.add_argument("--worker", metavar="UUID", help=argparse.SUPPRESS)
+    parser.add_argument("--terminal-worker", metavar="FD", type=int, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if args.terminal_worker is not None:
+        if args.event is not None or args.worker is not None:
+            parser.error("--terminal-worker takes no other arguments")
+        from .helper import main as helper_main
+
+        return helper_main(args.terminal_worker)
     if (args.event is None) == (args.worker is None):
         parser.error("expected exactly one EVENT")
     if args.worker is not None:
