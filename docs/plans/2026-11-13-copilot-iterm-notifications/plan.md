@@ -438,10 +438,13 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Copilot; do not pipe status output into the attention hook.
 - [x] **Step 3: Add only these Copilot Agents profile overrides.**
   Recheck keys against the installed iTerm2 version. Keep its GUID, parent,
-  tags, title expression, and unrelated settings intact:
+  tags, tab-title expression, and unrelated settings intact. Live acceptance
+  additionally required profile-only session titles: native OSC 9 prepends the
+  session title, which otherwise contains Copilot conversation text.
 
   ```json
   {
+    "Title Components": 32,
     "BM Growl": true,
     "Send Terminal Generated Alerts": true,
     "Send Bell Alert": false,
@@ -490,10 +493,10 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Do not enable Copilot's global beep/notifications settings; they would
   bypass profile scoping or duplicate feedback.
 - [ ] **Step 2: Activate only in an explicitly approved live test.**
-  **Blocked:** no further operator feedback is available. The original targets
-  are recorded in `verification.md` and remain unchanged. The runbook's
-  worktree-specific generated hook config was dry-run without terminal context,
-  but not linked into the live installation.
+  **In progress:** the operator approved supervised testing. Both links now
+  temporarily select this worktree, using generated absolute hook executable
+  paths. Original targets and unchanged Default/Naked fingerprints are recorded;
+  restoration remains required after testing unless explicitly retained.
   Record the current iTerm DynamicProfiles and user hook symlink targets
   before changing them. Temporarily point them at this worktree's updated
   files only with operator agreement, then warm runtime dependencies.
@@ -502,10 +505,10 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Record rollback targets and restore them after the test unless the
   operator explicitly chooses to keep the worktree active.
 - [ ] **Step 3: Execute the visible acceptance matrix.**
-  **Blocked for live runtime observation:** unit/integration coverage and warm
-  latency measurements passed; actual Copilot permission/question/completion
-  discovery and the visible matrix still require an operator. The Task 1 probe
-  result is not substituted for those observations.
+  **In progress:** real Copilot question/completion discovery, persistent alerts,
+  exact-pane click routing, and both focus rules passed. Cross-pane testing
+  exposed conversation text in iTerm2's native session-title prefix. The
+  profile-only title correction must pass a new visible check before acceptance.
 
   | Case | Expected |
   | --- | --- |

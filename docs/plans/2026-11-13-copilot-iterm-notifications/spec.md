@@ -80,6 +80,12 @@ If focus lookup fails, notify rather than losing a waiting alert. Native
 suppression may replace the explicit check only after verifying the same
 frontmost-app/key-window/selected-pane behavior.
 
+iTerm2 prepends its session title to OSC 9 notification bodies. Use only the
+profile name for Copilot Agents session titles (`Title Components: 32`) so
+Copilot's conversation/intent title cannot enter that prefix. Keep the separate
+repo/worktree tab-title expression unchanged. Outside Git, an empty repo label
+falls back to the profile name, not conversation contents.
+
 ## macOS controls and limitations
 
 Notification persistence is application-wide macOS policy, not a per-event

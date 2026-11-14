@@ -26,6 +26,20 @@ The saved dynamic profile enables terminal-generated alerts and audible bells,
 but disables bell-to-popup conversion and unrelated alert categories. It
 inherits its other settings from Default without editing Default.
 
+Its session title shows only the profile name. This matters because iTerm2
+prepends the session title to native notifications: inheriting Default's title
+components would expose Copilot conversation/intent text even though the hook
+never includes it. Repo/worktree tab titles still use the separate `repoLabel`
+expression; outside Git the tab falls back to **Copilot Agents**. Existing panes
+can retain local title overrides; use a new pane when checking this policy.
+
+To check the profile from inside a pane, rather than relying on its title:
+
+```bash
+/Applications/iTerm.app/Contents/Resources/utilities/it2 session get-var profileName \
+  --session "${ITERM_SESSION_ID##*:}"
+```
+
 From the checkout you intend to use, warm the script dependencies before
 starting new Copilot sessions:
 

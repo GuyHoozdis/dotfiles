@@ -207,6 +207,7 @@ class ProfileAlertPolicyTests(unittest.TestCase):
                 "Guid": "870214EA-844A-4654-A241-B7EB0B766076",
                 "Dynamic Profile Parent Name": "Default",
                 "Tags": ["copilot"],
+                "Title Components": 32,
                 "Use Custom Tab Title": True,
                 "Custom Tab Title": "\\(currentSession.user.repoLabel)",
             },

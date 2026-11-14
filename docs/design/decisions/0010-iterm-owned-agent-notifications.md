@@ -24,6 +24,9 @@ under the same application identity.
   the active application. Completion bells may sound for focused panes.
 - Scope new behavior to the Copilot Agents profile GUID; leave Default and
   Naked unchanged.
+- Show only the profile name in its session title, independently of repo/worktree
+  tab titles. Native OSC 9 alerts prepend the session title, so inheriting a
+  conversation-derived title would expose prompt contents outside our safe body.
 - Ask the operator to allow iTerm2 notifications and select persistent Alerts
   in macOS settings. Do not change system preferences automatically.
 - Verify terminal-output delivery to an explicitly identified source session
@@ -51,6 +54,11 @@ under the same application identity.
   exact-pane click routing, and bell-only completion; see
   [verification evidence](../../plans/2026-11-13-copilot-iterm-notifications/verification.md).
   Runtime acceptance is tracked separately.
+- Live runtime testing confirmed persistence, click routing, focused-source
+  suppression, and background-window delivery, but exposed the native
+  conversation-title prefix. A profile-only session-title override preserves
+  repo/worktree tabs in a live API check; corrected visible alerts still require
+  operator confirmation.
 
 ## Source and approval
 

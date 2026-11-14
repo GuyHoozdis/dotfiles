@@ -5,7 +5,7 @@
 The operator confirmed persistent waiting presentation, exact source click
 routing, unchanged shell input, and bell-only completion. Selected transport:
 **source tty output**. API fallback is unnecessary and was not tested.
-Runtime implementation and its acceptance matrix remain outstanding.
+Runtime implementation is complete; supervised runtime acceptance is in progress.
 
 Installed iTerm2: **3.7.7** (build 3.7.7). The locked Python `iterm2` package is
 **2.30**. Local inspection of that package confirmed `run_until_complete`,
@@ -137,23 +137,64 @@ transports fail, stop and request a revised design.
 
 ## Runtime activation and remaining acceptance
 
-After the transport gate, the operator approved the rest of the implementation
-in autopilot and stated that no further operator feedback would be available.
-Automated tests can proceed; this does not establish visible acceptance of the
-new runtime adapter or actual Copilot hook discovery.
-
-Recorded live installation targets before any activation:
+After automated implementation, the operator returned and approved supervised
+live acceptance. The following original targets were recorded before temporarily
+activating this worktree:
 
 - Dynamic profile:
   `/Users/ssulliva/dotfiles/etc/iterm/DynamicProfiles/copilot-agents.json`
 - User hook:
   `/Users/ssulliva/dotfiles/share/copilot/hooks/iterm2-session-status.json`
 
-`~/dotfiles` resolves to the main checkout, not this worktree. These symlinks
-have not been changed. No permanent worktree activation, merge, or push is
-authorized. The new runtime's real Copilot permission/question/completion
-exercise and full visible acceptance matrix remain **pending operator
-availability**, distinct from the already passed transport gate.
+`~/dotfiles` resolves to the main checkout, not this worktree. The profile link
+now temporarily selects this worktree's profile. The hook link selects a
+session-local generated manifest with all 14 commands targeting absolute
+worktree executable paths. Rollback metadata is retained outside the repository.
+Restore both original links after testing unless the operator explicitly retains
+activation. No permanent activation, merge, or push is authorized.
+
+### Supervised runtime observations
+
+- First source: `28FDEB84-4D68-4C61-BB1B-EDB1380DB696`, tab `39`,
+  tty `/dev/ttys019`. Exact original profile GUID and all nine notification/bell
+  overrides read back correctly. The source was in `~/Development`, outside Git,
+  with no `user.repoLabel`; fallback context `Development` was therefore expected.
+- A new real Copilot session executed a delayed question through `ask_user`.
+  The operator confirmed the waiting notification remained visible for at least
+  30 seconds, clicked back to the exact source pane without unexpected input,
+  and completion rang without a system popup. The attention spool reached
+  sequence 8 with `done_seen=true` and no error log.
+- Further real questions confirmed no waiting alert while the source was
+  focused in frontmost iTerm2, an audible focused completion, and waiting
+  delivery from a selected source pane in another iTerm2 window. New activity
+  successfully rearmed feedback; the spool subsequently reached sequence 20.
+- Second source: `B91EC5C6-5869-4660-87B6-297F23F72C5B`, tab `40`,
+  tty `/dev/ttys022`, in this Git worktree. Its source `user.repoLabel` and
+  rendered tab title both read `dotfiles|copilot-iterm-notifications`.
+  Both sources use window `pty-1A16C383-B41D-4CE0-9CB5-F14EFD164973`.
+- Cross-pane screenshots exposed a blocking presentation defect: iTerm2
+  prepends the session name to OSC 9 messages, and the inherited title policy
+  included Copilot conversation/intent text. The safe hook payload alone did
+  not prevent that disclosure. The first, non-Git pane also fell back to the
+  conversation title because its repo label was empty; the worktree pane's
+  separate repo/tab-title expression was intact.
+- Public iTerm2 `PTYSession/PTYSession.m`, `screenPostUserNotification:rich:`,
+  confirms the native `Session <name> #<tab>: <message>` decoration. A scoped
+  `Allow Title Setting=false` experiment did not reliably remove the intent
+  from the running session's name and was not adopted. Temporary experiments
+  restored their prior profile values.
+- A source-local `Title Components=32` (profile name only) experiment read back
+  `name=Copilot Agents` while retaining the correct repo/worktree tab title.
+  The saved Copilot Agents profile now uses that policy. Corrected visible
+  notification presentation still requires operator confirmation.
+- Overlapping completion sounds could not be counted separately. The operator
+  liked the unobtrusive result, but this is not evidence of cross-source
+  debouncing; the implementation still deduplicates independently per source.
+- Saved Default/Naked profile fingerprints were identical before and immediately
+  after initial temporary activation, and again after the title-policy correction.
+  The saved Copilot Agents policy read back as `Title Components=32`.
+  Both operator-provided test sources were subsequently found closed; no user
+  panes were closed by the implementation or test scripts.
 
 ## Automated runtime evidence
 
@@ -191,25 +232,25 @@ availability**, distinct from the already passed transport gate.
   a temporary manifest with explicitly quoted worktree executable paths. All
   14 generated commands were dry-run from a temporary HOME containing spaces,
   with iTerm context absent; they returned zero with empty stdout/stderr.
-  No live symlink was changed and the temporary config was removed.
+  During that pre-activation dry run, no live symlink was changed and its
+  temporary config was removed. The supervised activation above is separate.
 
 ## Runtime acceptance matrix
 
 | Requirement | Automated evidence | Live runtime observation |
 | --- | --- | --- |
-| Permission prompt/question waiting types | Parser, reducer, actual hook matcher/command cases | Pending real Copilot interaction |
-| Persistent waiting and exact-pane click | Source-only adapter and output-byte cases | Transport probe passed; new runtime pending |
-| Focused source suppression | Frontmost app/window/tab/pane fake API cases | Pending |
-| Selected source in background window | Fake API predicate cases | Pending |
-| iTerm2 behind another app | Fake API inactive-app case | Transport probe passed; new runtime pending |
-| Worktree/branch/detached context | Temporary Git repository/worktree cases | Pending |
-| Done bell, no popup | Exact BEL bytes and effective profile filter cases | Transport probe passed; new runtime pending |
-| Duplicates and activity rearming | Reducer and queued-event interleavings | Pending |
-| Two independent source panes | Separate queues and exact UUID/tty selection | Pending |
-| Default/Naked unaffected | Nonmatching GUID cases and unchanged exports | Pending |
+| Permission prompt/question waiting types | Parser, reducer, actual hook matcher/command cases | Real question passed; permission prompt not separately exercised |
+| Persistent waiting and exact-pane click | Source-only adapter and output-byte cases | Real runtime passed; corrected title prefix awaiting confirmation |
+| Focused source suppression | Frontmost app/window/tab/pane fake API cases | Operator confirmed |
+| Selected source in background window | Fake API predicate cases | Operator confirmed |
+| iTerm2 behind another app | Fake API inactive-app case | Operator confirmed |
+| Worktree/branch/detached context | Temporary Git repository/worktree cases | Worktree variable/tab verified; corrected alert and detached context not yet confirmed |
+| Done bell, no popup | Exact BEL bytes and effective profile filter cases | Operator confirmed; overlapping sources not counted separately |
+| Duplicates and activity rearming | Reducer and queued-event interleavings | Real activity rearmed; duplicate injection not separately exercised |
+| Two independent source panes | Separate queues and exact UUID/tty selection | Both sources processed events; separate click routing not yet confirmed |
+| Default/Naked unaffected | Nonmatching GUID cases and unchanged exports | Saved fingerprints unchanged at activation; no separate live session exercise |
 | Integration failure isolation | Subprocess exit/stdout/log/lock/helper-death cases | Automated requirement passed |
 
-**Handoff:** implementation and automated verification are complete on the
-worktree branch, not activated in the live installation. The remaining live
-steps are explicitly blocked on operator availability; neither actual Copilot
-hook discovery nor the full visible runtime matrix is claimed as passing.
+**Handoff:** temporarily active for supervised acceptance, with rollback still
+required. Real Copilot hook discovery is verified, but the native notification
+title-prefix correction and remaining matrix cases are not claimed as passing.
