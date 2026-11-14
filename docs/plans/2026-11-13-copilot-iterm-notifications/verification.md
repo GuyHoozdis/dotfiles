@@ -174,3 +174,42 @@ availability**, distinct from the already passed transport gate.
 - Separate unit/integration cases hold a fake delivery worker blocked while
   proving producer return and closure of inherited pipes. The latency sample
   above is the real executable, not an extrapolation from those fakes.
+- Final host-safe suite: **133 tests passed** with
+  `uv run --no-project --python 3.12 python -m unittest discover -s tests/copilot -p 'test_*.py' -q`.
+  Cases include source context, reducer/rearming, concurrent queue/crash replay,
+  status-worker independence, exact profile/focus rules, output bytes, real
+  helper-process cleanup, malformed protocol, and actual hook command quoting.
+  The new suite imports no live iTerm2 API at discovery.
+- Installed Ruff lint and formatting checks passed for the new entrypoint,
+  notification package, and `tests/copilot` (120-character formatting).
+  Bash syntax for the unchanged status bridge, both uv script locks, and the
+  runtime's locked `--help` entrypoint were checked. Existing shell-suite
+  manifests, Tart inputs, status bridge, and Default/Naked exports were not
+  changed.
+- Final review caught a worktree installation pitfall: merely linking the hook
+  manifest still runs `~/dotfiles/bin/...` from main. The runbook now generates
+  a temporary manifest with explicitly quoted worktree executable paths. All
+  14 generated commands were dry-run from a temporary HOME containing spaces,
+  with iTerm context absent; they returned zero with empty stdout/stderr.
+  No live symlink was changed and the temporary config was removed.
+
+## Runtime acceptance matrix
+
+| Requirement | Automated evidence | Live runtime observation |
+| --- | --- | --- |
+| Permission prompt/question waiting types | Parser, reducer, actual hook matcher/command cases | Pending real Copilot interaction |
+| Persistent waiting and exact-pane click | Source-only adapter and output-byte cases | Transport probe passed; new runtime pending |
+| Focused source suppression | Frontmost app/window/tab/pane fake API cases | Pending |
+| Selected source in background window | Fake API predicate cases | Pending |
+| iTerm2 behind another app | Fake API inactive-app case | Transport probe passed; new runtime pending |
+| Worktree/branch/detached context | Temporary Git repository/worktree cases | Pending |
+| Done bell, no popup | Exact BEL bytes and effective profile filter cases | Transport probe passed; new runtime pending |
+| Duplicates and activity rearming | Reducer and queued-event interleavings | Pending |
+| Two independent source panes | Separate queues and exact UUID/tty selection | Pending |
+| Default/Naked unaffected | Nonmatching GUID cases and unchanged exports | Pending |
+| Integration failure isolation | Subprocess exit/stdout/log/lock/helper-death cases | Automated requirement passed |
+
+**Handoff:** implementation and automated verification are complete on the
+worktree branch, not activated in the live installation. The remaining live
+steps are explicitly blocked on operator availability; neither actual Copilot
+hook discovery nor the full visible runtime matrix is claimed as passing.

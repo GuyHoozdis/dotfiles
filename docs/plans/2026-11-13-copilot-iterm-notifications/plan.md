@@ -19,11 +19,11 @@ routing before building the feature.
 stdlib unittest, the iTerm2 Python API, Git, and native iTerm2 OSC 9/BEL output.
 No notification helper application or persistent daemon.
 
-**Status:** Tasks 1–3 complete. Task 4 is in final review; Tasks 5–6 follow.
-The operator confirmed the transport gate and approved remaining implementation
-in autopilot, without further operator feedback. Runtime visible acceptance
-remains separate from the passing transport gate. The spec was approved on
-2026-11-13.
+**Status:** Tasks 1–5 implemented and verified. Task 6 documentation and automated
+checks are complete; live activation and the visible runtime acceptance matrix
+are blocked on operator availability. The operator confirmed the transport gate
+and approved remaining implementation in autopilot, without further feedback.
+No live links were changed. The spec was approved on 2026-11-13.
 
 ---
 
@@ -83,6 +83,7 @@ remains separate from the passing transport gate. The spec was approved on
 | `tests/copilot/test_terminal.py` | Fake API/session, output-byte and focus cases |
 | `tests/copilot/test_isolation.py` | Real owned-subprocess timeout, protocol, and orphan-cleanup cases |
 | `tests/copilot/test_hooks.py` | Fake-worker subprocess/hook integration and failure isolation |
+| `tests/copilot/test_registration.py` | Actual hook commands, quoting, and effective profile alert policy |
 | `tests/copilot/README.md` | Navigation and focused test/probe commands |
 | `share/copilot/hooks/iterm2-session-status.json` | Add attention hook entries without changing existing status commands |
 | `etc/iterm/DynamicProfiles/copilot-agents.json` | Notification/bell overrides for this profile alone |
@@ -357,20 +358,20 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
 **Files:** Create `terminal.py`, `test_terminal.py`; connect the adapter in
 `cli.py`; extend `test_hooks.py`.
 
-- [ ] **Step 1: Write failing adapter tests with fake API objects.**
+- [x] **Step 1: Write failing adapter tests with fake API objects.**
   Cover exact UUID lookup (never active-pane fallback), original/current
   profile GUID, renamed profile, nonmatching profiles, closed sessions,
   source label lookup, selected tab/pane in another window, iTerm2 not
   frontmost, unknown focus, focus API errors, unavailable tty, and a
   terminal-write/API failure. Fake sessions record output bytes and must
   reject any call to a keyboard-input API.
-- [ ] **Step 2: Implement source resolution through the Python API.**
+- [x] **Step 2: Implement source resolution through the Python API.**
   Lazily import `iterm2` in the worker, establish one connection for its
   drain, and find each source by UUID. Match `original_guid or guid`,
   obtain `user.repoLabel`, and resolve its tty for the chosen transport.
   Missing/closed sessions and other profiles do not alert; failure to
   determine profile identity must log and skip, never assume eligibility.
-- [ ] **Step 3: Implement the exact focused-source predicate.**
+- [x] **Step 3: Implement the exact focused-source predicate.**
   Refresh app/focus state immediately before waiting delivery; suppress
   only if all three checks positively succeed:
 
@@ -387,7 +388,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   another window or a background iTerm2 application must alert.
   Unknown/failed focus lookup logs a bounded diagnostic and allows delivery.
   Do not reuse the suppression predicate for done bells.
-- [ ] **Step 4: Implement exactly the transport that passed Task 1.**
+- [x] **Step 4: Implement exactly the transport that passed Task 1.**
   Use `OSC 9` with sanitized UTF-8 body for waiting; use only `b"\x07"` for
   done. For tty, open only the verified source character device, without
   creating it, using a nonblocking descriptor and bounded failure handling.
@@ -395,11 +396,11 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   across worker runs. For API injection, use `async_inject(bytes)` only.
   Bound each external Git/API/output operation (15 seconds maximum);
   close connections/descriptors in `finally`/context managers.
-- [ ] **Step 5: Run the full new unittest suite.**
+- [x] **Step 5: Run the full new unittest suite.**
   Assert focus suppression, fail-open focus behavior, fail-closed profile
   behavior, precise OSC/BEL bytes, no key injection, and independent sessions.
   Tests must run without a live GUI, network, or notification permissions.
-- [ ] **Step 6: Commit.**
+- [x] **Step 6: Commit.**
   `feat(iterm): deliver attention feedback to the source pane`.
 
 ### Task 5: Register attention hooks and configure Copilot Agents alone
@@ -407,7 +408,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
 **Files:** Modify the existing hooks JSON and dynamic profile; extend
 `test_hooks.py` and `test_terminal.py`.
 
-- [ ] **Step 1: Write failing hook-registration/profile behavior cases.**
+- [x] **Step 1: Write failing hook-registration/profile behavior cases.**
   Load the real hook JSON in the test. Run its new attention commands
   against a fake executable under a temporary HOME, including HOME with
   spaces; verify event names and stdin are delivered intact. Ensure every
@@ -418,7 +419,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   and terminal API failure.
   Assert the output-filter combination permits OSC alerts but not BEL
   popups, not merely that the profile contains arbitrary constants.
-- [ ] **Step 2: Append one attention entry to each existing event array.**
+- [x] **Step 2: Append one attention entry to each existing event array.**
   Use the same `type`, `bash`, and `timeoutSec` conventions as status:
 
   ```json
@@ -435,7 +436,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   status and new attention) retain `permission_prompt|elicitation_dialog`;
   no other array gets that matcher. Each command gets its own original stdin from
   Copilot; do not pipe status output into the attention hook.
-- [ ] **Step 3: Add only these Copilot Agents profile overrides.**
+- [x] **Step 3: Add only these Copilot Agents profile overrides.**
   Recheck keys against the installed iTerm2 version. Keep its GUID, parent,
   tags, title expression, and unrelated settings intact:
 
@@ -455,7 +456,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
 
   Explicit suppression lives in the adapter, so native active-session
   suppression must not hide an alert for a background window.
-- [ ] **Step 4: Run focused checks and commit.**
+- [x] **Step 4: Run focused checks and commit.**
 
   ```bash
   uv run --no-project --python 3.12 python -m unittest discover \
@@ -489,6 +490,10 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Do not enable Copilot's global beep/notifications settings; they would
   bypass profile scoping or duplicate feedback.
 - [ ] **Step 2: Activate only in an explicitly approved live test.**
+  **Blocked:** no further operator feedback is available. The original targets
+  are recorded in `verification.md` and remain unchanged. The runbook's
+  worktree-specific generated hook config was dry-run without terminal context,
+  but not linked into the live installation.
   Record the current iTerm DynamicProfiles and user hook symlink targets
   before changing them. Temporarily point them at this worktree's updated
   files only with operator agreement, then warm runtime dependencies.
@@ -497,6 +502,10 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   Record rollback targets and restore them after the test unless the
   operator explicitly chooses to keep the worktree active.
 - [ ] **Step 3: Execute the visible acceptance matrix.**
+  **Blocked for live runtime observation:** unit/integration coverage and warm
+  latency measurements passed; actual Copilot permission/question/completion
+  discovery and the visible matrix still require an operator. The Task 1 probe
+  result is not substituted for those observations.
 
   | Case | Expected |
   | --- | --- |
@@ -524,7 +533,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   must not wait for terminal delivery; use the unit harness to hold the
   fake API worker blocked and prove the producer still exits. Report actual
   latency rather than claiming the previous status hook's timing.
-- [ ] **Step 4: Record evidence without overstating it.**
+- [x] **Step 4: Record evidence without overstating it.**
   Record test command/result, selected transport, actual hook discovery,
   operator-observed click routing, audible completion, and persistence.
   Persistence must remain pending until the operator confirms the alert
@@ -532,7 +541,7 @@ and its script lock; extend `test_state.py`; create `test_hooks.py`.
   provides this or the operator chose to adjust macOS settings. Any failed
   source routing or visible behavior blocks completion; do not replace
   this with a submitted-notification proxy assertion.
-- [ ] **Step 5: Run final focused checks and commit documentation.**
+- [x] **Step 5: Run final focused checks and commit documentation.**
   Repeat the Task 5 commands after the final changes. If this repository
   has acquired an applicable linter/formatter since planning, run it;
   otherwise do not introduce unrelated tooling or claim a lint run.

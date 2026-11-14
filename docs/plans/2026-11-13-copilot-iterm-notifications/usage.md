@@ -60,6 +60,13 @@ Generate a temporary copy with explicit worktree executable paths instead:
 ```bash
 # Run from this worktree, only after approving temporary live activation.
 worktree="$(pwd -P)"
+profile_link="$HOME/Library/Application Support/iTerm2/DynamicProfiles/copilot-agents.json"
+hook_link="$HOME/.copilot/hooks/iterm2-session-status.json"
+# Confirm both paths are symlinks before proceeding; do not overwrite real files.
+ls -ld "$profile_link" "$hook_link"
+profile_before="$(readlink "$profile_link")"
+hook_before="$(readlink "$hook_link")"
+printf 'Rollback profile: %s\nRollback hooks: %s\n' "$profile_before" "$hook_before"
 hook_config="$(mktemp "${TMPDIR:-/tmp}/copilot-iterm-hooks.XXXXXX")"
 python3 - "$worktree" "$hook_config" <<'PY'
 import json
@@ -92,6 +99,15 @@ original targets after testing, then remove only that temporary config file;
 never delete a config while its live symlink still points to it. Do not overwrite
 an existing regular file with these commands: the installation above assumes
 both live paths are symlinks, as recorded in [verification](verification.md).
+
+```bash
+ln -sfn "$profile_before" "$profile_link"
+ln -sfn "$hook_before" "$hook_link"
+readlink "$profile_link"
+readlink "$hook_link"
+rm -- "$hook_config"
+```
+
 Do not edit `~/.copilot/settings.json` or enable Copilot's global notification
 or beep settings; those could duplicate feedback or bypass profile scoping.
 
