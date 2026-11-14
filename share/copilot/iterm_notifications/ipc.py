@@ -48,7 +48,7 @@ def encode_request(action: Action, event: HookEvent) -> bytes:
 def _object(line: bytes) -> dict[str, object]:
     try:
         data = json.loads(line)
-    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as error:
         raise DeliveryError("terminal_helper_protocol") from error
     if not isinstance(data, dict) or data.get("v") != VERSION:
         raise DeliveryError("terminal_helper_protocol")
@@ -58,7 +58,9 @@ def _object(line: bytes) -> dict[str, object]:
 def decode_message(line: bytes) -> Message:
     data = _object(line)
     kind, code, error = data.get("type"), data.get("code"), data.get("error", "Exception")
-    if kind not in _KINDS or not isinstance(error, str) or not _CLASS.fullmatch(error):
+    if not isinstance(kind, str) or kind not in _KINDS:
+        raise DeliveryError("terminal_helper_protocol")
+    if not isinstance(error, str) or not _CLASS.fullmatch(error):
         raise DeliveryError("terminal_helper_protocol")
     if kind in {"diagnostic", "failed"}:
         if not isinstance(code, str):
@@ -74,7 +76,9 @@ def decode_message(line: bytes) -> Message:
 def decode_request(line: bytes) -> tuple[Action, HookEvent]:
     data = _object(line)
     action, event = data.get("action"), data.get("event")
-    if action not in {"waiting", "done"} or not isinstance(event, dict):
+    if not isinstance(action, str) or action not in {"waiting", "done"}:
+        raise DeliveryError("terminal_helper_protocol")
+    if not isinstance(event, dict):
         raise DeliveryError("terminal_helper_protocol")
     fields = [event.get(name) for name in ("event", "cwd", "notification_type", "source_uuid")]
     name, cwd, kind, source = fields
@@ -82,7 +86,8 @@ def decode_request(line: bytes) -> tuple[Action, HookEvent]:
         value is None or isinstance(value, str) for value in (cwd, kind)
     ):
         raise DeliveryError("terminal_helper_protocol")
-    return cast(Action, action), HookEvent(name, cast(str | None, cwd), cast(str | None, kind), source)
+    event_value = HookEvent(name, cast(str | None, cwd), cast(str | None, kind), source)
+    return cast(Action, action), event_value
 
 
 class LineReader:

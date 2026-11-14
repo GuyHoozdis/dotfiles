@@ -242,7 +242,7 @@ class TerminalAdapterTests(unittest.TestCase):
             raise AssertionError("previous alarm handler must not fire")
 
         async def blocking_create():
-            time.sleep(5)
+            signal.pause()
             raise AssertionError("blocking authentication should be interrupted")
 
         self.iterm.Connection.async_create = staticmethod(blocking_create)
