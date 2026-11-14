@@ -192,7 +192,8 @@ the shared runnable scenario registry unchanged.
 - [x] **Step 4: Establish the red guest baseline on both images.**
 
   ```bash
-  stamp=$(date +%Y%m%d-%H%M%S)
+  artifacts_dir=$(mktemp -d "${TMPDIR:-/tmp}/shell-path-red.XXXXXXXX")
+  echo "Artifacts: $artifacts_dir"
   stage=path-red
   expected_status=1
   unexpected=0
@@ -200,7 +201,7 @@ the shared runnable scenario registry unchanged.
     status=0
     uv run tests/shell/run_tart.py --image "$image" --suite dotfiles \
       --marker acceptance \
-      --artifacts "$HOME/shell-artifacts/$stage-$image-$stamp" || status=$?
+      --artifacts "$artifacts_dir/$stage-$image" || status=$?
     printf '%s acceptance status: %s\n' "$image" "$status"
     if [ "$status" -ne "$expected_status" ]; then unexpected=1; fi
   done
@@ -406,13 +407,14 @@ the shared runnable scenario registry unchanged.
 - [x] **Step 1: Run all four guest combinations without a marker.**
 
   ```bash
-  stamp=$(date +%Y%m%d-%H%M%S)
+  artifacts_dir=$(mktemp -d "${TMPDIR:-/tmp}/shell-path-final.XXXXXXXX")
+  echo "Artifacts: $artifacts_dir"
   failed=0
   for image in ubuntu macos; do
     for suite in bash dotfiles; do
       status=0
       uv run tests/shell/run_tart.py --image "$image" --suite "$suite" \
-        --artifacts "$HOME/shell-artifacts/path-final-$image-$suite-$stamp" || status=$?
+        --artifacts "$artifacts_dir/$image-$suite" || status=$?
       printf '%s/%s status: %s\n' "$image" "$suite" "$status"
       if [ "$status" -ne 0 ]; then failed=1; fi
     done

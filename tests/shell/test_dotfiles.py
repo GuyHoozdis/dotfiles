@@ -50,8 +50,8 @@ def _shell_kind(shell) -> str:
     if shell.source_bashrc:
         assert not shell.interactive and not shell.login
         return "source-bashrc"
-    mode = "interactive" if shell.interactive else "noninteractive"
-    return f"{mode}-{'login' if shell.login else 'nonlogin'}"
+    mode = "interactive" if shell.reads_bashrc else "noninteractive"
+    return f"{mode}-{'login' if shell.reads_profile else 'nonlogin'}"
 
 
 def _normalize_startup_stderr(output: str) -> str:
@@ -66,11 +66,7 @@ def _normalize_startup_stderr(output: str) -> str:
 def _expected_local_log(configuration: dict, shell) -> str:
     if configuration["configuration"] != "tracked+local":
         return ""
-    loaded = []
-    if shell.login:
-        loaded.append("exports")
-    if shell.interactive:
-        loaded.extend(module for module in MODULE_LOAD_ORDER if module != "exports")
+    loaded = EXPECTED[_shell_kind(shell)]["modules"]
     return "".join(f"{module}.local;" for module in loaded)
 
 
@@ -95,6 +91,7 @@ def _check_integrity(records: dict, fixture: dict, scenario) -> None:
             "histfilesize",
             "shell_vars",
             "env",
+            "invocation",
             "marker_path",
             "marker_identity",
             "marker_status",
@@ -147,15 +144,16 @@ def _check_integrity(records: dict, fixture: dict, scenario) -> None:
         assert all(
             value is None or isinstance(value, str) for value in record["env"].values()
         )
+        assert set(record["invocation"]) == {
+            "env", "startup_before", "local_before", "gopath_before", "rcfile",
+        }
+        assert all(
+            value is None or isinstance(value, str)
+            for value in record["invocation"].values()
+        )
         assert isinstance(record["stdout"], str) and isinstance(record["stderr"], str)
 
-        modules_loaded = []
-        if shell.login:
-            modules_loaded.append("exports")
-        if shell.interactive:
-            modules_loaded.extend(
-                module for module in MODULE_LOAD_ORDER if module != "exports"
-            )
+        modules_loaded = EXPECTED[_shell_kind(shell)]["modules"]
         for module in modules_loaded:
             function = fixture["local_functions"].get(module)
             if function is not None:
@@ -301,6 +299,31 @@ class TestExpectedState:
             for name in ("codetree", "jqless", "set_prompt"):
                 assert (name in functions) is expected, (shell.name, name)
 
+    def test_invocation_inputs(self, scenario, dotfiles_home, acceptance_records):
+        candidate, control = acceptance_records
+        for shell in scenario.shells:
+            env_loaded = shell.bash_env and not shell.interactive
+            for records in (candidate, control):
+                record = records[shell.name]
+                invocation = record["invocation"]
+                assert invocation["env"] == ("loaded" if env_loaded else None)
+                assert invocation["rcfile"] == ("loaded" if shell.reads_rcfile else None)
+                assert record["startup_log"] == (
+                    "BASH_ENV;" if env_loaded else "rcfile;" if shell.reads_rcfile else ""
+                )
+                if env_loaded:
+                    assert invocation["startup_before"] == ""
+                    assert invocation["local_before"] == record["local_log"]
+                    assert invocation["gopath_before"] == (record["env"]["GOPATH"] or "")
+            if not shell.reads_profile:
+                expected_path = (
+                    candidate[shell.launcher]["path"]
+                    if shell.launcher else dotfiles_home["initial_path"]
+                )
+                if shell.prepend_callers:
+                    expected_path = dotfiles_home["callers"] + expected_path
+                assert candidate[shell.name]["path"] == expected_path, shell.name
+
     def test_ll_alias(self, scenario, acceptance_records):
         candidate, _ = acceptance_records
         for shell in scenario.shells:
@@ -311,7 +334,9 @@ class TestExpectedState:
         candidate, _ = acceptance_records
         for shell in scenario.shells:
             if EXPECTED[_shell_kind(shell)]["interactive"]:
-                assert candidate[shell.name]["env"]["PROMPT_COMMAND"] == "set_prompt", shell.name
+                assert candidate[shell.name]["env"]["PROMPT_COMMAND"] == (
+                    "set_prompt; _iterm2_set_repo_label"
+                ), shell.name
 
     def test_gopath(self, scenario, dotfiles_home, acceptance_records):
         candidate, _ = acceptance_records
@@ -428,7 +453,7 @@ class TestExpectedState:
                 entry for entry in homebrew if entry in present_homebrew
             ]
             assert actual_homebrew == expected_homebrew, (shell.name, path)
-            if not (shell.interactive or shell.login):
+            if not (shell.reads_bashrc or shell.reads_profile):
                 continue
             actual = [entry for entry in path if entry in managed]
             assert actual == sorted(actual, key=rank.__getitem__), (shell.name, actual)
@@ -448,8 +473,6 @@ class TestExpectedState:
     def test_fresh_login_retains_required_managed_path_defaults(
         self, scenario, dotfiles_home, acceptance_records
     ):
-        if scenario.id not in {"S01", "S08-fresh-login-c"}:
-            return
         candidate, _ = acceptance_records
         required = [
             str(dotfiles_home["home"] / suffix)
@@ -461,7 +484,7 @@ class TestExpectedState:
             )
         ]
         for shell in scenario.shells:
-            if shell.launcher is None and shell.login:
+            if shell.launcher is None and shell.reads_profile:
                 path = candidate[shell.name]["path"]
                 assert all(entry in path for entry in required), (shell.name, path)
                 assert [entry for entry in path if entry in required] == required, (
@@ -474,7 +497,7 @@ class TestExpectedState:
     ):
         candidate, _ = acceptance_records
         for shell in scenario.shells:
-            if shell.launcher is None and shell.login:
+            if shell.launcher is None and shell.reads_profile:
                 for entry in _managed_entries(dotfiles_home):
                     assert candidate[shell.name]["path"].count(entry) <= 1, (shell.name, entry)
 
@@ -507,7 +530,7 @@ class TestExpectedState:
     ):
         candidate, _ = acceptance_records
         for shell in scenario.shells:
-            if shell.launcher is None or shell.login:
+            if shell.launcher is None or shell.reads_profile:
                 continue
             inherited = candidate[shell.launcher]["path"]
             if shell.prepend_callers:

@@ -13,6 +13,7 @@ import scenarios
 import test_dotfiles as dotfiles
 from probe import SERIALIZE, launch_environment, launch_script, parse_shopt, run_scenario
 from test_dotfiles import _check_integrity
+from test_bash import expected_log
 
 
 RUNNABLE_IDS = {
@@ -26,6 +27,18 @@ RUNNABLE_IDS = {
     "S08-source-rc",
     "S08-fresh-c",
     "S08-fresh-login-c",
+    "S09-env-c",
+    "S09-env-script",
+    "S09-env-login-c",
+    "S09-env-interactive",
+    "S09-env-inherited-c",
+    "S10-noprofile-i",
+    "S10-noprofile-env",
+    "S11-norc-i",
+    "S11-norc-login",
+    "S12-rcfile-i",
+    "S12-rcfile-login",
+    "S12-norc-rcfile",
 }
 
 PENDING = {
@@ -261,6 +274,9 @@ def test_unresolved_dotfiles_marker_is_checked_without_execution(
         "env": dict.fromkeys(
             ("MYVAR", "GOPATH", "PROMPT_COMMAND", "HISTTIMEFORMAT", "VSCODE_RESOLVING_ENVIRONMENT")
         ),
+        "invocation": dict.fromkeys(
+            ("env", "startup_before", "local_before", "gopath_before", "rcfile")
+        ),
         "marker_path": "",
         "marker_identity": "",
         "marker_status": 127,
@@ -360,7 +376,141 @@ def test_runnable_scenario_shell_structures():
         "S08-fresh-c": (scenarios.Shell("fresh", ()),),
         "S08-fresh-login-c": (scenarios.Shell("fresh", ("-l",)),),
     }
-    assert {s.id: s.shells for s in scenarios.SCENARIOS if not s.pending} == expected
+    assert {
+        s.id: s.shells for s in scenarios.SCENARIOS
+        if s.id in expected
+    } == expected
+
+
+@pytest.mark.parametrize(
+    ("scenario_id", "options", "script", "env_loaded", "rc_loaded", "startup"),
+    [
+        ("S09-env-c", (), False, True, False, "BASH_ENV;"),
+        ("S09-env-script", (), True, True, False, "BASH_ENV;"),
+        ("S09-env-login-c", ("-l",), False, True, False, ".bash_profile;BASH_ENV;"),
+        ("S09-env-interactive", ("-i",), False, False, False, ".bashrc;"),
+        ("S09-env-inherited-c", (), False, True, False, "BASH_ENV;"),
+        ("S10-noprofile-i", ("--noprofile", "-i", "-l"), False, False, False, ""),
+        ("S10-noprofile-env", ("--noprofile", "-l"), False, True, False, "BASH_ENV;"),
+        ("S11-norc-i", ("--norc", "-i"), False, False, False, ""),
+        ("S11-norc-login", ("--norc", "-i", "-l"), False, False, False, ".bash_profile;"),
+        ("S12-rcfile-i", ("--rcfile", "{rcfile}", "-i"), False, False, True, "rcfile;"),
+        ("S12-rcfile-login", ("--rcfile", "{rcfile}", "-i", "-l"), False, False, False, ".bash_profile;"),
+        ("S12-norc-rcfile", ("--norc", "--rcfile", "{rcfile}", "-i"), False, False, False, ""),
+    ],
+)
+def test_actual_invocation_variations(
+    tmp_path, monkeypatch, scenario_id, options, script, env_loaded, rc_loaded, startup
+):
+    scenario = scenarios.SCENARIO.get(scenario_id)
+    assert scenario is not None, f"missing actual invocation scenario {scenario_id}"
+    shell = scenario.shells[-1]
+    assert shell.options == options
+    assert shell.script is script
+    home = tmp_path / "home with spaces"
+    home.mkdir()
+    for filename in (".bash_profile", ".bashrc"):
+        (home / filename).write_text(f'STARTUP_LOG="${{STARTUP_LOG-}}{filename};"\n')
+    launches = []
+    real_run = subprocess.run
+
+    def observe(command, **kwargs):
+        launches.append((command, kwargs["env"]))
+        return real_run(command, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", observe)
+    records = run_scenario(
+        scenario, home, {"PATH": "/usr/bin:/bin"}, "/bin/bash", tmp_path / "probe"
+    )
+    record = records[shell.name]
+    assert record["status"] == 0
+    assert record["startup_log"] == startup
+    assert record["invocation"]["env"] == ("loaded" if env_loaded else None)
+    assert record["invocation"]["rcfile"] == ("loaded" if rc_loaded else None)
+    assert record["interactive"] is shell.interactive
+    assert record["login"] is shell.login
+    assert record["shlvl"] == (2 if shell.launcher else 1)
+    assert record["stdout"] == ""
+    command, environment = launches[0]
+    if shell.launcher is None:
+        actual_options = [
+            str(tmp_path / "probe/invocation rc with spaces.bash")
+            if option == "{rcfile}" else option for option in options
+        ]
+        assert command[:1 + len(options)] == ["/bin/bash", *actual_options]
+    if script:
+        assert command[0] == "/bin/bash"
+        assert "-c" not in command
+        assert Path(command[1]).is_file()
+        assert "probe_shell" in Path(command[1]).read_text()
+    if shell.bash_env and shell.launcher is None:
+        assert " " in environment["BASH_ENV"]
+        assert Path(environment["BASH_ENV"]).is_file()
+    if env_loaded:
+        expected_before = ".bash_profile;" if shell.reads_profile else ""
+        assert record["invocation"]["startup_before"] == expected_before
+
+
+@pytest.mark.parametrize("scenario_id", sorted(RUNNABLE_IDS - {
+    "S01", "S02", "S03", "S04", "S07-resolve", "S08-c", "S08-login-c",
+    "S08-source-rc", "S08-fresh-c", "S08-fresh-login-c",
+}))
+def test_variation_suite_expectations_follow_invocation(scenario_id):
+    scenario = scenarios.SCENARIO[scenario_id]
+    shell = scenario.shells[-1]
+    profile = shell.login and "--noprofile" not in shell.options
+    regular_rc = shell.interactive and (
+        profile or (
+            not shell.login and "--norc" not in shell.options
+            and "--rcfile" not in shell.options
+        )
+    )
+    state = dotfiles.EXPECTED[dotfiles._shell_kind(shell)]
+    assert state["interactive"] is regular_rc
+    assert state["gopath"] == ("home" if profile else "inherited")
+    modules = (("exports",) if profile else ()) + (
+        dotfiles.MODULE_LOAD_ORDER[1:] if regular_rc else ()
+    )
+    assert state["modules"] == modules
+    fixture = {"configuration": "tracked+local"}
+    assert dotfiles._expected_local_log(fixture, shell) == "".join(
+        f"{module}.local;" for module in modules
+    )
+    loaded = []
+    if profile:
+        loaded.append(".bash_profile")
+    elif regular_rc:
+        loaded.append(".bashrc")
+    if shell.reads_rcfile:
+        loaded.append("rcfile")
+    if shell.bash_env and not shell.interactive:
+        loaded.append("BASH_ENV")
+    assert expected_log(frozenset((".bash_profile", ".bashrc")), shell) == "".join(
+        f"{name};" for name in loaded
+    )
+
+
+@pytest.mark.parametrize("scenario_id", ("S11-norc-login", "S12-rcfile-login"))
+def test_profile_can_explicitly_source_rc_despite_invocation_controls(tmp_path, scenario_id):
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / ".bash_profile").write_text('. "$HOME/.bashrc"\n')
+    (home / ".bashrc").write_text('STARTUP_LOG="explicit-rc;"\n')
+    scenario = scenarios.SCENARIO[scenario_id]
+    record = run_scenario(
+        scenario, home, {"PATH": "/usr/bin:/bin"}, "/bin/bash", tmp_path / "probe"
+    )["fresh"]
+    assert record["status"] == 0
+    assert record["startup_log"] == "explicit-rc;"
+    assert record["invocation"]["rcfile"] is None
+
+
+@pytest.mark.parametrize("command", ("set_prompt", "", "set_prompt; unexpected"))
+def test_prompt_expectation_rejects_missing_or_extra_hooks(command):
+    with pytest.raises(AssertionError):
+        dotfiles.TestExpectedState().test_prompt_command(
+            scenarios.S01, ({"parent": {"env": {"PROMPT_COMMAND": command}}}, {})
+        )
 
 
 def test_shell_mode_properties_and_immutable_records():

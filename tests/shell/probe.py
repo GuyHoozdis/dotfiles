@@ -82,6 +82,15 @@ record = {
             "VSCODE_RESOLVING_ENVIRONMENT",
         )
     },
+    "invocation": {
+        key: os.environ.get(name) for key, name in (
+            ("env", "INVOCATION_ENV"),
+            ("startup_before", "INVOCATION_STARTUP_BEFORE"),
+            ("local_before", "INVOCATION_LOCAL_BEFORE"),
+            ("gopath_before", "INVOCATION_GOPATH_BEFORE"),
+            ("rcfile", "INVOCATION_RCFILE"),
+        )
+    },
 }
 if marker_supplied == "true":
     record.update({
@@ -137,7 +146,7 @@ fi
 """
 
 
-def launch_script(scenario) -> str:
+def launch_script(scenario, invocation_files=None) -> str:
     """Build the Bash launcher that probes each shell in registry order."""
     first, *children = scenario.shells
     lines = [
@@ -164,8 +173,13 @@ def launch_script(scenario) -> str:
         launch.extend(
             f"{name}={shlex.quote(value)}" for name, value in shell.environment
         )
+        if shell.bash_env:
+            launch.append(f"BASH_ENV={shlex.quote(str(invocation_files['env']))}")
         launch.append('"$bash"')
-        launch.extend(shell.options)
+        launch.extend(
+            shlex.quote(str(invocation_files["rcfile"])) if option == "{rcfile}" else option
+            for option in shell.options
+        )
         launch.extend(
             [
                 "-c",
@@ -201,6 +215,25 @@ def run_scenario(scenario, home, environment, bash, root) -> dict:
     root = Path(root).resolve()
     home = Path(home).resolve()
     root.mkdir(parents=True, exist_ok=True)
+    invocation_files = {
+        "env": root / "invocation env with spaces.bash",
+        "rcfile": root / "invocation rc with spaces.bash",
+    }
+    if any(shell.bash_env for shell in scenario.shells):
+        invocation_files["env"].write_text(
+            'export INVOCATION_ENV=loaded\n'
+            'export INVOCATION_STARTUP_BEFORE="${STARTUP_LOG-}"\n'
+            'export INVOCATION_LOCAL_BEFORE="${LOCAL_LOG-}"\n'
+            'export INVOCATION_GOPATH_BEFORE="${GOPATH-}"\n'
+            'STARTUP_LOG="${STARTUP_LOG-}BASH_ENV;"\n',
+            encoding="utf-8",
+        )
+    if any("--rcfile" in shell.options for shell in scenario.shells):
+        invocation_files["rcfile"].write_text(
+            'export INVOCATION_RCFILE=loaded\n'
+            'STARTUP_LOG="${STARTUP_LOG-}rcfile;"\n',
+            encoding="utf-8",
+        )
     for shell in scenario.shells:
         for suffix in (
             ".json",
@@ -218,12 +251,20 @@ def run_scenario(scenario, home, environment, bash, root) -> dict:
     caller1 = root / "caller one/bin"
     caller2 = root / "caller two/bin"
     marker = environment.get("SHELL_MARKER", "")
+    payload = launch_script(scenario, invocation_files)
+    if first.script:
+        script_file = root / "invocation script with spaces.bash"
+        script_file.write_text(payload, encoding="utf-8")
+        entry = [str(script_file)]
+    else:
+        entry = ["-c", payload, "shell"]
     command = [
         os.path.abspath(bash),
-        *first.options,
-        "-c",
-        launch_script(scenario),
-        "shell",
+        *(
+            str(invocation_files["rcfile"]) if option == "{rcfile}" else option
+            for option in first.options
+        ),
+        *entry,
         os.path.abspath(bash),
         sys.executable,
         SERIALIZE,
@@ -233,9 +274,12 @@ def run_scenario(scenario, home, environment, bash, root) -> dict:
         str(caller1),
         str(caller2),
     ]
+    launch_env = launch_environment(scenario, {**environment, "HOME": str(home)})
+    if first.bash_env:
+        launch_env["BASH_ENV"] = str(invocation_files["env"])
     result = subprocess.run(
         command,
-        env=launch_environment(scenario, {**environment, "HOME": str(home)}),
+        env=launch_env,
         cwd=root,
         stdin=subprocess.DEVNULL,
         start_new_session=True,

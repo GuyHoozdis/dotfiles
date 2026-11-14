@@ -86,14 +86,18 @@ PRESENT_CONFIGURATIONS = tuple(
 def expected_log(present: frozenset[str], shell: Shell) -> str:
     """Return the startup file log expected for one shell mode."""
     loaded = []
-    if shell.login:
+    if shell.reads_profile:
         login_file = next(
             (filename for filename in LOGIN_CHAIN if filename in present), None
         )
         if login_file is not None:
             loaded.append(login_file)
-    elif shell.interactive and ".bashrc" in present:
+    elif shell.reads_bashrc and not shell.login and ".bashrc" in present:
         loaded.append(".bashrc")
+    if shell.reads_rcfile:
+        loaded.append("rcfile")
+    if shell.bash_env and not shell.interactive:
+        loaded.append("BASH_ENV")
     if shell.source_bashrc and ".bashrc" in present:
         loaded.append(".bashrc")
     return "".join(f"{filename};" for filename in loaded)
@@ -127,9 +131,43 @@ def test_startup_files_read(scenario, present, bash_home):
 
     for shell in scenario.shells:
         record = records[shell.name]
+        assert record["status"] == 0
         assert record["startup_log"] == expected_log(present, shell)
         assert record["interactive"] is shell.interactive
         assert record["login"] is shell.login
+        assert record["shlvl"] == (2 if shell.launcher else 1)
+        invocation = record["invocation"]
+        env_loaded = shell.bash_env and not shell.interactive
+        assert invocation["env"] == ("loaded" if env_loaded else None)
+        assert invocation["rcfile"] == ("loaded" if shell.reads_rcfile else None)
+        if env_loaded:
+            assert invocation["startup_before"] + "BASH_ENV;" == record["startup_log"]
+
+
+@pytest.mark.bash
+@pytest.mark.characterization
+@pytest.mark.parametrize(
+    "scenario", [scenarios.SCENARIO[name] for name in ("S11-norc-login", "S12-rcfile-login")],
+    ids=lambda scenario: scenario.id,
+)
+@pytest.mark.parametrize(
+    "present", PRESENT_CONFIGURATIONS,
+    ids=lambda present: "+".join(sorted(present)) or "empty",
+)
+def test_login_profile_can_explicitly_source_bashrc(scenario, present, bash_home):
+    home = bash_home["home"]
+    _write_startup_files(home, present)
+    for filename in LOGIN_CHAIN:
+        if filename in present:
+            with (home / filename).open("a", encoding="utf-8") as stream:
+                stream.write('\nif [ -r "$HOME/.bashrc" ]; then . "$HOME/.bashrc"; fi\n')
+    record = run_scenario(
+        scenario, home, bash_home["environment"], bash_home["bash"], bash_home["root"] / "probe",
+    )["fresh"]
+    explicit_rc = ".bashrc;" if ".bashrc" in present and set(LOGIN_CHAIN) & present else ""
+    assert record["status"] == 0
+    assert record["startup_log"] == expected_log(present, scenario.shells[0]) + explicit_rc
+    assert record["invocation"]["rcfile"] is None
 
 
 @pytest.mark.bash
@@ -152,7 +190,7 @@ def test_nonlogin_shell_keeps_launched_path(scenario, present, bash_home):
     )
 
     for shell in scenario.shells:
-        if shell.login:
+        if shell.reads_profile:
             continue
         launched_path = (
             records[shell.launcher]["path"]
